@@ -18,7 +18,7 @@ export const WatermarkLayer: React.FC<WatermarkLayerProps> = ({
             {/* Background Scale Markers (Abstract representation) */}
             <div className="absolute inset-0 opacity-10 flex justify-around w-full h-full">
                 {/* Render vertical bars for scale degrees? Or just a subtle texture */}
-                {scale.map((note, i) => (
+                {scale.map((_, i) => (
                     <div key={i} className="h-full w-px bg-blue-500" />
                 ))}
             </div>

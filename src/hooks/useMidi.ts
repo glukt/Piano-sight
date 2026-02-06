@@ -14,6 +14,7 @@ export type MidiInputDevice = {
 
 export const useMidi = () => {
     const [inputs, setInputs] = useState<MidiInputDevice[]>([]);
+    const [activeNotes, setActiveNotes] = useState<Set<number>>(new Set());
     const [lastNote, setLastNote] = useState<MidiNote | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isEnabled, setIsEnabled] = useState(false);
@@ -24,11 +25,22 @@ export const useMidi = () => {
         const command = status >> 4;
         const channel = status & 0xf;
 
-        // Note On (144) or Note Off (128)
+        // Note On (144)
         if (command === 9 && velocity > 0) {
             setLastNote({ note, velocity, channel });
-        } else if (command === 8 || (command === 9 && velocity === 0)) {
-            // NOTE: We could track Note Off here if needed for duration/sustain
+            setActiveNotes(prev => {
+                const newSet = new Set(prev);
+                newSet.add(note);
+                return newSet;
+            });
+        }
+        // Note Off (128) or Note On with 0 velocity
+        else if (command === 8 || (command === 9 && velocity === 0)) {
+            setActiveNotes(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(note);
+                return newSet;
+            });
         }
     }, []);
 
@@ -83,5 +95,5 @@ export const useMidi = () => {
         };
     }, [handleMidiMessage]);
 
-    return { inputs, lastNote, error, isEnabled };
+    return { inputs, lastNote, activeNotes, error, isEnabled };
 };

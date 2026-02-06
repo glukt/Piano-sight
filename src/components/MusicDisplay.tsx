@@ -12,6 +12,7 @@ interface MusicDisplayProps {
     width?: number;
     height?: number;
     showLabels?: boolean;
+    cursorIndex?: number;
 }
 
 const VF = Vex.Flow;
@@ -21,7 +22,8 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
     bassNotes = [{ keys: ["c/3"], duration: "q" }],
     width = 600,
     height = 300,
-    showLabels = false
+    showLabels = false,
+    cursorIndex = 0
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -62,12 +64,20 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         // Create Voices
         // -----------------------------------------------------------------------
         const createVoice = (notesData: StaveNoteData[], clef: string) => {
-            const notes = notesData.map(n => {
+            const notes = notesData.map((n, i) => {
                 const staveNote = new VF.StaveNote({
                     clef: clef,
                     keys: n.keys,
                     duration: n.duration,
                 });
+
+                if (cursorIndex !== undefined) {
+                    if (i === cursorIndex) {
+                        staveNote.setStyle({ fillStyle: "#3b82f6", strokeStyle: "#3b82f6" }); // Blue 500
+                    } else if (i < cursorIndex) {
+                        staveNote.setStyle({ fillStyle: "#9ca3af", strokeStyle: "#9ca3af" }); // Gray 400
+                    }
+                }
 
                 if (showLabels) {
                     n.keys.forEach((key, index) => {
@@ -101,7 +111,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         trebleVoice.draw(context, trebleStave);
         bassVoice.draw(context, bassStave);
 
-    }, [trebleNotes, bassNotes, width, height, showLabels]);
+    }, [trebleNotes, bassNotes, width, height, showLabels, cursorIndex]);
 
     return <div ref={containerRef} className="bg-white p-4 rounded shadow flex justify-center" />;
 };

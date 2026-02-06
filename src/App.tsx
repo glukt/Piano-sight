@@ -6,11 +6,14 @@ import { WatermarkLayer } from './components/WatermarkLayer';
 import { LevelGenerator, Difficulty } from './engine/LevelGenerator';
 
 function App() {
-    const { inputs, lastNote, error, isEnabled } = useMidi();
+    const { inputs, lastNote, activeNotes, error, isEnabled } = useMidi();
     const [audioStarted, setAudioStarted] = useState(false);
     const [history, setHistory] = useState<number[]>([]);
     const [showWatermark, setShowWatermark] = useState(true);
     const [showNoteLabels, setShowNoteLabels] = useState(false);
+
+    // Game State
+    const [cursorIndex, setCursorIndex] = useState(0);
 
     // Level State
     const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.NOVICE);
@@ -21,6 +24,7 @@ function App() {
     const generateNewLevel = (diff: Difficulty) => {
         setDifficulty(diff);
         setLevelData(LevelGenerator.generate(diff));
+        setCursorIndex(0); // Reset cursor
     };
 
     const startAudio = async () => {
@@ -28,16 +32,93 @@ function App() {
         setAudioStarted(true);
     };
 
+    // Note to MIDI Number Map (Simple C4=60)
+    // Vexflow keys are like "c/4"
+    const parseKeyToMidi = (key: string): number => {
+        const [note, octave] = key.split('/');
+        const noteMap: Record<string, number> = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 };
+        return noteMap[note.toLowerCase()] + (parseInt(octave) + 1) * 12;
+    };
+
     useEffect(() => {
         if (lastNote && audioStarted) {
             audio.playNote(lastNote.note, lastNote.velocity);
-            setHistory(prev => [...prev.slice(-4), lastNote.note]);
+            setHistory(prev => [...prev.slice(-8), lastNote.note]);
 
             // Release after a short duration if no NoteOff handled yet
-            // In real app, we handle NoteOff events properly
             setTimeout(() => audio.releaseNote(lastNote.note), 500);
+
+            // -------------------------------------------------------------------
+            // GAME LOOP / VALIDATION
+            // -------------------------------------------------------------------
+            // Check current index
+            if (cursorIndex < levelData.treble.length) {
+                const targetTreble = levelData.treble[cursorIndex];
+                const targetBass = levelData.bass[cursorIndex];
+
+                // Collect all required MIDI numbers for this step
+                const requiredNotes = new Set<number>();
+                targetTreble.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+                targetBass.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+
+                // Check if ALL required notes are pressed
+                // NOTE: 'activeNotes' updates in real-time. 'lastNote' triggers this effect.
+                // We might need to check strict set equality or subset.
+                // For forgiveness, let's check if new note is ONE of the required notes.
+                // Re-think: Real piano loop requires holding all notes? Or just pressing them?
+                // Let's go with: If you play a correct note that is part of the chord, good. 
+                // BUT to advance, you must hit ALL notes. 
+
+                // Simple version: For single notes (Novice/Inter), simple check.
+                // For chords: We check activeNotes.
+
+                const isComplete = Array.from(requiredNotes).every(n => activeNotes.has(n));
+
+                // OR simpler trigger: Does this NEW note complete the chord?
+                // Let's assume user holds keys.
+                // We check if the set of active notes contains needed notes.
+                // But activeNotes inside this effect might be slightly stale if batching? 
+                // Actually activeNotes is in dependency, so this effect runs on update.
+
+                // Wait, this effect runs on `lastNote` change.
+                // We should run validation on `activeNotes` change as well? 
+                // Let's add activeNotes to dependecy if we want real-time chord validation.
+            }
         }
     }, [lastNote, audioStarted]);
+
+    // Separate Validation Effect to handle Multi-note (Chord) inputs
+    useEffect(() => {
+        if (!audioStarted) return;
+
+        if (cursorIndex >= levelData.treble.length) {
+            // Level Complete!
+            // Auto-generate new after delay?
+            // For now, let's just wait or loop?
+            setTimeout(() => generateNewLevel(difficulty), 500);
+            return;
+        }
+
+        const targetTreble = levelData.treble[cursorIndex];
+        const targetBass = levelData.bass[cursorIndex];
+
+        // Gather Target MIDI Numbers
+        const requiredNotes = new Set<number>();
+        targetTreble.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+        targetBass.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+
+        // Check Agreement
+        // Condition: Active notes must INCLUDE all required notes.
+        // (We allow extra notes? Maybe strict for now to avoid mess)
+        const allFound = Array.from(requiredNotes).every(n => activeNotes.has(n));
+
+        if (allFound) {
+            // SUCCESS
+            setCursorIndex(prev => prev + 1);
+            // Optional: Visual 'Flash' or sound?
+        }
+
+    }, [activeNotes, cursorIndex, levelData, difficulty, audioStarted]);
 
 
 
@@ -60,6 +141,7 @@ function App() {
                     trebleNotes={levelData.treble}
                     bassNotes={levelData.bass}
                     showLabels={showNoteLabels}
+                    cursorIndex={cursorIndex}
                 />
 
                 {/* Feedback / HUD */}

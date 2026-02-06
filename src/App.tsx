@@ -1,14 +1,26 @@
 import { useEffect, useState } from 'react';
 import { useMidi } from './hooks/useMidi';
 import { audio } from './audio/Synth';
-import { MusicDisplay } from './components/MusicDisplay';
+import { MusicDisplay, StaveNoteData } from './components/MusicDisplay';
 import { WatermarkLayer } from './components/WatermarkLayer';
+import { LevelGenerator, Difficulty } from './engine/LevelGenerator';
 
 function App() {
     const { inputs, lastNote, error, isEnabled } = useMidi();
     const [audioStarted, setAudioStarted] = useState(false);
     const [history, setHistory] = useState<number[]>([]);
     const [showWatermark, setShowWatermark] = useState(true);
+
+    // Level State
+    const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.NOVICE);
+    const [levelData, setLevelData] = useState<{ treble: StaveNoteData[], bass: StaveNoteData[] }>(
+        LevelGenerator.generate(Difficulty.NOVICE)
+    );
+
+    const generateNewLevel = (diff: Difficulty) => {
+        setDifficulty(diff);
+        setLevelData(LevelGenerator.generate(diff));
+    };
 
     const startAudio = async () => {
         await audio.init();
@@ -26,12 +38,7 @@ function App() {
         }
     }, [lastNote, audioStarted]);
 
-    // Manual Trigger for testing without MIDI
-    const manualTrigger = (note: number) => {
-        audio.playNote(note);
-        setHistory(prev => [...prev.slice(-4), note]);
-        setTimeout(() => audio.releaseNote(note), 500);
-    };
+
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-100 text-neutral-900 p-8 space-y-8">
@@ -48,13 +55,9 @@ function App() {
 
                 <MusicDisplay
                     width={600}
-                    height={200}
-                    notes={[
-                        { keys: ["c/4"], duration: "q" },
-                        { keys: ["d/4"], duration: "q" },
-                        { keys: ["e/4"], duration: "q" },
-                        { keys: ["f/4"], duration: "q" }
-                    ]}
+                    height={300}
+                    trebleNotes={levelData.treble}
+                    bassNotes={levelData.bass}
                 />
 
                 {/* Feedback / HUD */}
@@ -84,13 +87,27 @@ function App() {
                 )}
 
                 {/* Test Controls */}
-                <div className="flex gap-2">
-                    <button onClick={() => setShowWatermark(!showWatermark)} className="px-4 py-2 border rounded hover:bg-gray-50">
-                        {showWatermark ? 'Hide' : 'Show'} Overlay
-                    </button>
-                    <button onClick={() => manualTrigger(60)} className="px-4 py-2 border rounded hover:bg-gray-50">C4</button>
-                    <button onClick={() => manualTrigger(62)} className="px-4 py-2 border rounded hover:bg-gray-50">D4</button>
-                    <button onClick={() => manualTrigger(64)} className="px-4 py-2 border rounded hover:bg-gray-50">E4</button>
+                <div className="flex flex-col gap-2">
+                    <div className="flex gap-2 justify-center">
+                        <button onClick={() => setShowWatermark(!showWatermark)} className="px-4 py-2 border rounded hover:bg-gray-50 text-xs">
+                            {showWatermark ? 'Hide' : 'Show'} Overlay
+                        </button>
+                        <button onClick={() => generateNewLevel(difficulty)} className="px-4 py-2 bg-neutral-800 text-white rounded hover:bg-neutral-700 text-xs">
+                            New Music
+                        </button>
+                    </div>
+
+                    <div className="flex gap-2 justify-center text-xs">
+                        {(Object.keys(Difficulty) as Array<keyof typeof Difficulty>).map((k) => (
+                            <button
+                                key={k}
+                                onClick={() => generateNewLevel(Difficulty[k])}
+                                className={`px-3 py-1 border rounded ${difficulty === Difficulty[k] ? 'bg-blue-100 border-blue-500' : 'hover:bg-gray-50'}`}
+                            >
+                                {k}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 

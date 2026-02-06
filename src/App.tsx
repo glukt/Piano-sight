@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { useMidi } from './hooks/useMidi';
 import { audio } from './audio/Synth';
 import { MusicDisplay } from './components/MusicDisplay';
+import { WatermarkLayer } from './components/WatermarkLayer';
 
 function App() {
     const { inputs, lastNote, error, isEnabled } = useMidi();
     const [audioStarted, setAudioStarted] = useState(false);
     const [history, setHistory] = useState<number[]>([]);
+    const [showWatermark, setShowWatermark] = useState(true);
 
     const startAudio = async () => {
         await audio.init();
@@ -39,7 +41,11 @@ function App() {
             </header>
 
             {/* Main Display Area */}
-            <div className="w-full max-w-4xl bg-white rounded-xl shadow-lg p-8 flex flex-col items-center space-y-6">
+            <div className="relative w-full max-w-4xl bg-white rounded-xl shadow-lg p-8 flex flex-col items-center space-y-6 overflow-hidden">
+
+                {/* Watermark Overlay */}
+                <WatermarkLayer visible={showWatermark} overlayText="C Major" />
+
                 <MusicDisplay
                     width={600}
                     height={200}
@@ -79,6 +85,9 @@ function App() {
 
                 {/* Test Controls */}
                 <div className="flex gap-2">
+                    <button onClick={() => setShowWatermark(!showWatermark)} className="px-4 py-2 border rounded hover:bg-gray-50">
+                        {showWatermark ? 'Hide' : 'Show'} Overlay
+                    </button>
                     <button onClick={() => manualTrigger(60)} className="px-4 py-2 border rounded hover:bg-gray-50">C4</button>
                     <button onClick={() => manualTrigger(62)} className="px-4 py-2 border rounded hover:bg-gray-50">D4</button>
                     <button onClick={() => manualTrigger(64)} className="px-4 py-2 border rounded hover:bg-gray-50">E4</button>

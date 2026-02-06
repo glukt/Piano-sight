@@ -10,6 +10,7 @@ function App() {
     const [audioStarted, setAudioStarted] = useState(false);
     const [history, setHistory] = useState<number[]>([]);
     const [showWatermark, setShowWatermark] = useState(true);
+    const [showNoteLabels, setShowNoteLabels] = useState(false);
 
     // Level State
     const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.NOVICE);
@@ -58,6 +59,7 @@ function App() {
                     height={300}
                     trebleNotes={levelData.treble}
                     bassNotes={levelData.bass}
+                    showLabels={showNoteLabels}
                 />
 
                 {/* Feedback / HUD */}
@@ -91,6 +93,9 @@ function App() {
                     <div className="flex gap-2 justify-center">
                         <button onClick={() => setShowWatermark(!showWatermark)} className="px-4 py-2 border rounded hover:bg-gray-50 text-xs">
                             {showWatermark ? 'Hide' : 'Show'} Overlay
+                        </button>
+                        <button onClick={() => setShowNoteLabels(!showNoteLabels)} className="px-4 py-2 border rounded hover:bg-gray-50 text-xs">
+                            {showNoteLabels ? 'Hide' : 'Show'} Labels
                         </button>
                         <button onClick={() => generateNewLevel(difficulty)} className="px-4 py-2 bg-neutral-800 text-white rounded hover:bg-neutral-700 text-xs">
                             New Music

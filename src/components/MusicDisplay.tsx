@@ -11,6 +11,7 @@ interface MusicDisplayProps {
     bassNotes?: StaveNoteData[];
     width?: number;
     height?: number;
+    showLabels?: boolean;
 }
 
 const VF = Vex.Flow;
@@ -19,7 +20,8 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
     trebleNotes = [{ keys: ["c/4"], duration: "q" }],
     bassNotes = [{ keys: ["c/3"], duration: "q" }],
     width = 600,
-    height = 300
+    height = 300,
+    showLabels = false
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -60,11 +62,26 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         // Create Voices
         // -----------------------------------------------------------------------
         const createVoice = (notesData: StaveNoteData[], clef: string) => {
-            const notes = notesData.map(n => new VF.StaveNote({
-                clef: clef,
-                keys: n.keys,
-                duration: n.duration,
-            }));
+            const notes = notesData.map(n => {
+                const staveNote = new VF.StaveNote({
+                    clef: clef,
+                    keys: n.keys,
+                    duration: n.duration,
+                });
+
+                if (showLabels) {
+                    n.keys.forEach((key, index) => {
+                        const noteName = key.split('/')[0].toUpperCase();
+                        staveNote.addModifier(
+                            new VF.Annotation(noteName)
+                                .setVerticalJustification(VF.Annotation.VerticalJustify.BOTTOM)
+                                .setFont("Arial", 10, "")
+                            , index
+                        );
+                    });
+                }
+                return staveNote;
+            });
             const voice = new VF.Voice({ num_beats: 4, beat_value: 4 });
             voice.addTickables(notes);
             return voice;
@@ -84,7 +101,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         trebleVoice.draw(context, trebleStave);
         bassVoice.draw(context, bassStave);
 
-    }, [trebleNotes, bassNotes, width, height]);
+    }, [trebleNotes, bassNotes, width, height, showLabels]);
 
     return <div ref={containerRef} className="bg-white p-4 rounded shadow flex justify-center" />;
 };

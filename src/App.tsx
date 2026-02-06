@@ -49,13 +49,13 @@ function App() {
             </header>
 
             {/* Main Display Area */}
-            <div className="relative w-full max-w-4xl bg-white rounded-xl shadow-lg p-8 flex flex-col items-center space-y-6 overflow-hidden">
+            <div className="relative w-full max-w-5xl bg-white rounded-xl shadow-lg p-8 flex flex-col items-center space-y-6 overflow-hidden">
 
                 {/* Watermark Overlay */}
                 <WatermarkLayer visible={showWatermark} overlayText="C Major" />
 
                 <MusicDisplay
-                    width={600}
+                    width={800}
                     height={300}
                     trebleNotes={levelData.treble}
                     bassNotes={levelData.bass}

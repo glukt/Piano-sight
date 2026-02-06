@@ -26,7 +26,7 @@ const RANGE_TREBLE = [
 const getRandom = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
 export const LevelGenerator = {
-    generate(difficulty: Difficulty, length: number = 4): LevelData {
+    generate(difficulty: Difficulty, length: number = 8): LevelData {
         switch (difficulty) {
             case Difficulty.NOVICE:
                 return this.generateNovice(length);

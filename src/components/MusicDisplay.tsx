@@ -45,12 +45,12 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
 
         // Treble Stave
         const trebleStave = new VF.Stave(startX, startY, staveWidth);
-        trebleStave.addClef("treble").addTimeSignature("4/4");
+        trebleStave.addClef("treble"); // Removed explicit 4/4 to support variable lengths visually (or keep it if we want strict measures later)
         trebleStave.setContext(context).draw();
 
         // Bass Stave
         const bassStave = new VF.Stave(startX, startY + 100, staveWidth);
-        bassStave.addClef("bass").addTimeSignature("4/4");
+        bassStave.addClef("bass");
         bassStave.setContext(context).draw();
 
         // Connectors (Brace + Lines)
@@ -82,7 +82,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                 }
                 return staveNote;
             });
-            const voice = new VF.Voice({ num_beats: 4, beat_value: 4 });
+            const voice = new VF.Voice({ num_beats: notes.length, beat_value: 4 });
             voice.addTickables(notes);
             return voice;
         };

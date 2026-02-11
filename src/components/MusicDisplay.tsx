@@ -13,6 +13,9 @@ interface MusicDisplayProps {
     height?: number;
     showLabels?: boolean;
     cursorIndex?: number;
+    inputStatus?: 'waiting' | 'correct' | 'incorrect' | 'perfect';
+    onLayout?: (positions: number[]) => void;
+    isDarkMode?: boolean;
 }
 
 const VF = Vex.Flow;
@@ -23,7 +26,10 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
     width = 600,
     height = 300,
     showLabels = false,
-    cursorIndex = 0
+    cursorIndex = 0,
+    inputStatus = 'waiting',
+    onLayout,
+    isDarkMode = false
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -38,6 +44,11 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         renderer.resize(width, height);
         const context = renderer.getContext();
 
+        // Dark Mode Styling
+        const foregroundColor = isDarkMode ? "#e5e7eb" : "#000000"; // Gray-200 or Black
+        context.setFillStyle(foregroundColor);
+        context.setStrokeStyle(foregroundColor);
+
         // -----------------------------------------------------------------------
         // Create Staves
         // -----------------------------------------------------------------------
@@ -47,7 +58,10 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
 
         // Treble Stave
         const trebleStave = new VF.Stave(startX, startY, staveWidth);
-        trebleStave.addClef("treble"); // Removed explicit 4/4 to support variable lengths visually (or keep it if we want strict measures later)
+        trebleStave.addClef("treble");
+
+        // Ensure stave lines match theme
+        // VexFlow Stave styling is tricky, we can set context prop before drawing
         trebleStave.setContext(context).draw();
 
         // Bass Stave
@@ -71,9 +85,18 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                     duration: n.duration,
                 });
 
+                // Apply Theme Styles (Default notes)
+                staveNote.setStyle({ fillStyle: foregroundColor, strokeStyle: foregroundColor });
+
                 if (cursorIndex !== undefined) {
                     if (i === cursorIndex) {
-                        staveNote.setStyle({ fillStyle: "#3b82f6", strokeStyle: "#3b82f6" }); // Blue 500
+                        // Color current note based on input status
+                        let color = "#3b82f6"; // Default Blue (Waiting)
+                        if (inputStatus === 'correct') color = "#22c55e"; // Green
+                        if (inputStatus === 'incorrect') color = "#ef4444"; // Red
+                        if (inputStatus === 'perfect') color = "#FFD700"; // Gold
+
+                        staveNote.setStyle({ fillStyle: color, strokeStyle: color });
                     } else if (i < cursorIndex) {
                         staveNote.setStyle({ fillStyle: "#9ca3af", strokeStyle: "#9ca3af" }); // Gray 400
                     }
@@ -106,12 +129,28 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         new VF.Formatter()
             .joinVoices([trebleVoice])
             .joinVoices([bassVoice])
+            // .format([trebleVoice, bassVoice], staveWidth - 50); // Original
+            // To ensure linear spacing for rhythm, we might want to use a different format call?
+            // But Formatter uses note durations.
+            // Using a large available width ensures spacing.
             .format([trebleVoice, bassVoice], staveWidth - 50);
 
         trebleVoice.draw(context, trebleStave);
         bassVoice.draw(context, bassStave);
 
-    }, [trebleNotes, bassNotes, width, height, showLabels, cursorIndex]);
+        // -----------------------------------------------------------------------
+        // Extract Layout (for external synchronization)
+        // -----------------------------------------------------------------------
+        if (onLayout) {
+            // Get X positions of treble notes
+            const tickables = trebleVoice.getTickables();
+            const positions = tickables.map(t => (t as any).getAbsoluteX());
 
-    return <div ref={containerRef} className="bg-white p-4 rounded shadow flex justify-center" />;
+            // Note: getAbsoluteX() returns the center/x of the note head properly formatted
+            onLayout(positions);
+        }
+
+    }, [trebleNotes, bassNotes, width, height, showLabels, cursorIndex, inputStatus, isDarkMode, onLayout]);
+
+    return <div ref={containerRef} className={`p-4 rounded shadow flex justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`} />;
 };

@@ -1,35 +1,115 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useMidi } from './hooks/useMidi';
 import { audio } from './audio/Synth';
 import { MusicDisplay, StaveNoteData } from './components/MusicDisplay';
-import { WatermarkLayer } from './components/WatermarkLayer';
 import { LevelGenerator, Difficulty } from './engine/LevelGenerator';
+import { midiToNoteName } from './utils/midiUtils';
+import { useRhythmEngine } from './hooks/useRhythmEngine';
 
 function App() {
-    const { inputs, lastNote, activeNotes, error, isEnabled } = useMidi();
+    // Audio Event Handlers (Direct Callbacks for Low Latency)
+    const onNoteOn = useRef((note: number, velocity: number) => {
+        if (audio.isInitialized) audio.playNote(note, velocity);
+    });
+
+    const onNoteOff = useRef((note: number) => {
+        if (audio.isInitialized) audio.releaseNote(note);
+    });
+
+    // useMidi Hook with Callbacks
+    const { activeNotes, error, isEnabled } = useMidi({
+        onNoteOn: (n, v) => onNoteOn.current(n, v),
+        onNoteOff: (n) => onNoteOff.current(n)
+    });
+
     const [audioStarted, setAudioStarted] = useState(false);
-    const [history, setHistory] = useState<number[]>([]);
-    const [showWatermark, setShowWatermark] = useState(true);
+    const [isAudioLoading, setIsAudioLoading] = useState(false);
     const [showNoteLabels, setShowNoteLabels] = useState(false);
 
     // Game State
     const [cursorIndex, setCursorIndex] = useState(0);
+    const [inputStatus, setInputStatus] = useState<'waiting' | 'correct' | 'incorrect' | 'perfect'>('waiting');
+    const [waitingForRelease, setWaitingForRelease] = useState(false);
+    const [gameMode, setGameMode] = useState<'both' | 'treble' | 'bass'>('both');
+    const [isRhythmMode, setIsRhythmMode] = useState(false);
+    const [countDown, setCountDown] = useState<number | null>(null);
+    const [streak, setStreak] = useState(0);
+    const [maxStreak, setMaxStreak] = useState(0);
+    const [lastHitType, setLastHitType] = useState<'perfect' | 'good' | 'okay' | null>(null);
+    const [preHeld, setPreHeld] = useState(false); // To prevent auto-triggering held notes
+    const [notePositions, setNotePositions] = useState<number[]>([]);
+    const [isDarkMode, setIsDarkMode] = useState(true); // Default to Dark Mode for Modern Classical theme
+
+    // Scoring & Stats
+    const [score, setScore] = useState({ correct: 0, incorrect: 0 });
+    const [errorStats, setErrorStats] = useState<Record<string, number>>({});
 
     // Level State
     const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.NOVICE);
     const [levelData, setLevelData] = useState<{ treble: StaveNoteData[], bass: StaveNoteData[] }>(
-        LevelGenerator.generate(Difficulty.NOVICE)
+        LevelGenerator.generate(Difficulty.NOVICE, errorStats)
     );
 
-    const generateNewLevel = (diff: Difficulty) => {
+    // Rhythm Engine (Depends on levelData)
+    const BPM = 60;
+    const RHYTHM_LEAD_IN = 2; // 2 Seconds of visual lead-in
+    const { isPlaying: isRhythmPlaying, playheadX, elapsedTime, start: startRhythm, stop: stopRhythm } = useRhythmEngine(BPM, Math.ceil(levelData.treble.length / 4));
+
+    const generateNewLevel = (diff: Difficulty, keepRhythm = false) => {
         setDifficulty(diff);
-        setLevelData(LevelGenerator.generate(diff));
+        setLevelData(LevelGenerator.generate(diff, errorStats));
         setCursorIndex(0); // Reset cursor
+        setStreak(0);
+        setInputStatus('waiting');
+        setWaitingForRelease(false);
+        if (keepRhythm) {
+            startRhythm(RHYTHM_LEAD_IN); // Restart with lead-in
+        } else {
+            stopRhythm();
+        }
     };
 
     const startAudio = async () => {
-        await audio.init();
-        setAudioStarted(true);
+        setIsAudioLoading(true);
+        try {
+            await audio.init();
+            setAudioStarted(true);
+        } catch (e) {
+            console.error("Audio failed to start", e);
+            alert("Failed to load piano samples. Check console.");
+        } finally {
+            setIsAudioLoading(false);
+        }
+    };
+
+    const testAudio = () => {
+        if (!audioStarted) return;
+        audio.playNote(60, 100); // Play C4
+        setTimeout(() => audio.releaseNote(60), 500);
+    };
+
+    const handleStartRhythm = () => {
+        if (isRhythmPlaying) {
+            stopRhythm();
+            return;
+        }
+
+        // Auto-enable visual mode if starting rhythm
+        if (!isRhythmMode) setIsRhythmMode(true);
+
+        let count = 3;
+        setCountDown(count);
+
+        const interval = setInterval(() => {
+            count--;
+            if (count > 0) {
+                setCountDown(count);
+            } else {
+                clearInterval(interval);
+                setCountDown(null);
+                startRhythm(RHYTHM_LEAD_IN);
+            }
+        }, 1000);
     };
 
     // Note to MIDI Number Map (Simple C4=60)
@@ -40,174 +120,432 @@ function App() {
         return noteMap[note.toLowerCase()] + (parseInt(octave) + 1) * 12;
     };
 
-    useEffect(() => {
-        if (lastNote && audioStarted) {
-            audio.playNote(lastNote.note, lastNote.velocity);
-            setHistory(prev => [...prev.slice(-8), lastNote.note]);
+    // Calculate Playhead X position in PIXELS based on time and note positions
+    const getPlayheadPixelX = (): number => {
+        if (notePositions.length === 0) return 20; // Default start
 
-            // Release after a short duration if no NoteOff handled yet
-            setTimeout(() => audio.releaseNote(lastNote.note), 500);
-
-            // -------------------------------------------------------------------
-            // GAME LOOP / VALIDATION
-            // -------------------------------------------------------------------
-            // Check current index
-            if (cursorIndex < levelData.treble.length) {
-                const targetTreble = levelData.treble[cursorIndex];
-                const targetBass = levelData.bass[cursorIndex];
-
-                // Collect all required MIDI numbers for this step
-                const requiredNotes = new Set<number>();
-                targetTreble.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
-                targetBass.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
-
-                // Check if ALL required notes are pressed
-                // NOTE: 'activeNotes' updates in real-time. 'lastNote' triggers this effect.
-                // We might need to check strict set equality or subset.
-                // For forgiveness, let's check if new note is ONE of the required notes.
-                // Re-think: Real piano loop requires holding all notes? Or just pressing them?
-                // Let's go with: If you play a correct note that is part of the chord, good. 
-                // BUT to advance, you must hit ALL notes. 
-
-                // Simple version: For single notes (Novice/Inter), simple check.
-                // For chords: We check activeNotes.
-
-                const isComplete = Array.from(requiredNotes).every(n => activeNotes.has(n));
-
-                // OR simpler trigger: Does this NEW note complete the chord?
-                // Let's assume user holds keys.
-                // We check if the set of active notes contains needed notes.
-                // But activeNotes inside this effect might be slightly stale if batching? 
-                // Actually activeNotes is in dependency, so this effect runs on update.
-
-                // Wait, this effect runs on `lastNote` change.
-                // We should run validation on `activeNotes` change as well? 
-                // Let's add activeNotes to dependecy if we want real-time chord validation.
-            }
+        // Case 1: Lead-in (Negative Time)
+        // Interpolate linearly into the first note
+        if (elapsedTime < 0) {
+            const firstNoteX = notePositions[0];
+            const startX = 20; // Stave start offset
+            // Map -LEAD_IN -> 0 seconds to startX -> firstNoteX
+            const progress = (elapsedTime + RHYTHM_LEAD_IN) / RHYTHM_LEAD_IN; // 0 to 1
+            return startX + (firstNoteX - startX) * progress;
         }
-    }, [lastNote, audioStarted]);
 
-    // Separate Validation Effect to handle Multi-note (Chord) inputs
+        // Case 2: During Notes
+        const noteDuration = 60 / BPM;
+
+        // Find current note segment
+        const currentIndex = Math.floor(elapsedTime / noteDuration);
+        const segmentProgress = (elapsedTime % noteDuration) / noteDuration;
+
+        const currentX = notePositions[currentIndex];
+        const nextX = notePositions[currentIndex + 1];
+
+        if (currentX !== undefined && nextX !== undefined) {
+            // Interpolate between current and next note
+            return currentX + (nextX - currentX) * segmentProgress;
+        } else if (currentX !== undefined) {
+            // Past last note? Extrapolate with previous width
+            const prevX = notePositions[currentIndex - 1] || 20;
+            const width = currentX - prevX;
+            return currentX + width * segmentProgress;
+        }
+
+        return 20; // Fallback
+    };
+
+    // Note: Audio Playing is now handled by useMidi callbacks!
+
+    // Effect: Prevent Holding Notes (Strict Attack)
+    useEffect(() => {
+        // When cursor moves to new note, check if we are ALREADY holding the required notes
+        const targetTreble = levelData.treble[cursorIndex];
+        const targetBass = levelData.bass[cursorIndex];
+        const requiredNotes = new Set<number>();
+
+        if (gameMode !== 'bass') targetTreble?.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+        if (gameMode !== 'treble') targetBass?.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+
+        // If any required note is currently active (held), flag it as PreHeld
+        const isHolding = Array.from(requiredNotes).some(n => activeNotes.has(n));
+        setPreHeld(isHolding);
+
+    }, [cursorIndex, levelData, gameMode, activeNotes]); // Check whenever these change. Note: activeNotes dependency ensures we clear it when released!
+
+    // Validation Effect
     useEffect(() => {
         if (!audioStarted) return;
 
         if (cursorIndex >= levelData.treble.length) {
             // Level Complete!
-            // Auto-generate new after delay?
-            // For now, let's just wait or loop?
-            setTimeout(() => generateNewLevel(difficulty), 500);
+            setTimeout(() => generateNewLevel(difficulty, isRhythmMode), 500); // Continuous play in Rhythm Mode
             return;
+        }
+
+        const noteDuration = 60 / BPM;
+        const targetTime = cursorIndex * noteDuration;
+        const timeWindow = 0.35; // 350ms window (more forgiving)
+
+        // RHYTHM MODE: Miss Detection (Time passed)
+        // RHYTHM MODE: Miss Detection (Time passed)
+        if (isRhythmMode && isRhythmPlaying) {
+            // Pass condition: Time window expired (0.35s late)
+            if (elapsedTime > targetTime + timeWindow) {
+                // Must move on!
+                setCursorIndex(prev => prev + 1);
+                setInputStatus('waiting');
+                setStreak(0);
+
+                if (inputStatus !== 'incorrect') {
+                    setInputStatus('incorrect');
+                    setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
+                }
+                return;
+            }
         }
 
         const targetTreble = levelData.treble[cursorIndex];
         const targetBass = levelData.bass[cursorIndex];
 
-        // Gather Target MIDI Numbers
+        // Gather Target MIDI Numbers based on Game Mode
         const requiredNotes = new Set<number>();
-        targetTreble.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
-        targetBass.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
 
-        // Check Agreement
-        // Condition: Active notes must INCLUDE all required notes.
-        // (We allow extra notes? Maybe strict for now to avoid mess)
-        const allFound = Array.from(requiredNotes).every(n => activeNotes.has(n));
-
-        if (allFound) {
-            // SUCCESS
-            setCursorIndex(prev => prev + 1);
-            // Optional: Visual 'Flash' or sound?
+        if (gameMode === 'both' || gameMode === 'treble') {
+            targetTreble.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+        }
+        if (gameMode === 'both' || gameMode === 'bass') {
+            targetBass.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
         }
 
-    }, [activeNotes, cursorIndex, levelData, difficulty, audioStarted]);
+        // Filter Played Notes based on Game Mode (Treble >= 60, Bass < 60)
+        // Actually, simpler: Just check if 'requiredNotes' are present in 'activeNotes'.
+        // BUT, we want to allow user to play anything? Or restrict?
+        // If mode is Treble Only, and user plays Bass C3, should it fail?
+        // Probably ignore it.
+
+        // Define "Relevant" active notes
+        const relevantActiveNotes = new Set<number>();
+        activeNotes.forEach(n => {
+            if (gameMode === 'both') relevantActiveNotes.add(n);
+            else if (gameMode === 'treble' && n >= 60) relevantActiveNotes.add(n);
+            else if (gameMode === 'bass' && n < 60) relevantActiveNotes.add(n);
+        });
+
+        // ----------------------------------------------------
+        // Logic: Waiting for Release
+        // ----------------------------------------------------
+        if (waitingForRelease) {
+            // Wait until ALL relevant notes are released
+            if (relevantActiveNotes.size === 0) {
+                setCursorIndex(prev => prev + 1);
+                setInputStatus('waiting');
+                setWaitingForRelease(false);
+            }
+            return;
+        }
+
+        // ----------------------------------------------------
+        // Logic: Note Validation
+        // ----------------------------------------------------
+
+        if (requiredNotes.size === 0) {
+            // Edge case: Rest? Auto advance.
+            setCursorIndex(prev => prev + 1);
+            return;
+        }
+
+        // Check if all needed notes are present
+        const relevantArray = Array.from(relevantActiveNotes);
+        const allFound = Array.from(requiredNotes).every(n => activeNotes.has(n));
+        const hasIncorrect = relevantArray.some(n => !requiredNotes.has(n));
+
+        // STRICT ATTACK CHECK: If pre-held, wait until release
+        if (preHeld) {
+            // Only clear PreHeld when the offending notes are released
+            const stillHolding = Array.from(requiredNotes).some(n => activeNotes.has(n));
+            if (!stillHolding) {
+                // Released! Now we can accept input
+                setPreHeld(false);
+            }
+            // Block validation while holding
+            return;
+        }
+
+        // 1. Check for Incorrect Notes (in relevant range)
+        // 1. Check for Incorrect Notes (in relevant range)
+        if (hasIncorrect) {
+            if (inputStatus !== 'incorrect') {
+                setInputStatus('incorrect');
+                setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
+                setStreak(0);
+
+                // Track Error Stats
+                relevantArray.filter(n => !requiredNotes.has(n)).forEach(n => {
+                    const name = midiToNoteName(n);
+                    setErrorStats(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
+                });
+            }
+            return;
+        }
+
+        // 2. Check for All Correct Notes
+        // allFound is already calculated above using activeNotes
+
+        if (allFound) {
+            // RHYTHM CHECK: Only allow if within time window
+            if (isRhythmMode && isRhythmPlaying) {
+                const diff = Math.abs(elapsedTime - targetTime);
+
+                // Graded Scoring:
+                // Perfect: < 0.1s
+                // Good: < 0.25s
+                // Okay: < 0.35s
+
+                if (diff > timeWindow) {
+                    // Too late/early (handled by auto-miss or just ignore if early)
+                    return;
+                }
+
+                // We have a hit! determine grade
+                if (diff <= 0.1) {
+                    setLastHitType('perfect');
+                    setScore(s => ({ ...s, correct: s.correct + 5 })); // Bonus points
+                    setInputStatus('perfect');
+                    setStreak(prev => prev + 1);
+                } else if (diff <= 0.25) {
+                    setLastHitType('good');
+                    setScore(s => ({ ...s, correct: s.correct + 2 }));
+                    setInputStatus('correct'); // Use Green for Good
+                    setStreak(prev => prev + 1);
+                } else {
+                    setLastHitType('okay');
+                    setScore(s => ({ ...s, correct: s.correct + 1 }));
+                    setInputStatus('correct'); // Use Green for Okay
+                    setStreak(prev => prev + 1);
+                }
+
+                if (streak + 1 > maxStreak) setMaxStreak(streak + 1);
+                setCursorIndex(prev => prev + 1);
+                setWaitingForRelease(true);
+                return;
+            }
+
+            // Normal Mode (Wait Mode) validation
+            setScore(s => ({ ...s, correct: s.correct + 1 }));
+            if (streak + 1 > maxStreak) setMaxStreak(streak + 1);
+            setStreak(prev => prev + 1);
+
+            setCursorIndex(prev => prev + 1);
+            setWaitingForRelease(true);
+
+            // Visual Feedback
+            setLastHitType('good');
+            setInputStatus('correct');
+        } else {
+            if (inputStatus !== 'waiting') setInputStatus('waiting');
+        }
+
+    }, [activeNotes, cursorIndex, levelData, audioStarted, difficulty, waitingForRelease, gameMode, isRhythmMode, isRhythmPlaying, elapsedTime, inputStatus, preHeld, streak, maxStreak, score]);
 
 
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-100 text-neutral-900 p-8 space-y-8">
-            <header className="text-center space-y-2">
-                <h1 className="text-4xl font-bold tracking-tight">Piano Sight</h1>
-                <p className="text-neutral-500">MIDI Sight-Reading Trainer</p>
+        <div className={`min-h-screen flex flex-col items-center p-8 transition-colors duration-500 ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
+            <header className="mb-8 text-center relative w-full max-w-4xl">
+                <h1 className="text-4xl font-bold mb-2">Piano Sight Reading</h1>
+
+                <button
+                    onClick={() => setIsDarkMode(!isDarkMode)}
+                    className={`absolute right-0 top-0 px-4 py-2 rounded-full border ${isDarkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'} hover:scale-105 transition`}
+                >
+                    {isDarkMode ? '☀️ Light' : '🌙 Dark'}
+                </button>
+
+                <div className="flex justify-center gap-4 text-lg items-center">
+                    <span className={`text-xs uppercase tracking-wider ${isEnabled ? 'text-emerald-500' : 'text-red-500'}`}>
+                        {isEnabled ? '🎹 MIDI Active' : '🔌 No MIDI'}
+                    </span>
+                    <span className="w-px h-4 bg-gray-400/30"></span>
+                    <span>Score: <span className="text-green-500">{score.correct}</span> / <span className="text-red-500">{score.incorrect}</span></span>
+                    {isRhythmMode && (
+                        <span className={`font-bold ${playheadX > 100 ? 'text-gray-400' : ''}`}>
+                            ⏱ {(levelData.treble.length * (60 / BPM) - elapsedTime).toFixed(1)}s
+                        </span>
+                    )}
+                </div>
             </header>
 
             {/* Main Display Area */}
-            <div className="relative w-full max-w-5xl bg-white rounded-xl shadow-lg p-8 flex flex-col items-center space-y-6 overflow-hidden">
+            <div className="relative w-full max-w-5xl bg-white rounded-sm shadow-xl p-10 flex flex-col items-center space-y-8 border-t-4 border-[#D4AF37]">
 
-                {/* Watermark Overlay */}
-                <WatermarkLayer visible={showWatermark} overlayText="C Major" />
+                {/* Count Down Overlay */}
+                {countDown !== null && (
+                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+                        <span className="text-9xl font-bold text-[#D4AF37] animate-pulse">{countDown}</span>
+                    </div>
+                )}
 
-                <MusicDisplay
-                    width={800}
-                    height={300}
-                    trebleNotes={levelData.treble}
-                    bassNotes={levelData.bass}
-                    showLabels={showNoteLabels}
-                    cursorIndex={cursorIndex}
-                />
+                {/* Piano Sheet Display */}
+                <div className="relative">
+                    <MusicDisplay
+                        trebleNotes={levelData.treble}
+                        bassNotes={levelData.bass}
+                        width={window.innerWidth < 800 ? window.innerWidth - 32 : 800}
+                        cursorIndex={cursorIndex}
+                        inputStatus={inputStatus}
+                        onLayout={setNotePositions}
+                        isDarkMode={isDarkMode}
+                    />
 
-                {/* Feedback / HUD */}
-                <div className="flex w-full justify-between items-center text-sm font-mono border-t pt-4">
-                    <div>
-                        <span className={`inline-block w-2 h-2 rounded-full mr-2 ${isEnabled ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                        MIDI: {isEnabled ? `${inputs.length} Device(s)` : 'Not Connected'}
-                    </div>
-                    <div>
-                        Last Note: <span className="font-bold text-lg">{lastNote?.note || '--'}</span>
-                    </div>
-                    <div>
-                        Audio: {audioStarted ? 'Active' : 'Standby'}
-                    </div>
+                    {/* Rhythm Playhead Overlay */}
+                    {isRhythmMode && (
+                        <div
+                            className="absolute top-0 bottom-0 w-1 bg-red-500/70 shadow-[0_0_10px_rgba(239,68,68,0.8)] transition-all duration-75 ease-linear pointer-events-none"
+                            style={{
+                                left: `${getPlayheadPixelX()}px`,
+                                // Remove percentage based left
+                            }}
+                        />
+                    )}
+
+                    {/* Feedback Popups */}
+                    {streak >= 5 && isRhythmMode && (
+                        <div className="absolute top-[-40px] right-0 animate-bounce text-yellow-500 font-bold text-xl drop-shadow-md">
+                            🔥 {streak} Streak!
+                        </div>
+                    )}
+                    {lastHitType === 'perfect' && (
+                        <div className="absolute top-[40%] left-[50%] transform -translate-x-1/2 -translate-y-1/2 animate-pop text-4xl text-gold font-black drop-shadow-[0_0_15px_rgba(255,215,0,0.8)] z-50 pointer-events-none">
+                            PERFECT!
+                        </div>
+                    )}
+                    {lastHitType === 'good' && (
+                        <div className="absolute top-[40%] left-[50%] transform -translate-x-1/2 -translate-y-1/2 animate-pop text-3xl text-green-400 font-bold drop-shadow-md z-50 pointer-events-none">
+                            GOOD
+                        </div>
+                    )}
+                    {lastHitType === 'okay' && (
+                        <div className="absolute top-[40%] left-[50%] transform -translate-x-1/2 -translate-y-1/2 animate-fade-up text-2xl text-blue-400 font-bold drop-shadow-md z-50 pointer-events-none">
+                            OKAY
+                        </div>
+                    )}
                 </div>
+                {/* Streak Counter */}
+                <div className="absolute top-4 right-8 flex flex-col items-center z-10">
+                    <div className="text-xs text-gray-400 uppercase tracking-widest">Streak</div>
+                    <div key={streak} className={`text-4xl font-bold transition-all ${streak >= 5 ? 'text-[#D4AF37] animate-pop' : 'text-gray-600'}`}>
+                        {streak}
+                    </div>
+                    {maxStreak > 0 && <div className="text-[10px] text-gray-300 mt-1">BEST: {maxStreak}</div>}
+                </div>
+
             </div>
 
             {/* Controls */}
-            <div className="flex gap-4">
-                {!audioStarted && (
-                    <button
-                        onClick={startAudio}
-                        className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition shadow"
-                    >
-                        Start Audio Engine
-                    </button>
-                )}
-
-                {/* Test Controls */}
+            <div className={`mt-8 flex gap-4 p-6 rounded-xl shadow-lg border transition-colors duration-500 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
                 <div className="flex flex-col gap-2">
-                    <div className="flex gap-2 justify-center">
-                        <button onClick={() => setShowWatermark(!showWatermark)} className="px-4 py-2 border rounded hover:bg-gray-50 text-xs">
-                            {showWatermark ? 'Hide' : 'Show'} Overlay
-                        </button>
-                        <button onClick={() => setShowNoteLabels(!showNoteLabels)} className="px-4 py-2 border rounded hover:bg-gray-50 text-xs">
-                            {showNoteLabels ? 'Hide' : 'Show'} Labels
-                        </button>
-                        <button onClick={() => generateNewLevel(difficulty)} className="px-4 py-2 bg-neutral-800 text-white rounded hover:bg-neutral-700 text-xs">
-                            New Music
-                        </button>
-                    </div>
-
-                    <div className="flex gap-2 justify-center text-xs">
-                        {(Object.keys(Difficulty) as Array<keyof typeof Difficulty>).map((k) => (
+                    <label className={`font-semibold text-sm uppercase tracking-wide opacity-70 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Difficulty</label>
+                    <div className="flex gap-2">
+                        {(Object.keys(Difficulty) as Array<keyof typeof Difficulty>).map(k => (
                             <button
                                 key={k}
                                 onClick={() => generateNewLevel(Difficulty[k])}
-                                className={`px-3 py-1 border rounded ${difficulty === Difficulty[k] ? 'bg-blue-100 border-blue-500' : 'hover:bg-gray-50'}`}
+                                className={`px-4 py-2 rounded-lg transition-all ${difficulty === Difficulty[k]
+                                    ? 'bg-blue-600 text-white shadow-lg scale-105'
+                                    : (isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
+                                    }`}
                             >
                                 {k}
                             </button>
                         ))}
                     </div>
                 </div>
-            </div>
 
-            {error && (
-                <div className="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200">
-                    {error}
+                <div className={`w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-auto'}`}></div>
+
+                <div className="flex flex-col gap-2">
+                    <label className={`font-semibold text-sm uppercase tracking-wide opacity-70 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Game Mode</label>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleStartRhythm}
+                            className={`px-6 py-2 rounded-lg font-bold transition-all ${isRhythmMode
+                                ? 'bg-red-500 text-white shadow-lg scale-105 animate-pulse'
+                                : (isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
+                                }`}
+                        >
+                            {isRhythmMode ? (countDown ? `Starting...` : 'STOP RHYTHM') : 'START RHYTHM'}
+                        </button>
+                    </div>
                 </div>
-            )}
 
-            <div className="text-xs text-gray-400">
-                History: {history.join(', ')}
+                <div className={`w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-auto'}`}></div>
+
+                {/* Hand Selector */}
+                <div className="flex flex-col gap-2">
+                    <label className={`font-semibold text-sm uppercase tracking-wide opacity-70 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Hand</label>
+                    <div className="flex gap-2">
+                        {(['both', 'treble', 'bass'] as const).map(m => (
+                            <button
+                                key={m}
+                                onClick={() => setGameMode(m)}
+                                className={`px-4 py-2 rounded-lg uppercase text-xs font-bold transition-all ${gameMode === m
+                                    ? (isDarkMode ? 'bg-gray-600 text-white' : 'bg-gray-800 text-white')
+                                    : (isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-500')
+                                    }`}
+                            >
+                                {m}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className={`w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-auto'}`}></div>
+
+                {/* System Controls */}
+                <div className="flex flex-col gap-2 justify-center">
+                    {!audioStarted ? (
+                        <button
+                            onClick={startAudio}
+                            disabled={isAudioLoading}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${isDarkMode
+                                ? 'bg-emerald-900 text-emerald-100 hover:bg-emerald-800 border border-emerald-700'
+                                : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-200'
+                                }`}
+                        >
+                            {isAudioLoading ? 'Loading...' : 'Init Audio'}
+                        </button>
+                    ) : (
+                        <button
+                            onClick={testAudio}
+                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide opacity-70 hover:opacity-100 transition-all ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-600'
+                                }`}
+                        >
+                            Test Sound
+                        </button>
+                    )}
+                    <button
+                        onClick={() => setShowNoteLabels(!showNoteLabels)}
+                        className={`text-[10px] uppercase tracking-wider underline decoration-dotted ${isDarkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
+                    >
+                        {showNoteLabels ? 'Hide Labels' : 'Show Labels'}
+                    </button>
+                </div>
             </div>
-        </div>
+
+
+
+            {
+                error && (
+                    <div className="p-4 bg-red-50 text-red-700 border border-red-200 text-sm">
+                        {error}
+                    </div>
+                )
+            }
+
+        </div >
     );
 }
 

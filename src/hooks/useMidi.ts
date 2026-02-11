@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
 export type MidiNote = {
     note: number;
@@ -12,12 +12,26 @@ export type MidiInputDevice = {
     manufacturer: string;
 };
 
-export const useMidi = () => {
+type MidiCallbacks = {
+    onNoteOn?: (note: number, velocity: number) => void;
+    onNoteOff?: (note: number) => void;
+};
+
+export const useMidi = ({ onNoteOn, onNoteOff }: MidiCallbacks = {}) => {
     const [inputs, setInputs] = useState<MidiInputDevice[]>([]);
     const [activeNotes, setActiveNotes] = useState<Set<number>>(new Set());
     const [lastNote, setLastNote] = useState<MidiNote | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isEnabled, setIsEnabled] = useState(false);
+
+    // Refs for callbacks to avoid effect dependencies
+    const onNoteOnRef = useRef(onNoteOn);
+    const onNoteOffRef = useRef(onNoteOff);
+
+    useEffect(() => {
+        onNoteOnRef.current = onNoteOn;
+        onNoteOffRef.current = onNoteOff;
+    }, [onNoteOn, onNoteOff]);
 
     // Helper to parse MIDI message
     const handleMidiMessage = useCallback((event: WebMidi.MIDIMessageEvent) => {
@@ -33,6 +47,7 @@ export const useMidi = () => {
                 newSet.add(note);
                 return newSet;
             });
+            onNoteOnRef.current?.(note, velocity);
         }
         // Note Off (128) or Note On with 0 velocity
         else if (command === 8 || (command === 9 && velocity === 0)) {
@@ -41,6 +56,7 @@ export const useMidi = () => {
                 newSet.delete(note);
                 return newSet;
             });
+            onNoteOffRef.current?.(note);
         }
     }, []);
 

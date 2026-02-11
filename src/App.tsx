@@ -38,7 +38,7 @@ function App() {
     const [lastHitType, setLastHitType] = useState<'perfect' | 'good' | 'okay' | null>(null);
     const [preHeld, setPreHeld] = useState(false); // To prevent auto-triggering held notes
     const [notePositions, setNotePositions] = useState<number[]>([]);
-    const [isDarkMode, setIsDarkMode] = useState(true); // Default to Dark Mode for Modern Classical theme
+    const [isDarkMode, setIsDarkMode] = useState(false); // Default to Light Mode
 
     // Scoring & Stats
     const [score, setScore] = useState({ correct: 0, incorrect: 0 });
@@ -89,8 +89,12 @@ function App() {
     };
 
     const handleStartRhythm = () => {
-        if (isRhythmPlaying) {
+        if (isRhythmPlaying || isRhythmMode) {
             stopRhythm();
+            setIsRhythmMode(false);
+            setCursorIndex(0); // Reset position
+            setInputStatus('waiting');
+            setStreak(0);
             return;
         }
 
@@ -398,6 +402,7 @@ function App() {
                         inputStatus={inputStatus}
                         onLayout={setNotePositions}
                         isDarkMode={isDarkMode}
+                        showLabels={showNoteLabels}
                     />
 
                     {/* Rhythm Playhead Overlay */}

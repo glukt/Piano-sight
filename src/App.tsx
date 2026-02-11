@@ -5,6 +5,7 @@ import { MusicDisplay, StaveNoteData } from './components/MusicDisplay';
 import { LevelGenerator, Difficulty } from './engine/LevelGenerator';
 import { midiToNoteName } from './utils/midiUtils';
 import { useRhythmEngine } from './hooks/useRhythmEngine';
+import { StatisticsPanel } from './components/StatisticsPanel';
 
 function App() {
     // Audio Event Handlers (Direct Callbacks for Low Latency)
@@ -43,6 +44,7 @@ function App() {
     // Scoring & Stats
     const [score, setScore] = useState({ correct: 0, incorrect: 0 });
     const [errorStats, setErrorStats] = useState<Record<string, number>>({});
+    const [hitStats, setHitStats] = useState<Record<string, number>>({});
 
     // Level State
     const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.NOVICE);
@@ -331,6 +333,12 @@ function App() {
                     setStreak(prev => prev + 1);
                 }
 
+                // Track Hit Stats
+                relevantArray.filter(n => requiredNotes.has(n)).forEach(n => {
+                    const name = midiToNoteName(n);
+                    setHitStats(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
+                });
+
                 if (streak + 1 > maxStreak) setMaxStreak(streak + 1);
                 setCursorIndex(prev => prev + 1);
                 setWaitingForRelease(true);
@@ -341,6 +349,12 @@ function App() {
             setScore(s => ({ ...s, correct: s.correct + 1 }));
             if (streak + 1 > maxStreak) setMaxStreak(streak + 1);
             setStreak(prev => prev + 1);
+
+            // Track Hit Stats
+            relevantArray.filter(n => requiredNotes.has(n)).forEach(n => {
+                const name = midiToNoteName(n);
+                setHitStats(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
+            });
 
             setCursorIndex(prev => prev + 1);
             setWaitingForRelease(true);
@@ -541,6 +555,12 @@ function App() {
             </div>
 
 
+
+            <StatisticsPanel
+                hitStats={hitStats}
+                errorStats={errorStats}
+                isDarkMode={isDarkMode}
+            />
 
             {
                 error && (

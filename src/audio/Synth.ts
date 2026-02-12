@@ -3,6 +3,8 @@ import * as Tone from 'tone';
 class AudioEngine {
     private sampler: Tone.Sampler | null = null;
     public isInitialized = false;
+    private isSustainActive = false;
+    private sustainedNotes = new Set<number>();
 
     constructor() {
         // Singleton pattern or simple instance
@@ -72,6 +74,13 @@ class AudioEngine {
         });
     }
 
+    setSustain(active: boolean) {
+        this.isSustainActive = active;
+        if (!active) {
+            this.releaseSustainedNotes();
+        }
+    }
+
     playNote(midiNote: number, velocity: number = 0.7) {
         if (!this.isInitialized) {
             console.warn("Audio not initialized yet");
@@ -92,6 +101,15 @@ class AudioEngine {
     releaseNote(midiNote: number) {
         if (!this.isInitialized) return;
 
+        if (this.isSustainActive) {
+            this.sustainedNotes.add(midiNote);
+            return;
+        }
+
+        this.triggerRelease(midiNote);
+    }
+
+    private triggerRelease(midiNote: number) {
         const freq = Tone.Frequency(midiNote, "midi").toNote();
 
         if (this.sampler && this.sampler.loaded) {
@@ -99,6 +117,13 @@ class AudioEngine {
         } else if (this.polySynth) {
             this.polySynth.triggerRelease(freq);
         }
+    }
+
+    private releaseSustainedNotes() {
+        this.sustainedNotes.forEach(note => {
+            this.triggerRelease(note);
+        });
+        this.sustainedNotes.clear();
     }
 
     releaseAll() {

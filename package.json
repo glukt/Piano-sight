@@ -13,6 +13,7 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "opensheetmusicdisplay": "^1.9.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tone": "^15.1.22",

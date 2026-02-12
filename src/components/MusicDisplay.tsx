@@ -152,5 +152,5 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
 
     }, [trebleNotes, bassNotes, width, height, showLabels, cursorIndex, inputStatus, isDarkMode, onLayout]);
 
-    return <div ref={containerRef} className={`p-4 rounded shadow flex justify-center ${isDarkMode ? 'bg-gray-800' : 'bg-white'}`} />;
+    return <div ref={containerRef} className="w-full h-full flex justify-center items-center" />;
 };

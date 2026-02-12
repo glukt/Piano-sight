@@ -1,28 +1,16 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
-export type MidiNote = {
-    note: number;
-    velocity: number;
-    channel: number;
-};
-
-export type MidiInputDevice = {
-    id: string;
-    name: string;
-    manufacturer: string;
-};
-
-type MidiCallbacks = {
+export interface UseMidiProps {
     onNoteOn?: (note: number, velocity: number) => void;
     onNoteOff?: (note: number) => void;
-};
+}
 
-export const useMidi = ({ onNoteOn, onNoteOff }: MidiCallbacks = {}) => {
-    const [inputs, setInputs] = useState<MidiInputDevice[]>([]);
+export function useMidi({ onNoteOn, onNoteOff }: UseMidiProps = {}) {
+    const [inputs, setInputs] = useState<WebMidi.MIDIInput[]>([]);
+    const [outputs, setOutputs] = useState<WebMidi.MIDIOutput[]>([]);
     const [activeNotes, setActiveNotes] = useState<Set<number>>(new Set());
-    const [lastNote, setLastNote] = useState<MidiNote | null>(null);
-    const [error, setError] = useState<string | null>(null);
     const [isEnabled, setIsEnabled] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     // Refs for callbacks to avoid effect dependencies
     const onNoteOnRef = useRef(onNoteOn);
@@ -33,83 +21,74 @@ export const useMidi = ({ onNoteOn, onNoteOff }: MidiCallbacks = {}) => {
         onNoteOffRef.current = onNoteOff;
     }, [onNoteOn, onNoteOff]);
 
-    // Helper to parse MIDI message
-    const handleMidiMessage = useCallback((event: WebMidi.MIDIMessageEvent) => {
-        const [status, note, velocity] = event.data;
-        const command = status >> 4;
-        const channel = status & 0xf;
+    const handleMidiMessage = useCallback((message: WebMidi.MIDIMessageEvent) => {
+        const [command, note, velocity] = message.data;
 
-        // Note On (144)
-        if (command === 9 && velocity > 0) {
-            setLastNote({ note, velocity, channel });
-            setActiveNotes(prev => {
-                const newSet = new Set(prev);
-                newSet.add(note);
-                return newSet;
-            });
-            onNoteOnRef.current?.(note, velocity);
+        // Note On (usually 144-159)
+        if (command >= 144 && command <= 159) {
+            if (velocity > 0) {
+                setActiveNotes(prev => {
+                    const next = new Set(prev);
+                    next.add(note);
+                    return next;
+                });
+                onNoteOnRef.current?.(note, velocity);
+            } else {
+                // Velocity 0 is often used as Note Off
+                setActiveNotes(prev => {
+                    const next = new Set(prev);
+                    next.delete(note);
+                    return next;
+                });
+                onNoteOffRef.current?.(note);
+            }
         }
-        // Note Off (128) or Note On with 0 velocity
-        else if (command === 8 || (command === 9 && velocity === 0)) {
+
+        // Note Off (usually 128-143)
+        if (command >= 128 && command <= 143) {
             setActiveNotes(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(note);
-                return newSet;
+                const next = new Set(prev);
+                next.delete(note);
+                return next;
             });
             onNoteOffRef.current?.(note);
         }
     }, []);
 
     useEffect(() => {
-        if (!navigator.requestMIDIAccess) {
-            setError('Web MIDI API is not supported in this browser.');
-            return;
-        }
+        const onMIDISuccess = (access: WebMidi.MIDIAccess) => {
+            setIsEnabled(true);
+            const updateDevices = () => {
+                const inputList: WebMidi.MIDIInput[] = [];
+                const outputList: WebMidi.MIDIOutput[] = [];
 
-        let midiAccess: WebMidi.MIDIAccess | null = null;
+                access.inputs.forEach((input) => inputList.push(input));
+                access.outputs.forEach((output) => outputList.push(output));
 
-        const onStateChange = () => {
-            if (!midiAccess) return;
-            const inputsList: MidiInputDevice[] = [];
-            midiAccess.inputs.forEach((input) => {
-                inputsList.push({
-                    id: input.id,
-                    name: input.name || 'Unknown Device',
-                    manufacturer: input.manufacturer || '',
-                });
-            });
-            setInputs(inputsList);
-        };
+                setInputs(inputList);
+                setOutputs(outputList);
 
-        navigator.requestMIDIAccess().then(
-            (access) => {
-                midiAccess = access;
-                setIsEnabled(true);
-                onStateChange();
-
-                // Listen for connection changes
-                midiAccess.onstatechange = onStateChange;
-
-                // Attach listeners to all inputs
-                midiAccess.inputs.forEach((input) => {
+                // Re-bind listeners to all inputs
+                inputList.forEach(input => {
                     input.onmidimessage = handleMidiMessage;
                 });
-            },
-            (err) => {
-                setError(`MIDI Access Failed: ${err}`);
-            }
-        );
+            };
 
-        return () => {
-            // Cleanup listeners if possible (though often unnecessary for global MIDI access in React components)
-            if (midiAccess) {
-                midiAccess.onstatechange = null;
-                midiAccess.inputs.forEach(input => {
-                    input.onmidimessage = null;
-                });
-            }
+            access.onstatechange = updateDevices;
+            updateDevices();
         };
+
+        const onMIDIFailure = (err: any) => {
+            console.warn('Could not access your MIDI devices.', err);
+            setError("MIDI Access Failed.");
+        };
+
+        if (navigator.requestMIDIAccess) {
+            navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+        } else {
+            setError("Web MIDI API not supported.");
+        }
     }, [handleMidiMessage]);
 
-    return { inputs, lastNote, activeNotes, error, isEnabled };
-};
+    return { inputs, outputs, activeNotes, isEnabled, error };
+}

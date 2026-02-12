@@ -6,6 +6,8 @@ import { LevelGenerator, Difficulty } from './engine/LevelGenerator';
 import { midiToNoteName } from './utils/midiUtils';
 import { useRhythmEngine } from './hooks/useRhythmEngine';
 import { StatisticsPanel } from './components/StatisticsPanel';
+import { ScoreDisplay } from './components/ScoreDisplay';
+import { MusicLibrary } from './components/MusicLibrary';
 
 function App() {
     // Audio Event Handlers (Direct Callbacks for Low Latency)
@@ -40,6 +42,10 @@ function App() {
     const [preHeld, setPreHeld] = useState(false); // To prevent auto-triggering held notes
     const [notePositions, setNotePositions] = useState<number[]>([]);
     const [isDarkMode, setIsDarkMode] = useState(false); // Default to Light Mode
+    const [currentView, setCurrentView] = useState<'game' | 'xml'>('game');
+    const [xmlData, setXmlData] = useState<string | null>(null);
+    const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+    const [fileName, setFileName] = useState<string | null>(null);
 
     // Scoring & Stats
     const [score, setScore] = useState({ correct: 0, incorrect: 0 });
@@ -116,6 +122,18 @@ function App() {
                 startRhythm(RHYTHM_LEAD_IN);
             }
         }, 1000);
+    };
+
+    const handleScoreSelect = (file: File) => {
+        setFileName(file.name);
+        setUploadedFile(file);
+        setXmlData(null);
+    };
+
+    const handleClearScore = () => {
+        setXmlData(null);
+        setUploadedFile(null);
+        setFileName(null);
     };
 
     // Note to MIDI Number Map (Simple C4=60)
@@ -371,7 +389,7 @@ function App() {
 
 
     return (
-        <div className={`min-h-screen flex flex-col items-center p-8 transition-colors duration-500 ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
+        <div className={`min-h-screen flex flex-col items-center p-8 transition-colors duration-500 ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100/50 text-gray-900'}`}>
             <header className="mb-8 text-center relative w-full max-w-4xl">
                 <h1 className="text-4xl font-bold mb-2">Piano Sight Reading</h1>
 
@@ -394,181 +412,224 @@ function App() {
                         </span>
                     )}
                 </div>
-            </header>
 
-            {/* Main Display Area */}
-            <div className="relative w-full max-w-5xl bg-white rounded-sm shadow-xl p-10 flex flex-col items-center space-y-8 border-t-4 border-[#D4AF37]">
-
-                {/* Count Down Overlay */}
-                {countDown !== null && (
-                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
-                        <span className="text-9xl font-bold text-[#D4AF37] animate-pulse">{countDown}</span>
-                    </div>
-                )}
-
-                {/* Piano Sheet Display */}
-                <div className="relative">
-                    <MusicDisplay
-                        trebleNotes={levelData.treble}
-                        bassNotes={levelData.bass}
-                        width={window.innerWidth < 800 ? window.innerWidth - 32 : 800}
-                        cursorIndex={cursorIndex}
-                        inputStatus={inputStatus}
-                        onLayout={setNotePositions}
-                        isDarkMode={isDarkMode}
-                        showLabels={showNoteLabels}
-                    />
-
-                    {/* Rhythm Playhead Overlay */}
-                    {isRhythmMode && (
-                        <div
-                            className="absolute top-0 bottom-0 w-1 bg-red-500/70 shadow-[0_0_10px_rgba(239,68,68,0.8)] transition-all duration-75 ease-linear pointer-events-none"
-                            style={{
-                                left: `${getPlayheadPixelX()}px`,
-                                // Remove percentage based left
-                            }}
-                        />
-                    )}
-
-                    {/* Feedback Popups */}
-                    {streak >= 5 && isRhythmMode && (
-                        <div className="absolute top-[-40px] right-0 animate-bounce text-yellow-500 font-bold text-xl drop-shadow-md">
-                            🔥 {streak} Streak!
-                        </div>
-                    )}
-                    {lastHitType === 'perfect' && (
-                        <div className="absolute top-[40%] left-[50%] transform -translate-x-1/2 -translate-y-1/2 animate-pop text-4xl text-gold font-black drop-shadow-[0_0_15px_rgba(255,215,0,0.8)] z-50 pointer-events-none">
-                            PERFECT!
-                        </div>
-                    )}
-                    {lastHitType === 'good' && (
-                        <div className="absolute top-[40%] left-[50%] transform -translate-x-1/2 -translate-y-1/2 animate-pop text-3xl text-green-400 font-bold drop-shadow-md z-50 pointer-events-none">
-                            GOOD
-                        </div>
-                    )}
-                    {lastHitType === 'okay' && (
-                        <div className="absolute top-[40%] left-[50%] transform -translate-x-1/2 -translate-y-1/2 animate-fade-up text-2xl text-blue-400 font-bold drop-shadow-md z-50 pointer-events-none">
-                            OKAY
-                        </div>
-                    )}
-                </div>
-                {/* Streak Counter */}
-                <div className="absolute top-4 right-8 flex flex-col items-center z-10">
-                    <div className="text-xs text-gray-400 uppercase tracking-widest">Streak</div>
-                    <div key={streak} className={`text-4xl font-bold transition-all ${streak >= 5 ? 'text-[#D4AF37] animate-pop' : 'text-gray-600'}`}>
-                        {streak}
-                    </div>
-                    {maxStreak > 0 && <div className="text-[10px] text-gray-300 mt-1">BEST: {maxStreak}</div>}
-                </div>
-
-            </div>
-
-            {/* Controls */}
-            <div className={`mt-8 flex gap-4 p-6 rounded-xl shadow-lg border transition-colors duration-500 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                <div className="flex flex-col gap-2">
-                    <label className={`font-semibold text-sm uppercase tracking-wide opacity-70 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Difficulty</label>
-                    <div className="flex gap-2">
-                        {(Object.keys(Difficulty) as Array<keyof typeof Difficulty>).map(k => (
-                            <button
-                                key={k}
-                                onClick={() => generateNewLevel(Difficulty[k])}
-                                className={`px-4 py-2 rounded-lg transition-all ${difficulty === Difficulty[k]
-                                    ? 'bg-blue-600 text-white shadow-lg scale-105'
-                                    : (isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
-                                    }`}
-                            >
-                                {k}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div className={`w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-auto'}`}></div>
-
-                <div className="flex flex-col gap-2">
-                    <label className={`font-semibold text-sm uppercase tracking-wide opacity-70 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Game Mode</label>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={handleStartRhythm}
-                            className={`px-6 py-2 rounded-lg font-bold transition-all ${isRhythmMode
-                                ? 'bg-red-500 text-white shadow-lg scale-105 animate-pulse'
-                                : (isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
-                                }`}
-                        >
-                            {isRhythmMode ? (countDown ? `Starting...` : 'STOP RHYTHM') : 'START RHYTHM'}
-                        </button>
-                    </div>
-                </div>
-
-                <div className={`w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-auto'}`}></div>
-
-                {/* Hand Selector */}
-                <div className="flex flex-col gap-2">
-                    <label className={`font-semibold text-sm uppercase tracking-wide opacity-70 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Hand</label>
-                    <div className="flex gap-2">
-                        {(['both', 'treble', 'bass'] as const).map(m => (
-                            <button
-                                key={m}
-                                onClick={() => setGameMode(m)}
-                                className={`px-4 py-2 rounded-lg uppercase text-xs font-bold transition-all ${gameMode === m
-                                    ? (isDarkMode ? 'bg-gray-600 text-white' : 'bg-gray-800 text-white')
-                                    : (isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-500')
-                                    }`}
-                            >
-                                {m}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div className={`w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-auto'}`}></div>
-
-                {/* System Controls */}
-                <div className="flex flex-col gap-2 justify-center">
-                    {!audioStarted ? (
-                        <button
-                            onClick={startAudio}
-                            disabled={isAudioLoading}
-                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${isDarkMode
-                                ? 'bg-emerald-900 text-emerald-100 hover:bg-emerald-800 border border-emerald-700'
-                                : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-200'
-                                }`}
-                        >
-                            {isAudioLoading ? 'Loading...' : 'Init Audio'}
-                        </button>
-                    ) : (
-                        <button
-                            onClick={testAudio}
-                            className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide opacity-70 hover:opacity-100 transition-all ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-600'
-                                }`}
-                        >
-                            Test Sound
-                        </button>
-                    )}
+                <div className="absolute left-0 top-0 flex gap-2">
                     <button
-                        onClick={() => setShowNoteLabels(!showNoteLabels)}
-                        className={`text-[10px] uppercase tracking-wider underline decoration-dotted ${isDarkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
+                        onClick={() => setCurrentView('game')}
+                        className={`px-4 py-2 rounded-full border ${currentView === 'game' ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-200 text-gray-700 border-gray-300'} font-bold text-xs uppercase transition`}
                     >
-                        {showNoteLabels ? 'Hide Labels' : 'Show Labels'}
+                        Game Mode
+                    </button>
+                    <button
+                        onClick={() => setCurrentView('xml')}
+                        className={`px-4 py-2 rounded-full border ${currentView === 'xml' ? 'bg-purple-600 text-white border-purple-600' : 'bg-gray-200 text-gray-700 border-gray-300'} font-bold text-xs uppercase transition`}
+                    >
+                        MusicXML (Beta)
                     </button>
                 </div>
-            </div>
+            </header>
 
+            {currentView === 'xml' ? (
+                <div className="w-full max-w-6xl flex flex-col gap-4">
+                    {uploadedFile || xmlData ? (
+                        <>
+                            <div className="bg-white p-4 rounded shadow flex items-center justify-between mb-4">
+                                <span className="font-bold text-gray-700">Current Score: {fileName || 'Loaded Score'}</span>
+                                <button
+                                    onClick={handleClearScore}
+                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-bold text-sm"
+                                >
+                                    Back to Library
+                                </button>
+                            </div>
+                            <ScoreDisplay file={uploadedFile || undefined} xmlContent={xmlData || undefined} isDarkMode={isDarkMode} />
+                        </>
+                    ) : (
+                        <div className="w-full">
+                            <MusicLibrary onSelectScore={handleScoreSelect} />
+                        </div>
+                    )}
+                </div>
+            ) : (
+                <>
 
+                    {/* Main Display Area */}
+                    <div className="relative w-full max-w-5xl flex flex-col items-center space-y-8">
 
-            <StatisticsPanel
-                hitStats={hitStats}
-                errorStats={errorStats}
-                isDarkMode={isDarkMode}
-            />
+                        {/* Count Down Overlay */}
+                        {countDown !== null && (
+                            <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+                                <span className="text-9xl font-bold text-[#D4AF37] animate-pulse">{countDown}</span>
+                            </div>
+                        )}
 
-            {
-                error && (
-                    <div className="p-4 bg-red-50 text-red-700 border border-red-200 text-sm">
-                        {error}
+                        {/* Piano Sheet Display */}
+                        <div className="relative">
+                            <MusicDisplay
+                                trebleNotes={levelData.treble}
+                                bassNotes={levelData.bass}
+                                width={window.innerWidth < 800 ? window.innerWidth - 32 : 800}
+                                cursorIndex={cursorIndex}
+                                inputStatus={inputStatus}
+                                onLayout={setNotePositions}
+                                isDarkMode={isDarkMode}
+                                showLabels={showNoteLabels}
+                            />
+
+                            {/* Rhythm Playhead Overlay */}
+                            {isRhythmMode && (
+                                <div
+                                    className="absolute top-0 bottom-0 w-1 bg-red-500/70 shadow-[0_0_10px_rgba(239,68,68,0.8)] transition-all duration-75 ease-linear pointer-events-none"
+                                    style={{
+                                        left: `${getPlayheadPixelX()}px`,
+                                        // Remove percentage based left
+                                    }}
+                                />
+                            )}
+
+                            {/* Feedback Popups */}
+                            {streak >= 5 && isRhythmMode && (
+                                <div className="absolute top-[-40px] right-0 animate-bounce text-yellow-500 font-bold text-xl drop-shadow-md">
+                                    🔥 {streak} Streak!
+                                </div>
+                            )}
+                            {lastHitType === 'perfect' && (
+                                <div className="absolute top-[40%] left-[50%] transform -translate-x-1/2 -translate-y-1/2 animate-pop text-4xl text-gold font-black drop-shadow-[0_0_15px_rgba(255,215,0,0.8)] z-50 pointer-events-none">
+                                    PERFECT!
+                                </div>
+                            )}
+                            {lastHitType === 'good' && (
+                                <div className="absolute top-[40%] left-[50%] transform -translate-x-1/2 -translate-y-1/2 animate-pop text-3xl text-green-400 font-bold drop-shadow-md z-50 pointer-events-none">
+                                    GOOD
+                                </div>
+                            )}
+                            {lastHitType === 'okay' && (
+                                <div className="absolute top-[40%] left-[50%] transform -translate-x-1/2 -translate-y-1/2 animate-fade-up text-2xl text-blue-400 font-bold drop-shadow-md z-50 pointer-events-none">
+                                    OKAY
+                                </div>
+                            )}
+                        </div>
+                        {/* Streak Counter */}
+                        <div className="absolute top-4 right-8 flex flex-col items-center z-10">
+                            <div className="text-xs text-gray-400 uppercase tracking-widest">Streak</div>
+                            <div key={streak} className={`text-4xl font-bold transition-all ${streak >= 5 ? 'text-[#D4AF37] animate-pop' : 'text-gray-600'}`}>
+                                {streak}
+                            </div>
+                            {maxStreak > 0 && <div className="text-[10px] text-gray-300 mt-1">BEST: {maxStreak}</div>}
+                        </div>
+
                     </div>
-                )
-            }
+
+                    {/* Controls */}
+                    <div className={`mt-8 flex gap-4 p-6 rounded-xl shadow-lg border transition-colors duration-500 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                        <div className="flex flex-col gap-2">
+                            <label className={`font-semibold text-sm uppercase tracking-wide opacity-70 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Difficulty</label>
+                            <div className="flex gap-2">
+                                {(Object.keys(Difficulty) as Array<keyof typeof Difficulty>).map(k => (
+                                    <button
+                                        key={k}
+                                        onClick={() => generateNewLevel(Difficulty[k])}
+                                        className={`px-4 py-2 rounded-lg transition-all ${difficulty === Difficulty[k]
+                                            ? 'bg-blue-600 text-white shadow-lg scale-105'
+                                            : (isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
+                                            }`}
+                                    >
+                                        {k}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className={`w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-auto'}`}></div>
+
+                        <div className="flex flex-col gap-2">
+                            <label className={`font-semibold text-sm uppercase tracking-wide opacity-70 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Game Mode</label>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={handleStartRhythm}
+                                    className={`px-6 py-2 rounded-lg font-bold transition-all ${isRhythmMode
+                                        ? 'bg-red-500 text-white shadow-lg scale-105 animate-pulse'
+                                        : (isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
+                                        }`}
+                                >
+                                    {isRhythmMode ? (countDown ? `Starting...` : 'STOP RHYTHM') : 'START RHYTHM'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className={`w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-auto'}`}></div>
+
+                        {/* Hand Selector */}
+                        <div className="flex flex-col gap-2">
+                            <label className={`font-semibold text-sm uppercase tracking-wide opacity-70 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Hand</label>
+                            <div className="flex gap-2">
+                                {(['both', 'treble', 'bass'] as const).map(m => (
+                                    <button
+                                        key={m}
+                                        onClick={() => setGameMode(m)}
+                                        className={`px-4 py-2 rounded-lg uppercase text-xs font-bold transition-all ${gameMode === m
+                                            ? (isDarkMode ? 'bg-gray-600 text-white' : 'bg-gray-800 text-white')
+                                            : (isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-500')
+                                            }`}
+                                    >
+                                        {m}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className={`w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-auto'}`}></div>
+
+                        {/* System Controls */}
+                        <div className="flex flex-col gap-2 justify-center">
+                            {!audioStarted ? (
+                                <button
+                                    onClick={startAudio}
+                                    disabled={isAudioLoading}
+                                    className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${isDarkMode
+                                        ? 'bg-emerald-900 text-emerald-100 hover:bg-emerald-800 border border-emerald-700'
+                                        : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-200'
+                                        }`}
+                                >
+                                    {isAudioLoading ? 'Loading...' : 'Init Audio'}
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={testAudio}
+                                    className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide opacity-70 hover:opacity-100 transition-all ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-600'
+                                        }`}
+                                >
+                                    Test Sound
+                                </button>
+                            )}
+                            <button
+                                onClick={() => setShowNoteLabels(!showNoteLabels)}
+                                className={`text-[10px] uppercase tracking-wider underline decoration-dotted ${isDarkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
+                            >
+                                {showNoteLabels ? 'Hide Labels' : 'Show Labels'}
+                            </button>
+                        </div>
+                    </div>
+
+
+
+                    <StatisticsPanel
+                        hitStats={hitStats}
+                        errorStats={errorStats}
+                        isDarkMode={isDarkMode}
+                    />
+
+                    {
+                        error && (
+                            <div className="p-4 bg-red-50 text-red-700 border border-red-200 text-sm">
+                                {error}
+                            </div>
+                        )
+                    }
+
+
+                </>
+            )}
 
         </div >
     );

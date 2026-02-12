@@ -19,7 +19,7 @@ export function useMidi({ onNoteOn, onNoteOff }: UseMidiProps = {}) {
     useEffect(() => {
         onNoteOnRef.current = onNoteOn;
         onNoteOffRef.current = onNoteOff;
-    }, [onNoteOn, onNoteOff]);
+    });
 
     const handleMidiMessage = useCallback((message: WebMidi.MIDIMessageEvent) => {
         const [command, note, velocity] = message.data;
@@ -84,9 +84,9 @@ export function useMidi({ onNoteOn, onNoteOff }: UseMidiProps = {}) {
         };
 
         if (navigator.requestMIDIAccess) {
-            navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+            navigator.requestMIDIAccess({ sysex: false }).then(onMIDISuccess, onMIDIFailure);
         } else {
-            setError("Web MIDI API not supported.");
+            setError("Web MIDI API not supported. Try Chrome or Edge.");
         }
     }, [handleMidiMessage]);
 

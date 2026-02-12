@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 interface VirtualKeyboardProps {
     activeNotes: Set<number>; // Playback notes (Blue)
     userActiveNotes?: Set<number>; // User input notes (Yellow/Green)
+    expectedNotes?: number[]; // Hints for Wait Mode (Orange/Red?)
     rangeStart?: number; // MIDI note to start (default 21 - A0)
     rangeEnd?: number;   // MIDI note to end (default 108 - C8)
     showLabels?: boolean;
@@ -19,6 +20,7 @@ const getNoteLabel = (midi: number) => {
 const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
     activeNotes,
     userActiveNotes = new Set(),
+    expectedNotes = [],
     rangeStart = 21,
     rangeEnd = 108,
     showLabels = false
@@ -44,11 +46,27 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
                 // White Key
                 const isPlayback = activeNotes.has(key.midi);
                 const isUser = userActiveNotes.has(key.midi);
+                const isExpected = expectedNotes.includes(key.midi);
 
                 let bgColor = 'bg-white';
-                if (isPlayback && isUser) bgColor = 'bg-green-400'; // Match
-                else if (isPlayback) bgColor = 'bg-blue-400'; // Playback only
-                else if (isUser) bgColor = 'bg-yellow-400'; // User only (Wrong?)
+
+                // Priority Logic:
+                // 1. If it's expected AND user plays it: GREEN (Success/Holding)
+                // 2. If it's expected AND user NOT playing: ORANGE (Target)
+                // 3. If user plays it BUT not expected: RED (Wrong note) -> Optional, maybe just Yellow
+                // 4. Playback (Blue) - only if not in Wait Mode context?
+
+                // Wait Mode Logic
+                if (expectedNotes.length > 0) {
+                    if (isExpected && isUser) bgColor = 'bg-green-500';
+                    else if (isExpected) bgColor = 'bg-orange-400';
+                    else if (isUser) bgColor = 'bg-red-400'; // Wrong note
+                } else {
+                    // Standard Playback / Free Play Logic
+                    if (isPlayback && isUser) bgColor = 'bg-green-400';
+                    else if (isPlayback) bgColor = 'bg-blue-400';
+                    else if (isUser) bgColor = 'bg-yellow-400';
+                }
 
                 return (
                     <div
@@ -80,11 +98,19 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
 
                     const isPlayback = activeNotes.has(key.midi);
                     const isUser = userActiveNotes.has(key.midi);
+                    const isExpected = expectedNotes.includes(key.midi);
 
                     let bgColor = 'bg-black';
-                    if (isPlayback && isUser) bgColor = 'bg-green-600'; // Match
-                    else if (isPlayback) bgColor = 'bg-blue-600'; // Playback only
-                    else if (isUser) bgColor = 'bg-yellow-500'; // User only
+
+                    if (expectedNotes.length > 0) {
+                        if (isExpected && isUser) bgColor = 'bg-green-600';
+                        else if (isExpected) bgColor = 'bg-orange-600';
+                        else if (isUser) bgColor = 'bg-red-600';
+                    } else {
+                        if (isPlayback && isUser) bgColor = 'bg-green-600';
+                        else if (isPlayback) bgColor = 'bg-blue-600';
+                        else if (isUser) bgColor = 'bg-yellow-500';
+                    }
 
                     // Center on the crack (offset is the white key AFTER the crack, so subtract half-width)
                     const keyWidthRatio = 0.7;

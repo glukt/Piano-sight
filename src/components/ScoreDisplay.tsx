@@ -5,6 +5,7 @@ import { PlaybackEngine } from '../engine/PlaybackEngine';
 import { audio } from '../audio/Synth';
 import VirtualKeyboard from './VirtualKeyboard';
 import { useMidi } from '../hooks/useMidi';
+import { usePracticeMode } from '../hooks/usePracticeMode';
 import LoopingControls from './LoopingControls';
 import { GraphicalNote } from 'opensheetmusicdisplay/build/dist/src/MusicalScore/Graphical/GraphicalNote';
 import { VexFlowGraphicalNote } from 'opensheetmusicdisplay/build/dist/src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote';
@@ -26,6 +27,18 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
     const [activeNotes, setActiveNotes] = useState<Set<number>>(new Set());
     const { activeNotes: userActiveNotes } = useMidi();
     const [error, setError] = useState<string | null>(null);
+
+    // Practice Mode
+    const {
+        isActive: isPracticeActive,
+        currentSection: practiceSection,
+        mode: practiceMode,
+        feedback: practiceFeedback,
+        startPractice,
+        stopPractice,
+        nextSection,
+        expectedNotes
+    } = usePracticeMode(playbackRef.current, playbackRef.current?.MeasureCount || 0, userActiveNotes);
 
     // Looping & Progress State
     const [currentTimestamp, setCurrentTimestamp] = useState(0);
@@ -355,8 +368,63 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
                         />
                         <span>Score Labels</span>
                     </label>
+
+                    {/* Practice Mode Toggle */}
+                    <button
+                        onClick={isPracticeActive ? stopPractice : startPractice}
+                        className={`ml-4 px-4 py-1 rounded-full text-xs font-bold border transition animate-pulse
+                            ${isPracticeActive
+                                ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white border-rose-600 shadow-lg'
+                                : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600 shadow-md hover:scale-105'}
+                        `}
+                    >
+                        {isPracticeActive ? 'Exit Practice' : '🎓 Learn to Play!'}
+                    </button>
                 </div>
             </div>
+
+            {/* Practice Mode Overlay - Compact Bottom Bar */}
+            {isPracticeActive && (
+                <div className="fixed bottom-0 left-0 right-0 bg-indigo-900/90 backdrop-blur-md text-white border-t border-indigo-500 p-4 shadow-2xl z-50 flex items-center justify-between animate-in slide-in-from-bottom duration-300">
+                    <div className="flex items-center gap-6">
+                        <div className="flex flex-col">
+                            <span className="text-xs text-indigo-300 uppercase font-bold tracking-wider">Mode</span>
+                            <span className={`font-bold text-lg ${practiceMode === 'wait' ? 'text-yellow-400' : 'text-green-400'}`}>{practiceMode.toUpperCase()}</span>
+                        </div>
+                        <div className="h-8 w-px bg-indigo-700"></div>
+                        <div className="flex flex-col">
+                            <span className="text-xs text-indigo-300 uppercase font-bold tracking-wider">Section</span>
+                            <span className="font-mono text-lg">{practiceSection.startMeasure + 1}-{practiceSection.endMeasure}</span>
+                        </div>
+                        <div className="h-8 w-px bg-indigo-700"></div>
+                        <div className="text-xl font-medium px-4">
+                            {practiceFeedback}
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4">
+                        <button
+                            onClick={() => playbackRef.current?.seek(playbackRef.current.getMeasureTimestamp(practiceSection.startMeasure) || 0)}
+                            className="px-4 py-2 bg-indigo-700 hover:bg-indigo-600 rounded-lg text-sm font-bold shadow-lg transition"
+                        >
+                            ↺ Replay
+                        </button>
+                        <button
+                            onClick={nextSection}
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-bold shadow-lg transition"
+                        >
+                            Next ➜
+                        </button>
+                        <button
+                            onClick={stopPractice}
+                            className="p-2 hover:bg-white/10 rounded-full transition ml-2"
+                            title="Exit Practice"
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <div className="w-full max-w-4xl mb-4">
                 <LoopingControls
@@ -376,8 +444,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
                     <VirtualKeyboard
                         activeNotes={activeNotes}
                         userActiveNotes={userActiveNotes}
-                        rangeStart={21}
-                        rangeEnd={108}
+                        expectedNotes={isPracticeActive && practiceMode === 'wait' ? expectedNotes : []}
                         showLabels={showPianoLabels}
                     />
                 </div>

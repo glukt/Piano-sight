@@ -15,6 +15,7 @@ export class PlaybackEngine {
     private onNoteOn: ((midi: number) => void) | null = null;
     private onNoteOff: ((midi: number) => void) | null = null;
     private onProgress: ((current: number, total: number) => void) | null = null;
+    private onLoop: (() => void) | null = null;
     private expectedNextStepTime: number = 0;
 
     private loopStart: number | null = null;
@@ -44,6 +45,10 @@ export class PlaybackEngine {
         this.onProgress = cb;
     }
 
+    public setLoopCallback(cb: () => void) {
+        this.onLoop = cb;
+    }
+
     public setLoop(start: number | null, end: number | null) {
         this.loopStart = start;
         this.loopEnd = end;
@@ -65,6 +70,27 @@ export class PlaybackEngine {
         });
         this.currentStyledNotes = [];
     }
+    public highlightCurrentNotes() {
+        if (!this.cursor) return;
+
+        // 1. Clear previous highlights
+        this.clearHighlights();
+
+        // 2. Highlight notes under cursor
+        const gNotes = this.cursor.GNotesUnderCursor();
+        gNotes.forEach(gn => {
+            // @ts-ignore
+            if (gn.setColor) {
+                // Use a distinct color for Wait Mode? Or standard Blue?
+                // Let's use Orange/Yellow if we passed an argument, but for now standard Blue.
+                // Wait, user wants "Wait Mode" highlighting.
+                // Maybe add color argument.
+                // @ts-ignore
+                gn.setColor("#f59e0b", { applyToNoteheads: true, applyToStem: true, applyToBeams: true }); // Amber/Orange
+                this.currentStyledNotes.push(gn as unknown as GraphicalNote);
+            }
+        });
+    }
 
     public get TotalDuration(): number {
         // Return total duration in "XML Fraction Value"
@@ -81,6 +107,36 @@ export class PlaybackEngine {
     public get CurrentTimestamp(): number {
         if (!this.cursor) return 0;
         return this.cursor.Iterator.currentTimeStamp.RealValue;
+    }
+
+    public getMeasureTimestamp(measureIndex: number): number | null {
+        if (!this.osmd.Sheet) return null;
+        const measures = this.osmd.Sheet.SourceMeasures;
+        if (measureIndex < 0 || measureIndex >= measures.length) return null;
+        return measures[measureIndex].AbsoluteTimestamp.RealValue;
+    }
+
+    public getNotesAtCurrentPosition(): number[] {
+        if (!this.cursor) return [];
+        const notes = this.cursor.NotesUnderCursor();
+        const midiNotes: number[] = [];
+        notes.forEach(note => {
+            if (!note.isRest() && note.Pitch) {
+                midiNotes.push(note.Pitch.getHalfTone() + 12);
+            }
+        });
+        return midiNotes;
+    }
+
+    public nextStep() {
+        if (!this.cursor) return;
+        this.cursor.next();
+        this.cursor.update(); // Update visuals immediately
+    }
+
+    public get MeasureCount(): number {
+        if (!this.osmd.Sheet) return 0;
+        return this.osmd.Sheet.SourceMeasures.length;
     }
 
     public seek(targetRealValue: number) {
@@ -207,7 +263,7 @@ export class PlaybackEngine {
         // Loop Check
         if (this.loopEnd !== null && this.loopStart !== null) {
             if (iterator.currentTimeStamp.RealValue >= this.loopEnd) {
-                console.log("Looping back...");
+                if (this.onLoop) this.onLoop();
                 this.stop(); // Clear current notes
                 this.seek(this.loopStart);
                 this.play(); // Resume

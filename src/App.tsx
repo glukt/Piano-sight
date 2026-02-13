@@ -323,10 +323,19 @@ function App() {
     // Validation Effect
     useEffect(() => {
         if (!audioStarted) return;
+        // GUARD: If Level Up Modal is showing, ignore input
+        if (levelUp) return;
 
-        // Level Complete!
-        handleAddXp(50); // Level completion bonus
-        setTimeout(() => generateNewLevel(difficulty, isRhythmMode), 500); // Continuous play in Rhythm Mode
+        // Check for End of Level
+        const levelLength = levelData.treble.length;
+        if (cursorIndex >= levelLength) {
+            // Only trigger ONCE when we hit the end
+            if (cursorIndex === levelLength) { // Exact match to avoid re-triggering if we overshoot?
+                handleAddXp(50); // Level completion bonus
+                setTimeout(() => generateNewLevel(difficulty, isRhythmMode), 500);
+            }
+            return;
+        }
 
         const noteDuration = 60 / BPM;
         const targetTime = cursorIndex * noteDuration;

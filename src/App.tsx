@@ -190,7 +190,7 @@ function App() {
         setCursorIndex(0); // Reset cursor
         setStreak(0);
         setInputStatus('waiting');
-        setWaitingForRelease(false);
+        setWaitingForRelease(true); // Force release between levels to prevent "machine gun" looping
         if (keepRhythm) {
             startRhythm(RHYTHM_LEAD_IN); // Restart with lead-in
         } else {

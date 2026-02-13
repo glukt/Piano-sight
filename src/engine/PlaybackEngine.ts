@@ -52,7 +52,6 @@ export class PlaybackEngine {
     public setLoop(start: number | null, end: number | null) {
         this.loopStart = start;
         this.loopEnd = end;
-        console.log(`Loop set: ${start} - ${end}`);
     }
 
     public setHighlightSettings(enable: boolean) {
@@ -181,7 +180,6 @@ export class PlaybackEngine {
         if (this.playbackCallback) this.playbackCallback(true);
 
         // Advance immediately to start/resume
-        console.log("Playback started");
         this.expectedNextStepTime = Date.now();
         this.step();
     }
@@ -298,11 +296,10 @@ export class PlaybackEngine {
             } else if (note.Pitch) {
                 midi = note.Pitch.getHalfTone() + 12;
             } else {
-                console.warn("Note has no pitch/halfTone:", note);
+                // console.warn("Note has no pitch/halfTone:", note);
                 return;
             }
 
-            console.log(`Playing Note: MIDI ${midi}`);
             midiNotes.push(midi);
 
             // Synth.ts expects MIDI velocity (0-127) because it divides by 127.

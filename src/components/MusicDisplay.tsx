@@ -32,6 +32,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
     isDarkMode = false
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
+    const prevPositionsRef = useRef<number[] | null>(null);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -146,8 +147,16 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
             const tickables = trebleVoice.getTickables();
             const positions = tickables.map(t => (t as any).getAbsoluteX());
 
-            // Note: getAbsoluteX() returns the center/x of the note head properly formatted
-            onLayout(positions);
+            // Check if positions changed to avoid infinite loop
+            // We use a simple element-wise check with prevPositionsRef.
+            const isDifferent = !prevPositionsRef.current ||
+                prevPositionsRef.current.length !== positions.length ||
+                prevPositionsRef.current.some((p, i) => Math.abs(p - positions[i]) > 0.1);
+
+            if (isDifferent) {
+                prevPositionsRef.current = positions;
+                onLayout(positions);
+            }
         }
 
     }, [trebleNotes, bassNotes, width, height, showLabels, cursorIndex, inputStatus, isDarkMode, onLayout]);

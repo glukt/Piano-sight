@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useMidi } from './hooks/useMidi';
 import { audio } from './audio/Synth';
 import { MusicDisplay, StaveNoteData } from './components/MusicDisplay';
@@ -8,26 +8,147 @@ import { useRhythmEngine } from './hooks/useRhythmEngine';
 import { StatisticsPanel } from './components/StatisticsPanel';
 import { ScoreDisplay } from './components/ScoreDisplay';
 import { MusicLibrary } from './components/MusicLibrary';
+import { useGamification } from './hooks/useGamification';
+import { useAchievements } from './hooks/useAchievements';
+import { useDailyChallenges } from './hooks/useDailyChallenges';
+import { AchievementsModal } from './components/AchievementsModal';
+import { NotificationToast } from './components/NotificationToast';
+import { useWindowSize } from './hooks/useWindowSize';
+import { useAudioInput } from './hooks/useAudioInput';
 
 function App() {
+    const { width: windowWidth } = useWindowSize();
+    const {
+        isListening: isMicActive,
+        detectedNote: micNote,
+        volume: micVolume,
+        startListening: startMic,
+        stopListening: stopMic
+    } = useAudioInput();
+
     // Audio Event Handlers (Direct Callbacks for Low Latency)
     const onNoteOn = useRef((note: number, velocity: number) => {
         if (audio.isInitialized) audio.playNote(note, velocity);
+
+        // We can't easily call hooks inside useRef callback if they change on every render,
+        // but useRef callback is stable. However, 'updateChallengeProgress' and 'incrementStat'
+        // come from hooks. We should use a ref to access them or assume they are stable.
+        // For now, let's just use window event or similar if we can't access them?
+        // Actually, onNoteOn depends on closures. PROPER WAY:
+        // define onNoteOn using useCallback with dependencies, pass to useRef?
+        // Current implementation: onNoteOn = useRef(...) initialized ONCE.
+        // It captures 'audio' from closure (module level?).
+        // To access 'updateChallengeProgress', we need to update the ref.current on every render.
     });
+
+
 
     const onNoteOff = useRef((note: number) => {
         if (audio.isInitialized) audio.releaseNote(note);
     });
 
     // useMidi Hook with Callbacks
+    // useMidi Hook with Callbacks
     const { activeNotes, error, isEnabled } = useMidi({
         onNoteOn: (n, v) => onNoteOn.current(n, v),
         onNoteOff: (n) => onNoteOff.current(n)
     });
 
+    const { state: gameState, addXp, levelUp, clearLevelUp } = useGamification();
+
+    // Merge MIDI and Mic Input
+    // We create a new Set that combines both.
+    // Note: 'activeNotes' from useMidi is a Set state.
+    // We need to be careful not to cause infinite loops if we were setting state, but here we derive.
+    // Merge MIDI and Mic Input
+    // Memoize to prevent effect loops since Set is a mutable object type
+    const effectiveActiveNotes = useMemo(() => {
+        const notes = new Set(activeNotes);
+        if (micNote !== null) {
+            notes.add(micNote);
+        }
+        return notes;
+    }, [activeNotes, micNote]);
+
+    // EFFECT: Handle Note On for Mic Input (for Gameplay Logic)
+    // MIDI has callbacks onNoteOn. Mic input is a state stream. 
+    // We need to detect "rising edge" of mic note to trigger sound/gameplay if we want strict attack events.
+    // However, the game loop uses `activeNotes` (state).
+    // But `onNoteOn` callback triggers audio AND stats. 
+    // If we only use `effectiveActiveNotes` for visual/validation, we miss the STATS updates for mic.
+
+    // We need a ref to track previous mic note to detect new attacks.
+    const prevMicNote = useRef<number | null>(null);
+    useEffect(() => {
+        if (micNote !== null && micNote !== prevMicNote.current) {
+            // New Note Attack!
+            // Trigger gameplay logic similar to MIDI Note On
+            if (audio.isInitialized) audio.playNote(micNote, 100); // Optional: play sound for mic? Probably NO, confusing with acoustic.
+            // Actually, usually you DON'T play sound for acoustic input ("Monitoring" vs "Controller").
+            // But we DO want to trigger Game Stats.
+            statRefs.current.incrementStat('totalNotes', 1);
+            statRefs.current.updateChallengeProgress('notes', 1);
+        }
+        prevMicNote.current = micNote;
+    }, [micNote]);
+
+    // Achievements Hook
+    // Achievements Hook
+    const {
+        incrementStat,
+        newUnlocks,
+        clearNewUnlocks,
+        achievements,
+        achievementsState,
+        getProgress
+    } = useAchievements();
+
+    const {
+        challenges: dailyChallenges,
+        updateChallengeProgress,
+        newCompleted: newDailyCompleted,
+        clearNewCompleted: clearNewDaily
+    } = useDailyChallenges();
+
+    // Update refs to latest hook functions
+    // We need to declare this AFTER the hooks return their values
+    const statRefs = useRef({ incrementStat, updateChallengeProgress });
+    useEffect(() => {
+        statRefs.current = { incrementStat, updateChallengeProgress };
+    }, [incrementStat, updateChallengeProgress]);
+
+    // Redefine the callback to use the ref
+    useEffect(() => {
+        onNoteOn.current = (note: number, velocity: number) => {
+            if (audio.isInitialized) audio.playNote(note, velocity);
+            statRefs.current.incrementStat('totalNotes', 1);
+            statRefs.current.updateChallengeProgress('notes', 1);
+        };
+    }, []);
+
     const [audioStarted, setAudioStarted] = useState(false);
     const [isAudioLoading, setIsAudioLoading] = useState(false);
     const [showNoteLabels, setShowNoteLabels] = useState(false);
+    const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
+
+    // Enhanced XP Handler that also tracks stats
+    const handleAddXp = useCallback((amount: number) => {
+        addXp(amount);
+        updateChallengeProgress('xp', amount);
+
+        // If amount suggest section completion (>10), count session/section
+        if (amount >= 50) {
+            incrementStat('sessionsCompleted', 1);
+            updateChallengeProgress('sections', 1);
+        }
+        // If amount suggests perfect note (e.g. 10), count perfect
+        // Note: 10 is exact match for perfect score in game
+        if (amount === 10) {
+            incrementStat('perfectNotes', 1);
+            updateChallengeProgress('perfect', 1);
+        }
+    }, [addXp, updateChallengeProgress, incrementStat]);
+
 
     // Game State
     const [cursorIndex, setCursorIndex] = useState(0);
@@ -194,20 +315,18 @@ function App() {
         if (gameMode !== 'treble') targetBass?.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
 
         // If any required note is currently active (held), flag it as PreHeld
-        const isHolding = Array.from(requiredNotes).some(n => activeNotes.has(n));
+        const isHolding = Array.from(requiredNotes).some(n => effectiveActiveNotes.has(n));
         setPreHeld(isHolding);
 
-    }, [cursorIndex, levelData, gameMode, activeNotes]); // Check whenever these change. Note: activeNotes dependency ensures we clear it when released!
+    }, [cursorIndex, levelData, gameMode, effectiveActiveNotes]); // Check whenever these change. Note: activeNotes dependency ensures we clear it when released!
 
     // Validation Effect
     useEffect(() => {
         if (!audioStarted) return;
 
-        if (cursorIndex >= levelData.treble.length) {
-            // Level Complete!
-            setTimeout(() => generateNewLevel(difficulty, isRhythmMode), 500); // Continuous play in Rhythm Mode
-            return;
-        }
+        // Level Complete!
+        handleAddXp(50); // Level completion bonus
+        setTimeout(() => generateNewLevel(difficulty, isRhythmMode), 500); // Continuous play in Rhythm Mode
 
         const noteDuration = 60 / BPM;
         const targetTime = cursorIndex * noteDuration;
@@ -252,7 +371,7 @@ function App() {
 
         // Define "Relevant" active notes
         const relevantActiveNotes = new Set<number>();
-        activeNotes.forEach(n => {
+        effectiveActiveNotes.forEach(n => {
             if (gameMode === 'both') relevantActiveNotes.add(n);
             else if (gameMode === 'treble' && n >= 60) relevantActiveNotes.add(n);
             else if (gameMode === 'bass' && n < 60) relevantActiveNotes.add(n);
@@ -283,13 +402,13 @@ function App() {
 
         // Check if all needed notes are present
         const relevantArray = Array.from(relevantActiveNotes);
-        const allFound = Array.from(requiredNotes).every(n => activeNotes.has(n));
+        const allFound = Array.from(requiredNotes).every(n => effectiveActiveNotes.has(n));
         const hasIncorrect = relevantArray.some(n => !requiredNotes.has(n));
 
         // STRICT ATTACK CHECK: If pre-held, wait until release
         if (preHeld) {
             // Only clear PreHeld when the offending notes are released
-            const stillHolding = Array.from(requiredNotes).some(n => activeNotes.has(n));
+            const stillHolding = Array.from(requiredNotes).some(n => effectiveActiveNotes.has(n));
             if (!stillHolding) {
                 // Released! Now we can accept input
                 setPreHeld(false);
@@ -319,6 +438,11 @@ function App() {
         // allFound is already calculated above using activeNotes
 
         if (allFound) {
+            // Check that we actually HAVE notes active (prevent empty set matching empty set if reqNotes was somehow empty, strictly)
+            if (relevantActiveNotes.size === 0 && requiredNotes.size > 0) {
+                // This shouldn't happen given allFound logic, but safety check.
+                return;
+            }
             // RHYTHM CHECK: Only allow if within time window
             if (isRhythmMode && isRhythmPlaying) {
                 const diff = Math.abs(elapsedTime - targetTime);
@@ -339,16 +463,19 @@ function App() {
                     setScore(s => ({ ...s, correct: s.correct + 5 })); // Bonus points
                     setInputStatus('perfect');
                     setStreak(prev => prev + 1);
+                    handleAddXp(10);
                 } else if (diff <= 0.25) {
                     setLastHitType('good');
                     setScore(s => ({ ...s, correct: s.correct + 2 }));
                     setInputStatus('correct'); // Use Green for Good
                     setStreak(prev => prev + 1);
+                    handleAddXp(5);
                 } else {
                     setLastHitType('okay');
                     setScore(s => ({ ...s, correct: s.correct + 1 }));
                     setInputStatus('correct'); // Use Green for Okay
                     setStreak(prev => prev + 1);
+                    handleAddXp(2);
                 }
 
                 // Track Hit Stats
@@ -367,6 +494,7 @@ function App() {
             setScore(s => ({ ...s, correct: s.correct + 1 }));
             if (streak + 1 > maxStreak) setMaxStreak(streak + 1);
             setStreak(prev => prev + 1);
+            handleAddXp(5); // Standard XP for wait mode
 
             // Track Hit Stats
             relevantArray.filter(n => requiredNotes.has(n)).forEach(n => {
@@ -384,7 +512,7 @@ function App() {
             if (inputStatus !== 'waiting') setInputStatus('waiting');
         }
 
-    }, [activeNotes, cursorIndex, levelData, audioStarted, difficulty, waitingForRelease, gameMode, isRhythmMode, isRhythmPlaying, elapsedTime, inputStatus, preHeld, streak, maxStreak, score]);
+    }, [effectiveActiveNotes, cursorIndex, levelData, audioStarted, difficulty, waitingForRelease, gameMode, isRhythmMode, isRhythmPlaying, elapsedTime, inputStatus, preHeld, streak, maxStreak, score, addXp]);
 
 
 
@@ -392,6 +520,22 @@ function App() {
         <div className={`min-h-screen flex flex-col items-center p-8 transition-colors duration-500 ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100/50 text-gray-900'}`}>
             <header className="mb-8 text-center relative w-full max-w-4xl">
                 <h1 className="text-4xl font-bold mb-2">Piano Sight Reading</h1>
+
+                {/* Level / XP Display - Mobile Optimized: Top Left Absolute */}
+                <div className="absolute left-0 top-12 md:top-12 flex items-center gap-2 scale-75 md:scale-100 origin-left">
+                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white shadow-lg">
+                        {gameState.level}
+                    </div>
+                    <div className="flex flex-col items-start">
+                        <span className="text-xs font-bold uppercase tracking-wide text-gray-500">Level</span>
+                        <div className="w-24 h-2 bg-gray-300 rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-blue-500 transition-all duration-500"
+                                style={{ width: `${(gameState.xp % 100)}%` }} // Modulo for progress within level
+                            ></div>
+                        </div>
+                    </div>
+                </div>
 
                 <button
                     onClick={() => setIsDarkMode(!isDarkMode)}
@@ -411,23 +555,59 @@ function App() {
                             ⏱ {(levelData.treble.length * (60 / BPM) - elapsedTime).toFixed(1)}s
                         </span>
                     )}
+                    <button
+                        onClick={() => setIsAchievementsOpen(true)}
+                        className="ml-4 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                        title="Achievements"
+                    >
+                        🏆
+                    </button>
                 </div>
 
-                <div className="absolute left-0 top-0 flex gap-2">
+                <div className="absolute left-0 top-0 flex gap-2 scale-90 origin-top-left md:scale-100">
                     <button
                         onClick={() => setCurrentView('game')}
-                        className={`px-4 py-2 rounded-full border ${currentView === 'game' ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-200 text-gray-700 border-gray-300'} font-bold text-xs uppercase transition`}
+                        className={`px-3 py-1 md:px-4 md:py-2 rounded-full border ${currentView === 'game' ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-200 text-gray-700 border-gray-300'} font-bold text-[10px] md:text-xs uppercase transition`}
                     >
-                        Game Mode
+                        Game
                     </button>
                     <button
                         onClick={() => setCurrentView('xml')}
-                        className={`px-4 py-2 rounded-full border ${currentView === 'xml' ? 'bg-purple-600 text-white border-purple-600' : 'bg-gray-200 text-gray-700 border-gray-300'} font-bold text-xs uppercase transition`}
+                        className={`px-3 py-1 md:px-4 md:py-2 rounded-full border ${currentView === 'xml' ? 'bg-purple-600 text-white border-purple-600' : 'bg-gray-200 text-gray-700 border-gray-300'} font-bold text-[10px] md:text-xs uppercase transition`}
                     >
-                        MusicXML (Beta)
+                        Library
                     </button>
                 </div>
             </header>
+
+            {levelUp && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in">
+                    <div className="relative bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl text-center transform animate-bounce overflow-hidden">
+                        {/* Confetti Particles */}
+                        {[...Array(12)].map((_, i) => (
+                            <div
+                                key={i}
+                                className="absolute top-1/2 left-1/2 w-2 h-2 bg-yellow-400 rounded-full animate-ping"
+                                style={{
+                                    transform: `translate(${(Math.random() - 0.5) * 200}px, ${(Math.random() - 0.5) * 200}px)`,
+                                    animationDelay: `${Math.random() * 0.5}s`,
+                                    animationDuration: '1s'
+                                }}
+                            />
+                        ))}
+
+                        <div className="text-6xl mb-4 relative z-10">🎉</div>
+                        <h2 className="text-4xl font-bold text-[#D4AF37] mb-2 relative z-10">Level Up!</h2>
+                        <p className="text-2xl text-gray-600 dark:text-gray-300 relative z-10">You reached Level {levelUp}!</p>
+                        <button
+                            onClick={clearLevelUp}
+                            className="mt-6 px-8 py-3 bg-blue-600 text-white rounded-full font-bold shadow-lg hover:scale-105 transition relative z-10"
+                        >
+                            Awesome!
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {currentView === 'xml' ? (
                 <div className="w-full max-w-6xl flex flex-col gap-4">
@@ -442,7 +622,12 @@ function App() {
                                     Back to Library
                                 </button>
                             </div>
-                            <ScoreDisplay file={uploadedFile || undefined} xmlContent={xmlData || undefined} isDarkMode={isDarkMode} />
+                            <ScoreDisplay
+                                file={uploadedFile || undefined}
+                                xmlContent={xmlData || undefined}
+                                isDarkMode={isDarkMode}
+                                onAddXp={handleAddXp}
+                            />
                         </>
                     ) : (
                         <div className="w-full">
@@ -468,7 +653,7 @@ function App() {
                             <MusicDisplay
                                 trebleNotes={levelData.treble}
                                 bassNotes={levelData.bass}
-                                width={window.innerWidth < 800 ? window.innerWidth - 32 : 800}
+                                width={windowWidth < 800 ? windowWidth - 48 : 800} // Responsive width using hook
                                 cursorIndex={cursorIndex}
                                 inputStatus={inputStatus}
                                 onLayout={setNotePositions}
@@ -520,16 +705,17 @@ function App() {
 
                     </div>
 
-                    {/* Controls */}
-                    <div className={`mt-8 flex gap-4 p-6 rounded-xl shadow-lg border transition-colors duration-500 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                        <div className="flex flex-col gap-2">
+                    {/* Controls - Responsive Container */}
+                    <div className={`mt-8 flex flex-wrap justify-center gap-4 p-4 md:p-6 rounded-xl shadow-lg border transition-colors duration-500 w-full max-w-4xl ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                        {/* Difficulty */}
+                        <div className="flex flex-col gap-2 items-center md:items-start">
                             <label className={`font-semibold text-sm uppercase tracking-wide opacity-70 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Difficulty</label>
                             <div className="flex gap-2">
                                 {(Object.keys(Difficulty) as Array<keyof typeof Difficulty>).map(k => (
                                     <button
                                         key={k}
                                         onClick={() => generateNewLevel(Difficulty[k])}
-                                        className={`px-4 py-2 rounded-lg transition-all ${difficulty === Difficulty[k]
+                                        className={`px-3 py-1 md:px-4 md:py-2 rounded-lg text-sm transition-all ${difficulty === Difficulty[k]
                                             ? 'bg-blue-600 text-white shadow-lg scale-105'
                                             : (isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
                                             }`}
@@ -540,34 +726,35 @@ function App() {
                             </div>
                         </div>
 
-                        <div className={`w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-auto'}`}></div>
+                        <div className={`hidden md:block w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-12'}`}></div>
 
-                        <div className="flex flex-col gap-2">
+                        {/* Rhythm Control */}
+                        <div className="flex flex-col gap-2 items-center md:items-start">
                             <label className={`font-semibold text-sm uppercase tracking-wide opacity-70 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Game Mode</label>
                             <div className="flex gap-2">
                                 <button
                                     onClick={handleStartRhythm}
-                                    className={`px-6 py-2 rounded-lg font-bold transition-all ${isRhythmMode
+                                    className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${isRhythmMode
                                         ? 'bg-red-500 text-white shadow-lg scale-105 animate-pulse'
                                         : (isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
                                         }`}
                                 >
-                                    {isRhythmMode ? (countDown ? `Starting...` : 'STOP RHYTHM') : 'START RHYTHM'}
+                                    {isRhythmMode ? (countDown ? `Starting...` : 'STOP') : 'RHYTHM'}
                                 </button>
                             </div>
                         </div>
 
-                        <div className={`w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-auto'}`}></div>
+                        <div className={`hidden md:block w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-12'}`}></div>
 
                         {/* Hand Selector */}
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-2 items-center md:items-start">
                             <label className={`font-semibold text-sm uppercase tracking-wide opacity-70 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Hand</label>
                             <div className="flex gap-2">
                                 {(['both', 'treble', 'bass'] as const).map(m => (
                                     <button
                                         key={m}
                                         onClick={() => setGameMode(m)}
-                                        className={`px-4 py-2 rounded-lg uppercase text-xs font-bold transition-all ${gameMode === m
+                                        className={`px-3 py-1 md:px-4 md:py-2 rounded-lg uppercase text-[10px] md:text-xs font-bold transition-all ${gameMode === m
                                             ? (isDarkMode ? 'bg-gray-600 text-white' : 'bg-gray-800 text-white')
                                             : (isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-500')
                                             }`}
@@ -578,20 +765,20 @@ function App() {
                             </div>
                         </div>
 
-                        <div className={`w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-auto'}`}></div>
+                        <div className={`hidden md:block w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-12'}`}></div>
 
                         {/* System Controls */}
-                        <div className="flex flex-col gap-2 justify-center">
+                        <div className="flex flex-col gap-2 justify-center items-center w-full md:w-auto mt-4 md:mt-0">
                             {!audioStarted ? (
                                 <button
                                     onClick={startAudio}
                                     disabled={isAudioLoading}
-                                    className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${isDarkMode
-                                        ? 'bg-emerald-900 text-emerald-100 hover:bg-emerald-800 border border-emerald-700'
-                                        : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-200'
+                                    className={`w-full md:w-auto px-6 py-3 rounded-xl text-sm font-bold uppercase tracking-wide transition-all shadow-md ${isDarkMode
+                                        ? 'bg-emerald-600 text-white hover:bg-emerald-500'
+                                        : 'bg-emerald-500 text-white hover:bg-emerald-400'
                                         }`}
                                 >
-                                    {isAudioLoading ? 'Loading...' : 'Init Audio'}
+                                    {isAudioLoading ? 'Loading...' : 'Tap to Start Audio'}
                                 </button>
                             ) : (
                                 <button
@@ -608,6 +795,27 @@ function App() {
                             >
                                 {showNoteLabels ? 'Hide Labels' : 'Show Labels'}
                             </button>
+
+                            {/* Mic Controls */}
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={isMicActive ? stopMic : startMic}
+                                    className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${isMicActive
+                                        ? 'bg-rose-500 text-white animate-pulse'
+                                        : (isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-500')
+                                        }`}
+                                >
+                                    {isMicActive ? '🎤 On' : '🎤 Off'}
+                                </button>
+                                {isMicActive && (
+                                    <div className="w-2 h-8 bg-gray-300 dark:bg-gray-700 rounded-full overflow-hidden flex items-end" title="Mic Level">
+                                        <div
+                                            className="w-full bg-green-500 transition-all duration-75"
+                                            style={{ height: `${Math.min(100, micVolume * 400)}%` }}
+                                        />
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -617,6 +825,14 @@ function App() {
                         hitStats={hitStats}
                         errorStats={errorStats}
                         isDarkMode={isDarkMode}
+                        onReset={() => {
+                            if (confirm("Are you sure you want to reset ALL progress (XP, Level, Stats)? This cannot be undone.")) {
+                                localStorage.removeItem('piano_gamification');
+                                localStorage.removeItem('pianopilot_stats');
+                                localStorage.removeItem('pianopilot_achievements');
+                                window.location.reload();
+                            }
+                        }}
                     />
 
                     {
@@ -631,6 +847,24 @@ function App() {
                 </>
             )}
 
+            <AchievementsModal
+                isOpen={isAchievementsOpen}
+                onClose={() => setIsAchievementsOpen(false)}
+                achievements={achievements}
+                achievementsState={achievementsState}
+                getProgress={getProgress}
+                dailyChallenges={dailyChallenges}
+            />
+
+            <NotificationToast
+                unlockedAchievements={newUnlocks}
+                completedChallenges={newDailyCompleted}
+                allChallenges={dailyChallenges}
+                onClear={() => {
+                    clearNewUnlocks();
+                    clearNewDaily();
+                }}
+            />
         </div >
     );
 }

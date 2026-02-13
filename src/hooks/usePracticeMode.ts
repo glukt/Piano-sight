@@ -8,7 +8,21 @@ interface PracticeSection {
 
 export type PracticeModeType = 'preview' | 'wait' | 'tempo';
 
-export function usePracticeMode(playbackEngine: PlaybackEngine | null, totalMeasures: number, userActiveNotes: Set<number>) {
+interface UsePracticeModeProps {
+    playbackEngine: PlaybackEngine | null;
+    totalMeasures: number;
+    userActiveNotes: Set<number>;
+    onNoteCorrect?: () => void;
+    onSectionComplete?: () => void;
+}
+
+export function usePracticeMode({
+    playbackEngine,
+    totalMeasures,
+    userActiveNotes,
+    onNoteCorrect,
+    onSectionComplete
+}: UsePracticeModeProps) {
     const [isActive, setIsActive] = useState(false);
     const [currentSection, setCurrentSection] = useState<PracticeSection>({ startMeasure: 0, endMeasure: 2 });
     const [mode, setMode] = useState<PracticeModeType>('preview');
@@ -149,6 +163,7 @@ export function usePracticeMode(playbackEngine: PlaybackEngine | null, totalMeas
 
                 if (acc >= 90) {
                     setFeedback(`Great! Accuracy: ${Math.round(acc)}%. Moving on!`);
+                    if (onSectionComplete) onSectionComplete(); // Major XP event
                     setTimeout(() => nextSection(), 1500);
                 } else {
                     setFeedback(`Accuracy: ${Math.round(acc)}%. Let's try again.`);
@@ -204,6 +219,7 @@ export function usePracticeMode(playbackEngine: PlaybackEngine | null, totalMeas
                 setFeedback("Good!");
                 playbackEngine.nextStep();
                 setNotesCorrect(prev => prev + 1);
+                if (onNoteCorrect) onNoteCorrect(); // Minor XP event
 
                 // Mark these notes as successful so we require re-trigger next time if needed
                 setLastSuccessfulNotes(new Set(currentExpected));
@@ -240,7 +256,7 @@ export function usePracticeMode(playbackEngine: PlaybackEngine | null, totalMeas
         const interval = setInterval(checkInput, 50); // Poll 20Hz
         return () => clearInterval(interval);
 
-    }, [isActive, mode, playbackEngine, userActiveNotes, currentSection, notesCorrect, notesMissed, lastSuccessfulNotes, nextSection, retrySection]);
+    }, [isActive, mode, playbackEngine, userActiveNotes, currentSection, notesCorrect, notesMissed, lastSuccessfulNotes, nextSection, retrySection, onNoteCorrect, onSectionComplete]);
 
 
     return {

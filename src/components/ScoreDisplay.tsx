@@ -8,15 +8,18 @@ import { useMidi } from '../hooks/useMidi';
 import { usePracticeMode } from '../hooks/usePracticeMode';
 import LoopingControls from './LoopingControls';
 import { VexFlowGraphicalNote } from 'opensheetmusicdisplay/build/dist/src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote';
+import { ScoreControls } from './ScoreControls';
+import { PracticeOverlay } from './PracticeOverlay';
 
 interface ScoreDisplayProps {
     xmlUrl?: string; // Optional: Load from URL
     xmlContent?: string; // Optional: Load from string content
     file?: File; // Optional: Load from File object (for MXL)
     isDarkMode?: boolean;
+    onAddXp?: (amount: number) => void;
 }
 
-export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, file, isDarkMode = false }) => {
+export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, file, isDarkMode = false, onAddXp }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const osmdRef = useRef<OSMD | null>(null);
     const playbackRef = useRef<PlaybackEngine | null>(null);
@@ -36,7 +39,13 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
         stopPractice,
         nextSection,
         expectedNotes
-    } = usePracticeMode(playbackRef.current, playbackRef.current?.MeasureCount || 0, userActiveNotes);
+    } = usePracticeMode({
+        playbackEngine: playbackRef.current,
+        totalMeasures: playbackRef.current?.MeasureCount || 0,
+        userActiveNotes,
+        onNoteCorrect: onAddXp ? () => onAddXp(2) : undefined, // 2 XP per note
+        onSectionComplete: onAddXp ? () => onAddXp(50) : undefined // 50 XP per section (~1/2 level early on)
+    });
 
     // Looping & Progress State
     const [currentTimestamp, setCurrentTimestamp] = useState(0);
@@ -55,6 +64,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
 
         // Initialize OSMD if not already done
         if (!osmdRef.current) {
+            // @ts-ignore - OSMD constructor types might be loose
             osmdRef.current = new OSMD(containerRef.current, {
                 autoResize: true,
                 backend: "svg",
@@ -284,144 +294,34 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
             {error && <div className="text-red-500 font-bold">Error: {error}</div>}
 
             {/* Controls Bar */}
-            <div className={`w-full max-w-4xl p-4 rounded-xl shadow-lg border flex flex-col gap-4 mb-6 transition-colors duration-500
-                 ${isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-200 text-gray-800'}
-            `}>
-                {/* Top Row: Playback & File Info */}
-                <div className="flex justify-between items-center">
-                    <div className="flex gap-2">
-                        <button
-                            onClick={togglePlayback}
-                            disabled={loading}
-                            className={`px-6 py-2 rounded-full font-bold uppercase text-sm tracking-wider transition-all
-                                ${isPlaying
-                                    ? 'bg-red-500 text-white shadow-red-500/50 hover:bg-red-600'
-                                    : (isDarkMode ? 'bg-emerald-600 text-white hover:bg-emerald-500' : 'bg-emerald-500 text-white shadow-emerald-500/50 hover:bg-emerald-600')}
-                                ${loading ? 'opacity-50 cursor-not-allowed' : 'shadow-lg hover:scale-105 active:scale-95'}
-                            `}
-                        >
-                            {loading ? 'Loading...' : isPlaying ? 'Stop' : 'Play'}
-                        </button>
-                        <button
-                            onClick={stopPlayback}
-                            disabled={loading}
-                            className={`px-6 py-2 rounded-full font-bold uppercase text-sm tracking-wider transition-all
-                                ${isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}
-                                ${loading ? 'opacity-50 cursor-not-allowed' : 'shadow-lg hover:scale-105 active:scale-95'}
-                            `}
-                        >
-                            Reset
-                        </button>
-                    </div>
-                    {/* Placeholder for file info / title */}
-                    <div className={`text-lg font-semibold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
-                        {/* Score Title */}
-                    </div>
-                </div>
-
-                {/* Bottom Row: Toggles */}
-                <div className={`flex flex-wrap items-center justify-center gap-6 p-4 rounded-lg border w-full max-w-4xl mb-4 font-sans text-sm transition-colors duration-500
-                    ${isDarkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-gray-50 border-gray-200 text-gray-800'}
-                `}>
-                    <div className={`font-serif font-bold mr-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Display:</div>
-
-                    <label className={`flex items-center gap-2 cursor-pointer select-none transition ${isDarkMode ? 'hover:text-blue-400' : 'hover:text-blue-600'}`}>
-                        <input
-                            type="checkbox"
-                            checked={showKeyboard}
-                            onChange={(e) => setShowKeyboard(e.target.checked)}
-                            className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-                        />
-                        <span>Virtual Piano</span>
-                    </label>
-
-                    <label className={`flex items-center gap-2 cursor-pointer select-none transition ${isDarkMode ? 'hover:text-blue-400' : 'hover:text-blue-600'}`}>
-                        <input
-                            type="checkbox"
-                            checked={showPianoLabels}
-                            onChange={(e) => setShowPianoLabels(e.target.checked)}
-                            className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-                        />
-                        <span>Piano Labels</span>
-                    </label>
-
-                    <div className={`h-4 w-px mx-2 ${isDarkMode ? 'bg-gray-500' : 'bg-gray-300'}`}></div>
-
-                    <label className={`flex items-center gap-2 cursor-pointer select-none transition ${isDarkMode ? 'hover:text-blue-400' : 'hover:text-blue-600'}`}>
-                        <input
-                            type="checkbox"
-                            checked={highlightNotes}
-                            onChange={(e) => setHighlightNotes(e.target.checked)}
-                            className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-                        />
-                        <span>Highlight Notes</span>
-                    </label>
-
-                    <label className={`flex items-center gap-2 cursor-pointer select-none transition ${isDarkMode ? 'hover:text-blue-400' : 'hover:text-blue-600'}`}>
-                        <input
-                            type="checkbox"
-                            checked={showNoteNames}
-                            onChange={(e) => setShowNoteNames(e.target.checked)}
-                            className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-                        />
-                        <span>Score Labels</span>
-                    </label>
-
-                    {/* Practice Mode Toggle */}
-                    <button
-                        onClick={isPracticeActive ? stopPractice : startPractice}
-                        className={`ml-4 px-4 py-1 rounded-full text-xs font-bold border transition animate-pulse
-                            ${isPracticeActive
-                                ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white border-rose-600 shadow-lg'
-                                : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600 shadow-md hover:scale-105'}
-                        `}
-                    >
-                        {isPracticeActive ? 'Exit Practice' : '🎓 Learn to Play!'}
-                    </button>
-                </div>
-            </div>
+            <ScoreControls
+                loading={loading}
+                isPlaying={isPlaying}
+                isDarkMode={isDarkMode}
+                showKeyboard={showKeyboard}
+                showPianoLabels={showPianoLabels}
+                highlightNotes={highlightNotes}
+                showNoteNames={showNoteNames}
+                isPracticeActive={isPracticeActive}
+                onTogglePlayback={togglePlayback}
+                onReset={stopPlayback}
+                onToggleKeyboard={setShowKeyboard}
+                onTogglePianoLabels={setShowPianoLabels}
+                onToggleHighlight={setHighlightNotes}
+                onToggleNoteNames={setShowNoteNames}
+                onTogglePractice={isPracticeActive ? stopPractice : startPractice}
+            />
 
             {/* Practice Mode Overlay - Compact Bottom Bar */}
             {isPracticeActive && (
-                <div className="fixed bottom-0 left-0 right-0 bg-indigo-900/90 backdrop-blur-md text-white border-t border-indigo-500 p-4 shadow-2xl z-50 flex items-center justify-between animate-in slide-in-from-bottom duration-300">
-                    <div className="flex items-center gap-6">
-                        <div className="flex flex-col">
-                            <span className="text-xs text-indigo-300 uppercase font-bold tracking-wider">Mode</span>
-                            <span className={`font-bold text-lg ${practiceMode === 'wait' ? 'text-yellow-400' : 'text-green-400'}`}>{practiceMode.toUpperCase()}</span>
-                        </div>
-                        <div className="h-8 w-px bg-indigo-700"></div>
-                        <div className="flex flex-col">
-                            <span className="text-xs text-indigo-300 uppercase font-bold tracking-wider">Section</span>
-                            <span className="font-mono text-lg">{practiceSection.startMeasure + 1}-{practiceSection.endMeasure}</span>
-                        </div>
-                        <div className="h-8 w-px bg-indigo-700"></div>
-                        <div className="text-xl font-medium px-4">
-                            {practiceFeedback}
-                        </div>
-                    </div>
-
-                    <div className="flex gap-4">
-                        <button
-                            onClick={() => playbackRef.current?.seek(playbackRef.current.getMeasureTimestamp(practiceSection.startMeasure) || 0)}
-                            className="px-4 py-2 bg-indigo-700 hover:bg-indigo-600 rounded-lg text-sm font-bold shadow-lg transition"
-                        >
-                            ↺ Replay
-                        </button>
-                        <button
-                            onClick={nextSection}
-                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-bold shadow-lg transition"
-                        >
-                            Next ➜
-                        </button>
-                        <button
-                            onClick={stopPractice}
-                            className="p-2 hover:bg-white/10 rounded-full transition ml-2"
-                            title="Exit Practice"
-                        >
-                            ✕
-                        </button>
-                    </div>
-                </div>
+                <PracticeOverlay
+                    practiceMode={practiceMode}
+                    practiceSection={practiceSection}
+                    practiceFeedback={practiceFeedback}
+                    onReplay={() => playbackRef.current?.seek(playbackRef.current.getMeasureTimestamp(practiceSection.startMeasure) || 0)}
+                    onNext={nextSection}
+                    onExit={stopPractice}
+                />
             )}
 
             <div className="w-full max-w-4xl mb-4">

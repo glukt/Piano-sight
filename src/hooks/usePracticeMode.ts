@@ -30,7 +30,6 @@ export function usePracticeMode(playbackEngine: PlaybackEngine | null, totalMeas
         setCurrentSection({ startMeasure: 0, endMeasure: 2 }); // Start with first 2 measures
         setMode('preview');
         setPreviewLoopCount(0);
-        setConsecutiveSuccesses(0);
         setNotesCorrect(0);
         setNotesMissed(0);
         setLastSuccessfulNotes(new Set());
@@ -57,7 +56,6 @@ export function usePracticeMode(playbackEngine: PlaybackEngine | null, totalMeas
         setCurrentSection({ startMeasure: nextStart, endMeasure: nextEnd });
         setMode('preview'); // Reset to preview for new section
         setPreviewLoopCount(0);
-        setConsecutiveSuccesses(0);
         setNotesCorrect(0);
         setNotesMissed(0);
         setLastSuccessfulNotes(new Set());

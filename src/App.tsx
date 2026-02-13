@@ -438,8 +438,13 @@ function App() {
         // allFound is already calculated above using activeNotes
 
         if (allFound) {
+            // CRITICAL FIX: Prevent empty set matching when no notes are required (e.g. during loading/transition)
+            if (requiredNotes.size === 0) {
+                return;
+            }
+
             // Check that we actually HAVE notes active (prevent empty set matching empty set if reqNotes was somehow empty, strictly)
-            if (relevantActiveNotes.size === 0 && requiredNotes.size > 0) {
+            if (relevantActiveNotes.size === 0) {
                 // This shouldn't happen given allFound logic, but safety check.
                 return;
             }

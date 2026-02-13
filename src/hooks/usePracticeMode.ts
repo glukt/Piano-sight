@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { PlaybackEngine } from '../engine/PlaybackEngine';
 
 interface PracticeSection {
@@ -18,19 +18,31 @@ export function usePracticeMode(playbackEngine: PlaybackEngine | null, totalMeas
     const [previewLoopCount, setPreviewLoopCount] = useState(0);
     const [expectedNotes, setExpectedNotes] = useState<number[]>([]);
 
+    // Accuracy Tracking
+    const [notesCorrect, setNotesCorrect] = useState(0);
+    const [notesMissed, setNotesMissed] = useState(0);
+    const [lastSuccessfulNotes, setLastSuccessfulNotes] = useState<Set<number>>(new Set());
+
+    // Track held wrong notes to avoid counting the same press multiple times
+    const heldWrongNotesRef = useRef<Set<number>>(new Set());
+
     const startPractice = useCallback(() => {
         setIsActive(true);
         setCurrentSection({ startMeasure: 0, endMeasure: 2 }); // Start with first 2 measures
         setMode('preview');
         setPreviewLoopCount(0);
         setConsecutiveSuccesses(0);
+        setNotesCorrect(0);
+        setNotesMissed(0);
+        setLastSuccessfulNotes(new Set());
+        heldWrongNotesRef.current.clear();
         setFeedback("Listen to this section...");
     }, []);
 
     const stopPractice = useCallback(() => {
         setIsActive(false);
         playbackEngine?.stop();
-        playbackEngine?.setLoop(null, null); // Use setLoop null instead of cancelLoop
+        playbackEngine?.setLoop(null, null);
     }, [playbackEngine]);
 
     const nextSection = useCallback(() => {
@@ -47,14 +59,31 @@ export function usePracticeMode(playbackEngine: PlaybackEngine | null, totalMeas
         setMode('preview'); // Reset to preview for new section
         setPreviewLoopCount(0);
         setConsecutiveSuccesses(0);
+        setNotesCorrect(0);
+        setNotesMissed(0);
+        setLastSuccessfulNotes(new Set());
+        heldWrongNotesRef.current.clear();
         setFeedback("New Section! Listen first.");
     }, [currentSection, totalMeasures]);
 
     const retrySection = useCallback(() => {
         setFeedback("Let's try that again. Focus on accuracy.");
-        // Reset to wait mode
-        setMode('wait');
-    }, []);
+        setNotesCorrect(0);
+        setNotesMissed(0);
+        setLastSuccessfulNotes(new Set());
+        heldWrongNotesRef.current.clear();
+
+        // Reset to wait mode directly or preview? User pattern suggests Preview might be helpful if they failed.
+        // But let's go with user preference or default.
+        // Let's reset to Preview to give them a refresher.
+        setMode('preview');
+        setPreviewLoopCount(0);
+
+        const startTs = playbackEngine?.getMeasureTimestamp(currentSection.startMeasure);
+        if (startTs !== null && startTs !== undefined) {
+            playbackEngine?.seek(startTs);
+        }
+    }, [currentSection, playbackEngine]);
 
     // Effect to handle Mode Transitions & Looping
     useEffect(() => {
@@ -69,7 +98,6 @@ export function usePracticeMode(playbackEngine: PlaybackEngine | null, totalMeas
                 playbackEngine.setLoop(startTs, endTs);
 
                 // Handle Loop Callback for Preview Counter
-                // We pass a callback that increments the counter state
                 playbackEngine.setLoopCallback(() => {
                     setPreviewLoopCount(prev => prev + 1);
                 });
@@ -96,9 +124,7 @@ export function usePracticeMode(playbackEngine: PlaybackEngine | null, totalMeas
         if (mode === 'preview' && previewLoopCount >= 2) {
             setMode('wait');
             setFeedback("Now you try! Play the notes.");
-            // Force stop immediately to prevent 3rd loop start
             playbackEngine?.stop();
-            // Seek to start of section
             const startTs = playbackEngine?.getMeasureTimestamp(currentSection.startMeasure);
             if (startTs !== null && startTs !== undefined) {
                 playbackEngine?.seek(startTs);
@@ -111,38 +137,114 @@ export function usePracticeMode(playbackEngine: PlaybackEngine | null, totalMeas
         if (!isActive || mode !== 'wait' || !playbackEngine) return;
 
         const checkInput = () => {
-            const expectedNotes = playbackEngine.getNotesAtCurrentPosition();
+            const currentExpected = playbackEngine.getNotesAtCurrentPosition();
 
-            if (expectedNotes.length === 0) {
-                // Optimization: If no notes (e.g. rest), just wait a beat or advance immediately?
-                // For now, let's advance to avoid getting stuck on rests.
-                playbackEngine.nextStep();
+            // 1. Check for End of Section
+            const currentTimestamp = playbackEngine.CurrentTimestamp;
+            const endTimestamp = playbackEngine.getMeasureTimestamp(currentSection.endMeasure);
+
+            if (endTimestamp !== null && currentTimestamp >= endTimestamp) {
+                // End of Section Reached! Check Accuracy.
+                const total = notesCorrect + notesMissed;
+                // If total is 0 (empty section?), treat as 100%
+                const acc = total > 0 ? (notesCorrect / total) * 100 : 100;
+                setAccuracy(Math.round(acc));
+
+                if (acc >= 90) {
+                    setFeedback(`Great! Accuracy: ${Math.round(acc)}%. Moving on!`);
+                    setTimeout(() => nextSection(), 1500);
+                } else {
+                    setFeedback(`Accuracy: ${Math.round(acc)}%. Let's try again.`);
+                    setTimeout(() => retrySection(), 1500);
+                }
+                playbackEngine.stop(); // Stop checking
                 return;
             }
 
-            // Highlighting!
+            // 2. Handle Rests / Empty Steps
+            if (currentExpected.length === 0) {
+                playbackEngine.nextStep();
+                setLastSuccessfulNotes(new Set());
+                return;
+            }
+
+            // 3. Highlight Notes
             playbackEngine.highlightCurrentNotes();
+            setExpectedNotes(currentExpected);
 
+            // 4. Repeated Note Logic (Re-trigger check)
+            // Identify notes that were correctly played in the PREVIOUS step
+            // AND are still currently held by the user.
+            // These notes must be released before they can count for the CURRENT step
+            // (if the current step requires them).
+            const stillHeldFromPrevious = currentExpected.filter(n => lastSuccessfulNotes.has(n) && userActiveNotes.has(n));
 
-            // Check if User is holding ALL required notes
-            const allNotesPressed = expectedNotes.every(note => userActiveNotes.has(note));
+            if (stillHeldFromPrevious.length > 0) {
+                // User must release these notes first.
+                // Note: We don't block *other* notes, but "allNotesPressed" checks "every" expected note.
+                // So effectively, we block advancement until these specific notes are released and re-pressed.
 
-            // Update state for UI visualization
-            setExpectedNotes(expectedNotes);
+                // Cleanup: If user HAS released a note, remove it from lastSuccessfulNotes 
+                // so we know it's "clearguard" for next press.
+                const newLast = new Set(lastSuccessfulNotes);
+                let changed = false;
+                lastSuccessfulNotes.forEach(n => {
+                    if (!userActiveNotes.has(n)) {
+                        newLast.delete(n);
+                        changed = true;
+                    }
+                });
+                if (changed) setLastSuccessfulNotes(newLast);
+
+                // Wait for release. Do not advance.
+                return;
+            }
+
+            // 5. Check Input
+            const allNotesPressed = currentExpected.every(note => userActiveNotes.has(note));
 
             if (allNotesPressed) {
                 setFeedback("Good!");
-                // Advance cursor
                 playbackEngine.nextStep();
+                setNotesCorrect(prev => prev + 1);
                 setConsecutiveSuccesses(prev => prev + 1);
-                setAccuracy(100);
+
+                // Mark these notes as successful so we require re-trigger next time if needed
+                setLastSuccessfulNotes(new Set(currentExpected));
+            } else {
+                // 6. Mistake Tracking
+                // Count any active note that is NOT in expected notes
+                const activeWrongNotes = [...userActiveNotes].filter(n => !currentExpected.includes(n));
+
+                let newMistakes = 0;
+
+                // Add new wrong notes to heldWrongNotes
+                activeWrongNotes.forEach(n => {
+                    if (!heldWrongNotesRef.current.has(n)) {
+                        heldWrongNotesRef.current.add(n);
+                        newMistakes++;
+                    }
+                });
+
+                // Remove released key from heldWrongNotes
+                // (Convert to array to avoid modification during iteration issues if any)
+                [...heldWrongNotesRef.current].forEach(n => {
+                    if (!userActiveNotes.has(n)) {
+                        heldWrongNotesRef.current.delete(n);
+                    }
+                });
+
+                if (newMistakes > 0) {
+                    setNotesMissed(prev => prev + newMistakes);
+                    setFeedback("Careful!");
+                }
             }
         };
 
         const interval = setInterval(checkInput, 50); // Poll 20Hz
         return () => clearInterval(interval);
 
-    }, [isActive, mode, playbackEngine, userActiveNotes]);
+    }, [isActive, mode, playbackEngine, userActiveNotes, currentSection, notesCorrect, notesMissed, lastSuccessfulNotes, nextSection, retrySection]);
 
 
     return {

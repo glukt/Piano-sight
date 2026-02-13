@@ -383,12 +383,15 @@ function App() {
         if (waitingForRelease) {
             // Wait until ALL relevant notes are released
             if (relevantActiveNotes.size === 0) {
-                setCursorIndex(prev => prev + 1);
+                // DO NOT INCREMENT HERE! We already incremented when the hit was registered.
                 setInputStatus('waiting');
                 setWaitingForRelease(false);
             }
             return;
         }
+
+        // GUARD: If Level Up Modal is showing, ignore input
+        if (levelUp) return;
 
         // ----------------------------------------------------
         // Logic: Note Validation

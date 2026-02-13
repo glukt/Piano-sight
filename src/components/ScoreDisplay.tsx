@@ -38,7 +38,8 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
         startPractice,
         stopPractice,
         nextSection,
-        expectedNotes
+        expectedNotes,
+        showHint // NEW
     } = usePracticeMode({
         playbackEngine: playbackRef.current,
         totalMeasures: playbackRef.current?.MeasureCount || 0,
@@ -46,6 +47,10 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
         onNoteCorrect: onAddXp ? () => onAddXp(2) : undefined, // 2 XP per note
         onSectionComplete: onAddXp ? () => onAddXp(50) : undefined // 50 XP per section (~1/2 level early on)
     });
+
+    // ... (rest of code)
+
+
 
     // Looping & Progress State
     const [currentTimestamp, setCurrentTimestamp] = useState(0);
@@ -58,6 +63,10 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
     const [highlightNotes, setHighlightNotes] = useState(true);
     const [showNoteNames, setShowNoteNames] = useState(false);
     const [showPianoLabels, setShowPianoLabels] = useState(false);
+
+    // Determine if we should show keyboard
+    // Show if: User manually toggled ON OR (Practice Mode AND Hint is Active)
+    const effectiveShowKeyboard = showKeyboard || (isPracticeActive && showHint);
 
     useEffect(() => {
         if (!containerRef.current) return;
@@ -255,7 +264,10 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
     };
 
     const handleSeek = (val: number) => {
-        if (playbackRef.current) playbackRef.current.seek(val);
+        if (playbackRef.current) {
+            setActiveNotes(new Set());
+            playbackRef.current.seek(val);
+        }
     };
 
     const handleSetLoopStart = () => {
@@ -286,6 +298,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
         playbackRef.current?.stop();
         osmdRef.current?.cursor?.reset();
         setCurrentTimestamp(0);
+        setActiveNotes(new Set());
     };
 
     return (
@@ -337,14 +350,19 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
                 />
             </div>
 
-            {showKeyboard && (
-                <div className="w-full max-w-4xl mb-4">
+            {effectiveShowKeyboard && (
+                <div className={`w-full max-w-4xl mb-4 transition-all duration-500 ${isPracticeActive && showHint ? 'animate-bounce shadow-2xl ring-4 ring-yellow-400 rounded-xl' : ''}`}>
                     <VirtualKeyboard
                         activeNotes={activeNotes}
                         userActiveNotes={userActiveNotes}
                         expectedNotes={isPracticeActive && practiceMode === 'wait' ? expectedNotes : []}
                         showLabels={showPianoLabels}
                     />
+                    {isPracticeActive && showHint && (
+                        <div className="text-center text-sm font-bold text-yellow-600 animate-pulse">
+                            👇 Hint: Play these notes!
+                        </div>
+                    )}
                 </div>
             )}
 

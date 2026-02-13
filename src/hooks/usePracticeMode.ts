@@ -143,12 +143,36 @@ export function usePracticeMode({
         }
     }, [previewLoopCount, mode, playbackEngine, currentSection.startMeasure]);
 
+    const [showHint, setShowHint] = useState(false);
+    const stuckTimerRef = useRef(0);
+    const prevExpectedNotesRef = useRef<string>("");
+
     // Active Logic for Wait Mode
     useEffect(() => {
         if (!isActive || mode !== 'wait' || !playbackEngine) return;
 
         const checkInput = () => {
             const currentExpected = playbackEngine.getNotesAtCurrentPosition();
+            const currentExpectedStr = currentExpected.slice().sort().join(',');
+
+            // Check Stuck Timer
+            if (currentExpected.length > 0) {
+                if (currentExpectedStr === prevExpectedNotesRef.current) {
+                    stuckTimerRef.current += 50; // Add 50ms
+                    if (stuckTimerRef.current > 3000 && !showHint) {
+                        setShowHint(true);
+                    }
+                } else {
+                    // New notes! Reset.
+                    stuckTimerRef.current = 0;
+                    prevExpectedNotesRef.current = currentExpectedStr;
+                    setShowHint(false);
+                }
+            } else {
+                stuckTimerRef.current = 0;
+                setShowHint(false);
+            }
+
 
             // 1. Check for End of Section
             const currentTimestamp = playbackEngine.CurrentTimestamp;
@@ -170,6 +194,7 @@ export function usePracticeMode({
                     setTimeout(() => retrySection(), 1500);
                 }
                 playbackEngine.stop(); // Stop checking
+                setShowHint(false);
                 return;
             }
 
@@ -223,6 +248,9 @@ export function usePracticeMode({
 
                 // Mark these notes as successful so we require re-trigger next time if needed
                 setLastSuccessfulNotes(new Set(currentExpected));
+                // Reset hint immediately on success
+                // (though next tick will do it too via currentExpected change, this feels snappier)
+                setShowHint(false);
             } else {
                 // 6. Mistake Tracking
                 // Count any active note that is NOT in expected notes
@@ -256,7 +284,7 @@ export function usePracticeMode({
         const interval = setInterval(checkInput, 50); // Poll 20Hz
         return () => clearInterval(interval);
 
-    }, [isActive, mode, playbackEngine, userActiveNotes, currentSection, notesCorrect, notesMissed, lastSuccessfulNotes, nextSection, retrySection, onNoteCorrect, onSectionComplete]);
+    }, [isActive, mode, playbackEngine, userActiveNotes, currentSection, notesCorrect, notesMissed, lastSuccessfulNotes, nextSection, retrySection, onNoteCorrect, onSectionComplete, showHint]);
 
 
     return {
@@ -270,6 +298,7 @@ export function usePracticeMode({
         setMode,
         nextSection,
         retrySection,
-        expectedNotes
+        expectedNotes,
+        showHint
     };
 }

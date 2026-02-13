@@ -86,10 +86,7 @@ export function useDailyChallenges() {
         });
     }, []);
 
-    const claimChallenge = useCallback((id: string) => {
-        // Logic if we want manual claiming, for now we just auto-complete logic above
-        // This function could be used to remove from "newCompleted" list or similar
-    }, []);
+
 
     const clearNewCompleted = useCallback(() => {
         setNewCompleted([]);

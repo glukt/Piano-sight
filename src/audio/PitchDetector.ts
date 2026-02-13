@@ -32,7 +32,7 @@ export class PitchDetector {
     public lastVolume: number = 0;
 
     public getPitch(): number | null {
-        this.analyser.getFloatTimeDomainData(this.buffer);
+        this.analyser.getFloatTimeDomainData(this.buffer as any);
         // Cast buffer to avoid "ArrayBufferLike" mismatch in strict environments
         const autoCorrelateValue = this.autoCorrelate(this.buffer as any, this.audioContext.sampleRate);
 

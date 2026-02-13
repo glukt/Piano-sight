@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useMidi } from './hooks/useMidi';
 import { audio } from './audio/Synth';
 import { MusicDisplay, StaveNoteData } from './components/MusicDisplay';

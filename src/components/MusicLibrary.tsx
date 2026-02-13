@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useMusicLibrary, LibraryScore } from '../hooks/useMusicLibrary';
+import { useMusicLibrary } from '../hooks/useMusicLibrary';
 
 interface MusicLibraryProps {
     onSelectScore: (file: File) => void;

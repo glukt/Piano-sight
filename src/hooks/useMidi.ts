@@ -83,8 +83,8 @@ export function useMidi({ onNoteOn, onNoteOff }: UseMidiProps = {}) {
             setError("MIDI Access Failed.");
         };
 
-        if (navigator.requestMIDIAccess) {
-            navigator.requestMIDIAccess({ sysex: false }).then(onMIDISuccess, onMIDIFailure);
+        if ((navigator as any).requestMIDIAccess) {
+            (navigator as any).requestMIDIAccess({ sysex: false }).then(onMIDISuccess, onMIDIFailure);
         } else {
             setError("Web MIDI API not supported. Try Chrome or Edge.");
         }

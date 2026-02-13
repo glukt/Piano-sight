@@ -13,7 +13,6 @@ export function usePracticeMode(playbackEngine: PlaybackEngine | null, totalMeas
     const [currentSection, setCurrentSection] = useState<PracticeSection>({ startMeasure: 0, endMeasure: 2 });
     const [mode, setMode] = useState<PracticeModeType>('preview');
     const [accuracy, setAccuracy] = useState(100);
-    const [consecutiveSuccesses, setConsecutiveSuccesses] = useState(0);
     const [feedback, setFeedback] = useState<string | null>(null);
     const [previewLoopCount, setPreviewLoopCount] = useState(0);
     const [expectedNotes, setExpectedNotes] = useState<number[]>([]);
@@ -207,7 +206,6 @@ export function usePracticeMode(playbackEngine: PlaybackEngine | null, totalMeas
                 setFeedback("Good!");
                 playbackEngine.nextStep();
                 setNotesCorrect(prev => prev + 1);
-                setConsecutiveSuccesses(prev => prev + 1);
 
                 // Mark these notes as successful so we require re-trigger next time if needed
                 setLastSuccessfulNotes(new Set(currentExpected));

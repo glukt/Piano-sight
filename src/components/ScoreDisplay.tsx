@@ -7,9 +7,7 @@ import VirtualKeyboard from './VirtualKeyboard';
 import { useMidi } from '../hooks/useMidi';
 import { usePracticeMode } from '../hooks/usePracticeMode';
 import LoopingControls from './LoopingControls';
-import { GraphicalNote } from 'opensheetmusicdisplay/build/dist/src/MusicalScore/Graphical/GraphicalNote';
 import { VexFlowGraphicalNote } from 'opensheetmusicdisplay/build/dist/src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote';
-import { AccidentalEnum } from 'opensheetmusicdisplay/build/dist/src/Common/DataObjects/Pitch';
 
 interface ScoreDisplayProps {
     xmlUrl?: string; // Optional: Load from URL
@@ -116,7 +114,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
 
                 setTotalDuration(playbackRef.current.TotalDuration);
 
-                playbackRef.current.setProgressCallback((curr, total) => {
+                playbackRef.current.setProgressCallback((curr) => {
                     setCurrentTimestamp(curr);
                 });
 

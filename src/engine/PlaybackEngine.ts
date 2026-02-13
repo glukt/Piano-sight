@@ -174,7 +174,7 @@ export class PlaybackEngine {
             // Check if cursor exists, if not it might be initialized on render.
             // But cursor property is on the instance.
             // Type definition says `cursor` property exists.
-            this.osmd.cursor.show();
+            (this.osmd.cursor as any)?.show();
         }
         this.cursor = this.osmd.cursor;
         this.isPlaying = true;

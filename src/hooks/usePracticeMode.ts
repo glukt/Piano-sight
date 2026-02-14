@@ -84,19 +84,10 @@ export function usePracticeMode({
         setLastSuccessfulNotes(new Set());
         heldWrongNotesRef.current.clear();
 
-        // Reset to wait mode directly or preview? User pattern suggests Preview might be helpful if they failed.
-        // But let's go with user preference or default.
-        // Let's reset to Preview to give them a refresher.
+        // Reset to preview mode. The useEffect will handle stopping and seeking.
         setMode('preview');
         setPreviewLoopCount(0);
-
-        const startTs = playbackEngine?.getMeasureTimestamp(currentSection.startMeasure);
-        if (startTs !== null && startTs !== undefined) {
-            // Ensure stop is called to clear any pending timeouts/intervals
-            playbackEngine?.stop();
-            playbackEngine?.seek(startTs);
-        }
-    }, [currentSection, playbackEngine]);
+    }, []);
 
     // Effect to handle Mode Transitions & Looping
     useEffect(() => {
@@ -272,7 +263,17 @@ export function usePracticeMode({
             } else {
                 // 6. Mistake Tracking
                 // Count any active note that is NOT in expected notes
-                const activeWrongNotes = [...userActiveNotes].filter(n => !currentExpectedMidis.includes(n));
+                // LEGATO FIX: Ignore notes that are in existing "lastSuccessfulNotes" (trailing notes from previous step)
+                const activeWrongNotes = [...userActiveNotes].filter(n => {
+                    // If it's in the current expected set, it's correct (or at least valid).
+                    if (currentExpectedMidis.includes(n)) return false;
+
+                    // If it was correct in the PREVIOUS step (and held over), ignore it (Legato tolerance).
+                    if (lastSuccessfulNotes.has(n)) return false;
+
+                    // Otherwise, it's a wrong note.
+                    return true;
+                });
 
                 let newMistakes = 0;
 

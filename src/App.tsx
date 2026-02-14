@@ -16,6 +16,7 @@ import { NotificationToast } from './components/NotificationToast';
 import { useWindowSize } from './hooks/useWindowSize';
 import { useAudioInput } from './hooks/useAudioInput';
 import { ReferencePanel } from './components/ReferencePanel';
+import { SettingsPanel } from './components/SettingsPanel';
 
 function App() {
     const { width: windowWidth } = useWindowSize();
@@ -158,7 +159,7 @@ function App() {
     const [preHeld, setPreHeld] = useState(false); // To prevent auto-triggering held notes
     const [notePositions, setNotePositions] = useState<number[]>([]);
     const [isDarkMode, setIsDarkMode] = useState(false); // Default to Light Mode
-    const [currentView, setCurrentView] = useState<'game' | 'musicxml' | 'reference'>('game');
+    const [currentView, setCurrentView] = useState<'game' | 'musicxml' | 'reference' | 'settings'>('game');
     const [xmlData, setXmlData] = useState<string | null>(null);
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [fileName, setFileName] = useState<string | null>(null);
@@ -536,7 +537,7 @@ function App() {
 
                 {/* Center Tabs */}
                 <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 p-1 rounded-xl">
-                    {(['game', 'musicxml', 'reference'] as const).map(view => (
+                    {(['game', 'musicxml', 'reference', 'settings'] as const).map(view => (
                         <button
                             key={view}
                             onClick={() => setCurrentView(view)}
@@ -701,25 +702,21 @@ function App() {
                             <div className="p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-3">
                                 <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Actions</h3>
                                 {/* Audio Toggle */}
-                                {!audioStarted ? (
-                                    <button
-                                        onClick={startAudio}
-                                        disabled={isAudioLoading}
-                                        className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-bold text-sm shadow-sm transition"
-                                    >
-                                        {isAudioLoading ? 'Loading Audio...' : 'Start Audio Engine'}
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={handleStartRhythm}
-                                        className={`w-full py-2 rounded-lg font-bold text-sm shadow-sm transition ${isRhythmMode
-                                            ? 'bg-red-500 text-white animate-pulse'
-                                            : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600'
-                                            }`}
-                                    >
-                                        {isRhythmMode ? (countDown ? 'Get Ready!' : 'Stop Rhythm Mode') : 'Start Rhythm Mode'}
-                                    </button>
+                                {/* Audio Toggle - MOVED TO SETTINGS */}
+                                {!audioStarted && (
+                                    <div className="w-full py-2 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg text-xs font-medium text-center px-2">
+                                        Head to Settings ⚙️ to start Audio Engine
+                                    </div>
                                 )}
+                                <button
+                                    onClick={handleStartRhythm}
+                                    className={`w-full py-2 rounded-lg font-bold text-sm shadow-sm transition ${isRhythmMode
+                                        ? 'bg-red-500 text-white animate-pulse'
+                                        : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600'
+                                        }`}
+                                >
+                                    {isRhythmMode ? (countDown ? 'Get Ready!' : 'Stop Rhythm Mode') : 'Start Rhythm Mode'}
+                                </button>
                                 <div className="flex gap-2 mt-auto">
                                     <button onClick={testAudio} disabled={!audioStarted} className="flex-1 py-1 text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-200">
                                         Test Sound
@@ -753,6 +750,7 @@ function App() {
                                     xmlContent={xmlData || undefined}
                                     isDarkMode={isDarkMode}
                                     onAddXp={handleAddXp}
+                                    userActiveNotes={effectiveActiveNotes} // Pass microphone/midi input
                                 />
                             </>
                         ) : (
@@ -767,6 +765,31 @@ function App() {
                 {currentView === 'reference' && (
                     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <ReferencePanel />
+                    </div>
+                )}
+
+                {/* SETTINGS VIEW */}
+                {currentView === 'settings' && (
+                    <div className="w-full flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <SettingsPanel
+                            isDarkMode={isDarkMode}
+                            onToggleTheme={() => setIsDarkMode(!isDarkMode)}
+                            showNoteLabels={showNoteLabels}
+                            onToggleLabels={() => setShowNoteLabels(!showNoteLabels)}
+                            audioStarted={audioStarted}
+                            isAudioLoading={isAudioLoading}
+                            onStartAudio={startAudio}
+                            onResetProgress={() => {
+                                // Clear Local Storage
+                                localStorage.removeItem('piano-sight-xp');
+                                localStorage.removeItem('piano-sight-level');
+                                localStorage.removeItem('piano-sight-achievements');
+                                localStorage.removeItem('piano-sight-challenges');
+                                localStorage.removeItem('piano-sight-stats');
+                                // Force Reload
+                                window.location.reload();
+                            }}
+                        />
                     </div>
                 )}
             </main>

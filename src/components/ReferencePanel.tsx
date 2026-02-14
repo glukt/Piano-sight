@@ -14,8 +14,8 @@ export const ReferencePanel: React.FC = () => {
                         key={tab}
                         onClick={() => setActiveTab(tab)}
                         className={`flex-1 py-4 text-center font-bold uppercase text-sm tracking-wider transition-colors ${activeTab === tab
-                                ? 'bg-white dark:bg-gray-800 text-blue-600 border-b-2 border-blue-600'
-                                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                            ? 'bg-white dark:bg-gray-800 text-blue-600 border-b-2 border-blue-600'
+                            : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                             }`}
                     >
                         {tab}
@@ -63,24 +63,24 @@ export const ReferencePanel: React.FC = () => {
                             <h3 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">Note Reading Mnemonics</h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="p-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
-                                    <h4 className="text-xl font-bold mb-2 text-blue-800 dark:text-blue-300">Treble Clef (Lines)</h4>
-                                    <p className="text-lg mb-4">E - G - B - D - F</p>
-                                    <p className="italic text-gray-600 dark:text-gray-400">"Every Good Boy Does Fine"</p>
+                                    <h4 className="text-xl font-bold mb-2 text-blue-900 dark:text-blue-300">Treble Clef (Lines)</h4>
+                                    <p className="text-lg mb-4 font-semibold text-gray-800 dark:text-gray-100">E - G - B - D - F</p>
+                                    <p className="italic text-gray-700 dark:text-gray-300">"Every Good Boy Does Fine"</p>
                                 </div>
                                 <div className="p-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
-                                    <h4 className="text-xl font-bold mb-2 text-blue-800 dark:text-blue-300">Treble Clef (Spaces)</h4>
-                                    <p className="text-lg mb-4">F - A - C - E</p>
-                                    <p className="italic text-gray-600 dark:text-gray-400">"FACE"</p>
+                                    <h4 className="text-xl font-bold mb-2 text-blue-900 dark:text-blue-300">Treble Clef (Spaces)</h4>
+                                    <p className="text-lg mb-4 font-semibold text-gray-800 dark:text-gray-100">F - A - C - E</p>
+                                    <p className="italic text-gray-700 dark:text-gray-300">"FACE"</p>
                                 </div>
                                 <div className="p-6 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-100 dark:border-purple-800">
-                                    <h4 className="text-xl font-bold mb-2 text-purple-800 dark:text-purple-300">Bass Clef (Lines)</h4>
-                                    <p className="text-lg mb-4">G - B - D - F - A</p>
-                                    <p className="italic text-gray-600 dark:text-gray-400">"Good Boys Do Fine Always"</p>
+                                    <h4 className="text-xl font-bold mb-2 text-purple-900 dark:text-purple-300">Bass Clef (Lines)</h4>
+                                    <p className="text-lg mb-4 font-semibold text-gray-800 dark:text-gray-100">G - B - D - F - A</p>
+                                    <p className="italic text-gray-700 dark:text-gray-300">"Good Boys Do Fine Always"</p>
                                 </div>
                                 <div className="p-6 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-100 dark:border-purple-800">
-                                    <h4 className="text-xl font-bold mb-2 text-purple-800 dark:text-purple-300">Bass Clef (Spaces)</h4>
-                                    <p className="text-lg mb-4">A - C - E - G</p>
-                                    <p className="italic text-gray-600 dark:text-gray-400">"All Cows Eat Grass"</p>
+                                    <h4 className="text-xl font-bold mb-2 text-purple-900 dark:text-purple-300">Bass Clef (Spaces)</h4>
+                                    <p className="text-lg mb-4 font-semibold text-gray-800 dark:text-gray-100">A - C - E - G</p>
+                                    <p className="italic text-gray-700 dark:text-gray-300">"All Cows Eat Grass"</p>
                                 </div>
                             </div>
                         </div>

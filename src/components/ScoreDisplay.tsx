@@ -4,7 +4,7 @@ import { OpenSheetMusicDisplay as OSMD } from 'opensheetmusicdisplay';
 import { PlaybackEngine } from '../engine/PlaybackEngine';
 import { audio } from '../audio/Synth';
 import VirtualKeyboard from './VirtualKeyboard';
-import { useMidi } from '../hooks/useMidi';
+// import { useMidi } from '../hooks/useMidi'; // Removed, passed as prop
 import { usePracticeMode } from '../hooks/usePracticeMode';
 import LoopingControls from './LoopingControls';
 import { VexFlowGraphicalNote } from 'opensheetmusicdisplay/build/dist/src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote';
@@ -17,16 +17,17 @@ interface ScoreDisplayProps {
     file?: File; // Optional: Load from File object (for MXL)
     isDarkMode?: boolean;
     onAddXp?: (amount: number) => void;
+    userActiveNotes?: Set<number>; // NEW: Pass microphone/midi input from parent
 }
 
-export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, file, isDarkMode = false, onAddXp }) => {
+export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, file, isDarkMode = false, onAddXp, userActiveNotes = new Set() }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const osmdRef = useRef<OSMD | null>(null);
     const playbackRef = useRef<PlaybackEngine | null>(null);
     const [loading, setLoading] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false);
     const [activeNotes, setActiveNotes] = useState<Set<number>>(new Set());
-    const { activeNotes: userActiveNotes } = useMidi();
+    // REMOVED: const { activeNotes: userActiveNotes } = useMidi(); -> Now using prop
     const [error, setError] = useState<string | null>(null);
 
     // Practice Mode

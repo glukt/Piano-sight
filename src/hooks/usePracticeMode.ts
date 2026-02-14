@@ -95,6 +95,13 @@ export function usePracticeMode({
 
     // Effect to handle Mode Transitions & Looping
     useEffect(() => {
+        // cleanup when NOT active
+        if (!isActive && playbackEngine) {
+            playbackEngine.stop();
+            playbackEngine.setLoop(null, null);
+            return;
+        }
+
         if (!isActive || !playbackEngine) return;
 
         const setupLoop = () => {

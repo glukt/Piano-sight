@@ -16,6 +16,7 @@ interface MusicDisplayProps {
     inputStatus?: 'waiting' | 'correct' | 'incorrect' | 'perfect';
     onLayout?: (positions: number[]) => void;
     isDarkMode?: boolean;
+    gameMode?: 'treble' | 'bass' | 'both';
 }
 
 const VF = Vex.Flow;
@@ -29,7 +30,8 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
     cursorIndex = 0,
     inputStatus = 'waiting',
     onLayout,
-    isDarkMode = false
+    isDarkMode = false,
+    gameMode = 'both'
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const prevPositionsRef = useRef<number[] | null>(null);
@@ -58,6 +60,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         const staveWidth = width - 40;
 
         // Treble Stave
+
         const trebleStave = new VF.Stave(startX, startY, staveWidth);
         trebleStave.addClef("treble");
 
@@ -65,10 +68,13 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         // VexFlow Stave styling is tricky, we can set context prop before drawing
         trebleStave.setContext(context).draw();
 
+
         // Bass Stave
+
         const bassStave = new VF.Stave(startX, startY + 100, staveWidth);
         bassStave.addClef("bass");
         bassStave.setContext(context).draw();
+
 
         // Connectors (Brace + Lines)
         new VF.StaveConnector(trebleStave, bassStave).setType(VF.StaveConnector.type.BRACE).setContext(context).draw();
@@ -136,8 +142,13 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
             // Using a large available width ensures spacing.
             .format([trebleVoice, bassVoice], staveWidth - 50);
 
+
         trebleVoice.draw(context, trebleStave);
+
+
+
         bassVoice.draw(context, bassStave);
+
 
         // -----------------------------------------------------------------------
         // Extract Layout (for external synchronization)
@@ -161,5 +172,5 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
 
     }, [trebleNotes, bassNotes, width, height, showLabels, cursorIndex, inputStatus, isDarkMode, onLayout]);
 
-    return <div ref={containerRef} className="w-full h-full flex justify-center items-center" />;
+    return <div ref={containerRef} className="w-full h-full flex justify-center items-center relative" style={{ backgroundColor: isDarkMode ? '' : 'white' }} />;
 };

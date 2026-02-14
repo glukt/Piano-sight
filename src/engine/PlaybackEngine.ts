@@ -111,6 +111,12 @@ export class PlaybackEngine {
     public getMeasureTimestamp(measureIndex: number): number | null {
         if (!this.osmd.Sheet) return null;
         const measures = this.osmd.Sheet.SourceMeasures;
+
+        // Handle end of score (exclusive index == count)
+        if (measureIndex === measures.length) {
+            return this.TotalDuration;
+        }
+
         if (measureIndex < 0 || measureIndex >= measures.length) return null;
         return measures[measureIndex].AbsoluteTimestamp.RealValue;
     }

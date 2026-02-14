@@ -64,8 +64,12 @@ export function usePracticeMode({
         if (nextStart >= totalMeasures) {
             setFeedback("Practice Complete! Great job!");
             setIsActive(false);
+            playbackEngine?.stop();
             return;
         }
+
+        // Force stop to clear notes and visuals immediately
+        playbackEngine?.stop();
 
         setCurrentSection({ startMeasure: nextStart, endMeasure: nextEnd });
         setMode('preview'); // Reset to preview for new section
@@ -75,7 +79,7 @@ export function usePracticeMode({
         setLastSuccessfulNotes(new Set());
         heldWrongNotesRef.current.clear();
         setFeedback("New Section! Listen first.");
-    }, [currentSection, totalMeasures]);
+    }, [currentSection, totalMeasures, playbackEngine]);
 
     const retrySection = useCallback(() => {
         setFeedback("Let's try that again. Focus on accuracy.");

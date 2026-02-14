@@ -70,12 +70,28 @@ export function useMidi({ onNoteOn, onNoteOff }: UseMidiProps = {}) {
 
                 // Re-bind listeners to all inputs
                 inputList.forEach(input => {
-                    input.onmidimessage = handleMidiMessage;
+                    // Remove old listener if any (though handleMidiMessage changes ref, we need stable cleanup?)
+                    // For simplicity in this effect, we just add. Cleanup is hard without tracking.
+                    // Actually, the effect re-runs on handleMidiMessage change.
+                    input.addEventListener('midimessage', handleMidiMessage);
                 });
             };
 
             access.onstatechange = updateDevices;
             updateDevices();
+
+            // Cleanup function for the effect
+            return () => {
+                // We need to access the LATEST inputs to remove listeners?
+                // accesses inputs from closure scope of 'updateDevices' call? No.
+                // We can't easily cleanup here because 'inputs' state might not be up to date or we need access.
+                // BUT, since we set local vars inputList, we can define cleanup logic inside updateDevices or return a cleanup from the effect.
+                if (access) {
+                    access.inputs.forEach(input => {
+                        input.removeEventListener('midimessage', handleMidiMessage);
+                    });
+                }
+            };
         };
 
         const onMIDIFailure = (err: any) => {
@@ -83,11 +99,26 @@ export function useMidi({ onNoteOn, onNoteOff }: UseMidiProps = {}) {
             setError("MIDI Access Failed.");
         };
 
+        let accessObj: WebMidi.MIDIAccess | null = null;
+
         if ((navigator as any).requestMIDIAccess) {
-            (navigator as any).requestMIDIAccess({ sysex: false }).then(onMIDISuccess, onMIDIFailure);
+            (navigator as any).requestMIDIAccess({ sysex: false }).then((access: WebMidi.MIDIAccess) => {
+                accessObj = access;
+                onMIDISuccess(access);
+                // We need to store cleanup?
+                // The Effect return should call cleanup.
+            }, onMIDIFailure);
         } else {
             setError("Web MIDI API not supported. Try Chrome or Edge.");
         }
+
+        return () => {
+            if (accessObj) {
+                accessObj.inputs.forEach(input => {
+                    input.removeEventListener('midimessage', handleMidiMessage);
+                });
+            }
+        };
     }, [handleMidiMessage]);
 
     return { inputs, outputs, activeNotes, isEnabled, error };

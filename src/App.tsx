@@ -5,7 +5,7 @@ import { MusicDisplay, StaveNoteData } from './components/MusicDisplay';
 import { LevelGenerator, Difficulty } from './engine/LevelGenerator';
 import { midiToNoteName } from './utils/midiUtils';
 import { useRhythmEngine } from './hooks/useRhythmEngine';
-import { StatisticsPanel } from './components/StatisticsPanel';
+
 import { ScoreDisplay } from './components/ScoreDisplay';
 import { MusicLibrary } from './components/MusicLibrary';
 import { useGamification } from './hooks/useGamification';
@@ -15,15 +15,12 @@ import { AchievementsModal } from './components/AchievementsModal';
 import { NotificationToast } from './components/NotificationToast';
 import { useWindowSize } from './hooks/useWindowSize';
 import { useAudioInput } from './hooks/useAudioInput';
+import { ReferencePanel } from './components/ReferencePanel';
 
 function App() {
     const { width: windowWidth } = useWindowSize();
     const {
-        isListening: isMicActive,
-        detectedNote: micNote,
-        volume: micVolume,
-        startListening: startMic,
-        stopListening: stopMic
+        detectedNote: micNote
     } = useAudioInput();
 
     // Audio Event Handlers (Direct Callbacks for Low Latency)
@@ -48,8 +45,7 @@ function App() {
     });
 
     // useMidi Hook with Callbacks
-    // useMidi Hook with Callbacks
-    const { activeNotes, error, isEnabled } = useMidi({
+    const { activeNotes, isEnabled } = useMidi({
         onNoteOn: (n, v) => onNoteOn.current(n, v),
         onNoteOff: (n) => onNoteOff.current(n)
     });
@@ -60,7 +56,6 @@ function App() {
     // We create a new Set that combines both.
     // Note: 'activeNotes' from useMidi is a Set state.
     // We need to be careful not to cause infinite loops if we were setting state, but here we derive.
-    // Merge MIDI and Mic Input
     // Memoize to prevent effect loops since Set is a mutable object type
     const effectiveActiveNotes = useMemo(() => {
         const notes = new Set(activeNotes);
@@ -163,7 +158,7 @@ function App() {
     const [preHeld, setPreHeld] = useState(false); // To prevent auto-triggering held notes
     const [notePositions, setNotePositions] = useState<number[]>([]);
     const [isDarkMode, setIsDarkMode] = useState(false); // Default to Light Mode
-    const [currentView, setCurrentView] = useState<'game' | 'xml'>('game');
+    const [currentView, setCurrentView] = useState<'game' | 'musicxml' | 'reference'>('game');
     const [xmlData, setXmlData] = useState<string | null>(null);
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [fileName, setFileName] = useState<string | null>(null);
@@ -171,7 +166,6 @@ function App() {
     // Scoring & Stats
     const [score, setScore] = useState({ correct: 0, incorrect: 0 });
     const [errorStats, setErrorStats] = useState<Record<string, number>>({});
-    const [hitStats, setHitStats] = useState<Record<string, number>>({});
 
     // Level State
     const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.NOVICE);
@@ -182,7 +176,7 @@ function App() {
     // Rhythm Engine (Depends on levelData)
     const BPM = 60;
     const RHYTHM_LEAD_IN = 2; // 2 Seconds of visual lead-in
-    const { isPlaying: isRhythmPlaying, playheadX, elapsedTime, start: startRhythm, stop: stopRhythm } = useRhythmEngine(BPM, Math.ceil(levelData.treble.length / 4));
+    const { isPlaying: isRhythmPlaying, elapsedTime, start: startRhythm, stop: stopRhythm } = useRhythmEngine(BPM, Math.ceil(levelData.treble.length / 4));
 
     const generateNewLevel = (diff: Difficulty, keepRhythm = false) => {
         setDifficulty(diff);
@@ -495,11 +489,7 @@ function App() {
                     handleAddXp(2);
                 }
 
-                // Track Hit Stats
-                relevantArray.filter(n => requiredNotes.has(n)).forEach(n => {
-                    const name = midiToNoteName(n);
-                    setHitStats(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
-                });
+
 
                 if (streak + 1 > maxStreak) setMaxStreak(streak + 1);
                 setCursorIndex(prev => prev + 1);
@@ -513,11 +503,7 @@ function App() {
             setStreak(prev => prev + 1);
             handleAddXp(5); // Standard XP for wait mode
 
-            // Track Hit Stats
-            relevantArray.filter(n => requiredNotes.has(n)).forEach(n => {
-                const name = midiToNoteName(n);
-                setHitStats(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
-            });
+
 
             setCursorIndex(prev => prev + 1);
             setWaitingForRelease(true);
@@ -534,169 +520,120 @@ function App() {
 
 
     return (
-        <div className={`min-h-screen flex flex-col items-center p-8 transition-colors duration-500 ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-100/50 text-gray-900'}`}>
-            <header className="mb-8 text-center relative w-full max-w-4xl">
-                <h1 className="text-4xl font-bold mb-2">Piano Sight Reading</h1>
+        <div className={`min-h-screen flex flex-col items-center p-4 md:p-8 transition-colors duration-500 ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
 
-                {/* Level / XP Display - Mobile Optimized: Top Left Absolute */}
-                <div className="absolute left-0 top-12 md:top-12 flex items-center gap-2 scale-75 md:scale-100 origin-left">
-                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-bold text-white shadow-lg">
-                        {gameState.level}
+            {/* Top Navigation Bar */}
+            <nav className={`w-full max-w-6xl mb-8 flex justify-between items-center p-2 rounded-2xl shadow-sm border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+                <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold shadow-lg">
+                        🎹
                     </div>
-                    <div className="flex flex-col items-start">
-                        <span className="text-xs font-bold uppercase tracking-wide text-gray-500">Level</span>
-                        <div className="w-24 h-2 bg-gray-300 rounded-full overflow-hidden">
-                            <div
-                                className="h-full bg-blue-500 transition-all duration-500"
-                                style={{ width: `${(gameState.xp % 100)}%` }} // Modulo for progress within level
-                            ></div>
-                        </div>
+                    <div className="hidden md:block">
+                        <h1 className="text-xl font-bold tracking-tight">Piano Sight</h1>
+                        <div className="text-[10px] uppercase tracking-widest opacity-60 font-semibold">Virtuoso Training</div>
                     </div>
                 </div>
 
-                <button
-                    onClick={() => setIsDarkMode(!isDarkMode)}
-                    className={`absolute right-0 top-0 px-4 py-2 rounded-full border ${isDarkMode ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-white'} hover:scale-105 transition`}
-                >
-                    {isDarkMode ? '☀️ Light' : '🌙 Dark'}
-                </button>
+                {/* Center Tabs */}
+                <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 p-1 rounded-xl">
+                    {(['game', 'musicxml', 'reference'] as const).map(view => (
+                        <button
+                            key={view}
+                            onClick={() => setCurrentView(view)}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wide transition-all ${currentView === view
+                                ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                                }`}
+                        >
+                            {view === 'musicxml' ? 'MusicXML' : view.charAt(0).toUpperCase() + view.slice(1)}
+                        </button>
+                    ))}
+                </div>
 
-                <div className="flex justify-center gap-4 text-lg items-center">
-                    <span className={`text-xs uppercase tracking-wider ${isEnabled ? 'text-emerald-500' : 'text-red-500'}`}>
-                        {isEnabled ? '🎹 MIDI Active' : '🔌 No MIDI'}
-                    </span>
-                    <span className="w-px h-4 bg-gray-400/30"></span>
-                    <span>Score: <span className="text-green-500">{score.correct}</span> / <span className="text-red-500">{score.incorrect}</span></span>
-                    {isRhythmMode && (
-                        <span className={`font-bold ${playheadX > 100 ? 'text-gray-400' : ''}`}>
-                            ⏱ {(levelData.treble.length * (60 / BPM) - elapsedTime).toFixed(1)}s
-                        </span>
-                    )}
+                {/* Right Actions */}
+                <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-end mr-2 cursor-pointer group" title="Current Level">
+                        <div className="text-xs font-bold text-blue-500 group-hover:text-blue-400 transition">LVL {gameState.level}</div>
+                        <div className="w-20 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${(gameState.xp % 100)}%` }}></div>
+                        </div>
+                    </div>
+
                     <button
                         onClick={() => setIsAchievementsOpen(true)}
-                        className="ml-4 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-xl transition relative"
                         title="Achievements"
                     >
                         🏆
-                    </button>
-                </div>
-
-                <div className="absolute left-0 top-0 flex gap-2 scale-90 origin-top-left md:scale-100">
-                    <button
-                        onClick={() => setCurrentView('game')}
-                        className={`px-3 py-1 md:px-4 md:py-2 rounded-full border ${currentView === 'game' ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-200 text-gray-700 border-gray-300'} font-bold text-[10px] md:text-xs uppercase transition`}
-                    >
-                        Game
-                    </button>
-                    <button
-                        onClick={() => setCurrentView('xml')}
-                        className={`px-3 py-1 md:px-4 md:py-2 rounded-full border ${currentView === 'xml' ? 'bg-purple-600 text-white border-purple-600' : 'bg-gray-200 text-gray-700 border-gray-300'} font-bold text-[10px] md:text-xs uppercase transition`}
-                    >
-                        Library
-                    </button>
-                </div>
-            </header>
-
-            {levelUp && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in">
-                    <div className="relative bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl text-center transform animate-bounce overflow-hidden">
-                        {/* Confetti Particles */}
-                        {[...Array(12)].map((_, i) => (
-                            <div
-                                key={i}
-                                className="absolute top-1/2 left-1/2 w-2 h-2 bg-yellow-400 rounded-full animate-ping"
-                                style={{
-                                    transform: `translate(${(Math.random() - 0.5) * 200}px, ${(Math.random() - 0.5) * 200}px)`,
-                                    animationDelay: `${Math.random() * 0.5}s`,
-                                    animationDuration: '1s'
-                                }}
-                            />
-                        ))}
-
-                        <div className="text-6xl mb-4 relative z-10">🎉</div>
-                        <h2 className="text-4xl font-bold text-[#D4AF37] mb-2 relative z-10">Level Up!</h2>
-                        <p className="text-2xl text-gray-600 dark:text-gray-300 relative z-10">You reached Level {levelUp}!</p>
-                        <button
-                            onClick={clearLevelUp}
-                            className="mt-6 px-8 py-3 bg-blue-600 text-white rounded-full font-bold shadow-lg hover:scale-105 transition relative z-10"
-                        >
-                            Awesome!
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {currentView === 'xml' ? (
-                <div className="w-full max-w-6xl flex flex-col gap-4">
-                    {uploadedFile || xmlData ? (
-                        <>
-                            <div className="bg-white p-4 rounded shadow flex items-center justify-between mb-4">
-                                <span className="font-bold text-gray-700">Current Score: {fileName || 'Loaded Score'}</span>
-                                <button
-                                    onClick={handleClearScore}
-                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 font-bold text-sm"
-                                >
-                                    Back to Library
-                                </button>
-                            </div>
-                            <ScoreDisplay
-                                file={uploadedFile || undefined}
-                                xmlContent={xmlData || undefined}
-                                isDarkMode={isDarkMode}
-                                onAddXp={handleAddXp}
-                            />
-                        </>
-                    ) : (
-                        <div className="w-full">
-                            <MusicLibrary onSelectScore={handleScoreSelect} />
-                        </div>
-                    )}
-                </div>
-            ) : (
-                <>
-
-                    {/* Main Display Area */}
-                    <div className="relative w-full max-w-5xl flex flex-col items-center space-y-8">
-
-                        {/* Count Down Overlay */}
-                        {countDown !== null && (
-                            <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
-                                <span className="text-9xl font-bold text-[#D4AF37] animate-pulse">{countDown}</span>
-                            </div>
+                        {newUnlocks.length > 0 && (
+                            <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></span>
                         )}
+                    </button>
+                    <button
+                        onClick={() => setIsDarkMode(!isDarkMode)}
+                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-xl transition"
+                        title="Toggle Theme"
+                    >
+                        {isDarkMode ? '🌙' : '☀️'}
+                    </button>
+                </div>
+            </nav>
 
-                        {/* Piano Sheet Display */}
-                        <div className="relative">
-                            <MusicDisplay
-                                trebleNotes={levelData.treble}
-                                bassNotes={levelData.bass}
-                                width={windowWidth < 800 ? windowWidth - 48 : 800} // Responsive width using hook
-                                cursorIndex={cursorIndex}
-                                inputStatus={inputStatus}
-                                onLayout={setNotePositions}
-                                isDarkMode={isDarkMode}
-                                showLabels={showNoteLabels}
-                            />
+            {/* Main Content Area */}
+            <main className="w-full max-w-6xl flex flex-col items-center">
 
-                            {/* Rhythm Playhead Overlay */}
-                            {isRhythmMode && (
-                                <div
-                                    className="absolute top-0 bottom-0 w-1 bg-red-500/70 shadow-[0_0_10px_rgba(239,68,68,0.8)] transition-all duration-75 ease-linear pointer-events-none"
-                                    style={{
-                                        left: `${getPlayheadPixelX()}px`,
-                                        // Remove percentage based left
-                                    }}
-                                />
+                {/* GAME VIEW */}
+                {currentView === 'game' && (
+                    <div className="w-full flex flex-col items-center gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {/* Stats Bar */}
+                        <div className="flex gap-8 text-sm font-bold bg-white dark:bg-gray-800 px-6 py-3 rounded-full shadow-sm border border-gray-100 dark:border-gray-700">
+                            <div className="flex items-center gap-2">
+                                <div className={`w-2 h-2 rounded-full ${isEnabled ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                                <span className={isEnabled ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400'}>{isEnabled ? 'MIDI Connected' : 'No MIDI'}</span>
+                            </div>
+                            <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 self-center"></div>
+                            <div className="flex items-center gap-4">
+                                <span className="text-green-600 dark:text-green-400">Correct: {score.correct}</span>
+                                <span className="text-red-500 dark:text-red-400">Missed: {score.incorrect}</span>
+                            </div>
+                        </div>
+
+                        <div className="relative w-full max-w-5xl">
+                            {/* ... (Existing MusicDisplay and Overlays) ... */}
+                            {countDown !== null && (
+                                <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm rounded-xl">
+                                    <span className="text-9xl font-bold text-[#D4AF37] animate-pulse">{countDown}</span>
+                                </div>
                             )}
 
-                            {/* Feedback Popups */}
+                            <div className="bg-white dark:bg-gray-800 p-2 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 relative overflow-hidden">
+                                <MusicDisplay
+                                    trebleNotes={levelData.treble}
+                                    bassNotes={levelData.bass}
+                                    width={windowWidth < 800 ? windowWidth - 48 : 800}
+                                    cursorIndex={cursorIndex}
+                                    inputStatus={inputStatus}
+                                    onLayout={setNotePositions}
+                                    isDarkMode={isDarkMode}
+                                    showLabels={showNoteLabels}
+                                />
+                                {/* Rhythm Playhead */}
+                                {isRhythmMode && (
+                                    <div
+                                        className="absolute top-0 bottom-0 w-0.5 bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)] z-10 transition-all duration-75 ease-linear pointer-events-none"
+                                        style={{ left: `${getPlayheadPixelX()}px` }}
+                                    />
+                                )}
+                            </div>
+
+                            {/* Feedback Popups (Existing) */}
                             {streak >= 5 && isRhythmMode && (
                                 <div className="absolute top-[-40px] right-0 animate-bounce text-yellow-500 font-bold text-xl drop-shadow-md">
                                     🔥 {streak} Streak!
                                 </div>
                             )}
                             {lastHitType === 'perfect' && (
-                                <div className="absolute top-[40%] left-[50%] transform -translate-x-1/2 -translate-y-1/2 animate-pop text-4xl text-gold font-black drop-shadow-[0_0_15px_rgba(255,215,0,0.8)] z-50 pointer-events-none">
+                                <div className="absolute top-[40%] left-[50%] transform -translate-x-1/2 -translate-y-1/2 animate-pop text-4xl text-yellow-400 font-black drop-shadow-lg z-50 pointer-events-none">
                                     PERFECT!
                                 </div>
                             )}
@@ -711,159 +648,165 @@ function App() {
                                 </div>
                             )}
                         </div>
-                        {/* Streak Counter */}
-                        <div className="absolute top-4 right-8 flex flex-col items-center z-10">
-                            <div className="text-xs text-gray-400 uppercase tracking-widest">Streak</div>
-                            <div key={streak} className={`text-4xl font-bold transition-all ${streak >= 5 ? 'text-[#D4AF37] animate-pop' : 'text-gray-600'}`}>
-                                {streak}
-                            </div>
-                            {maxStreak > 0 && <div className="text-[10px] text-gray-300 mt-1">BEST: {maxStreak}</div>}
-                        </div>
 
-                    </div>
-
-                    {/* Controls - Responsive Container */}
-                    <div className={`mt-8 flex flex-wrap justify-center gap-4 p-4 md:p-6 rounded-xl shadow-lg border transition-colors duration-500 w-full max-w-4xl ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                        {/* Difficulty */}
-                        <div className="flex flex-col gap-2 items-center md:items-start">
-                            <label className={`font-semibold text-sm uppercase tracking-wide opacity-70 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Difficulty</label>
-                            <div className="flex gap-2">
-                                {(Object.keys(Difficulty) as Array<keyof typeof Difficulty>).map(k => (
+                        {/* Controls Container */}
+                        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* Input Settings */}
+                            <div className="p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-3">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Input & Mode</h3>
+                                <div className="flex gap-2">
                                     <button
-                                        key={k}
-                                        onClick={() => generateNewLevel(Difficulty[k])}
-                                        className={`px-3 py-1 md:px-4 md:py-2 rounded-lg text-sm transition-all ${difficulty === Difficulty[k]
-                                            ? 'bg-blue-600 text-white shadow-lg scale-105'
-                                            : (isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
+                                        onClick={() => setGameMode('both')}
+                                        className={`flex-1 py-2 rounded-lg text-sm font-bold ${gameMode === 'both' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
+                                    >
+                                        Both Hands
+                                    </button>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => setGameMode('treble')}
+                                        className={`flex-1 py-1 rounded text-xs font-bold ${gameMode === 'treble' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
+                                    >
+                                        Right (Treble)
+                                    </button>
+                                    <button
+                                        onClick={() => setGameMode('bass')}
+                                        className={`flex-1 py-1 rounded text-xs font-bold ${gameMode === 'bass' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}
+                                    >
+                                        Left (Bass)
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Difficulty */}
+                            <div className="p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-3">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Difficulty</h3>
+                                <div className="flex gap-2 flex-wrap">
+                                    {(Object.keys(Difficulty) as Array<keyof typeof Difficulty>).map(k => (
+                                        <button
+                                            key={k}
+                                            onClick={() => generateNewLevel(Difficulty[k])}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${difficulty === Difficulty[k]
+                                                ? 'bg-blue-600 text-white shadow-md'
+                                                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                                }`}
+                                        >
+                                            {k}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Actions */}
+                            <div className="p-4 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col gap-3">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Actions</h3>
+                                {/* Audio Toggle */}
+                                {!audioStarted ? (
+                                    <button
+                                        onClick={startAudio}
+                                        disabled={isAudioLoading}
+                                        className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-bold text-sm shadow-sm transition"
+                                    >
+                                        {isAudioLoading ? 'Loading Audio...' : 'Start Audio Engine'}
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={handleStartRhythm}
+                                        className={`w-full py-2 rounded-lg font-bold text-sm shadow-sm transition ${isRhythmMode
+                                            ? 'bg-red-500 text-white animate-pulse'
+                                            : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600'
                                             }`}
                                     >
-                                        {k}
+                                        {isRhythmMode ? (countDown ? 'Get Ready!' : 'Stop Rhythm Mode') : 'Start Rhythm Mode'}
                                     </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className={`hidden md:block w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-12'}`}></div>
-
-                        {/* Rhythm Control */}
-                        <div className="flex flex-col gap-2 items-center md:items-start">
-                            <label className={`font-semibold text-sm uppercase tracking-wide opacity-70 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Game Mode</label>
-                            <div className="flex gap-2">
-                                <button
-                                    onClick={handleStartRhythm}
-                                    className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${isRhythmMode
-                                        ? 'bg-red-500 text-white shadow-lg scale-105 animate-pulse'
-                                        : (isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')
-                                        }`}
-                                >
-                                    {isRhythmMode ? (countDown ? `Starting...` : 'STOP') : 'RHYTHM'}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className={`hidden md:block w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-12'}`}></div>
-
-                        {/* Hand Selector */}
-                        <div className="flex flex-col gap-2 items-center md:items-start">
-                            <label className={`font-semibold text-sm uppercase tracking-wide opacity-70 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Hand</label>
-                            <div className="flex gap-2">
-                                {(['both', 'treble', 'bass'] as const).map(m => (
-                                    <button
-                                        key={m}
-                                        onClick={() => setGameMode(m)}
-                                        className={`px-3 py-1 md:px-4 md:py-2 rounded-lg uppercase text-[10px] md:text-xs font-bold transition-all ${gameMode === m
-                                            ? (isDarkMode ? 'bg-gray-600 text-white' : 'bg-gray-800 text-white')
-                                            : (isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-100 text-gray-500')
-                                            }`}
-                                    >
-                                        {m}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className={`hidden md:block w-px mx-2 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200 self-center h-12'}`}></div>
-
-                        {/* System Controls */}
-                        <div className="flex flex-col gap-2 justify-center items-center w-full md:w-auto mt-4 md:mt-0">
-                            {!audioStarted ? (
-                                <button
-                                    onClick={startAudio}
-                                    disabled={isAudioLoading}
-                                    className={`w-full md:w-auto px-6 py-3 rounded-xl text-sm font-bold uppercase tracking-wide transition-all shadow-md ${isDarkMode
-                                        ? 'bg-emerald-600 text-white hover:bg-emerald-500'
-                                        : 'bg-emerald-500 text-white hover:bg-emerald-400'
-                                        }`}
-                                >
-                                    {isAudioLoading ? 'Loading...' : 'Tap to Start Audio'}
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={testAudio}
-                                    className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide opacity-70 hover:opacity-100 transition-all ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-600'
-                                        }`}
-                                >
-                                    Test Sound
-                                </button>
-                            )}
-                            <button
-                                onClick={() => setShowNoteLabels(!showNoteLabels)}
-                                className={`text-[10px] uppercase tracking-wider underline decoration-dotted ${isDarkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
-                            >
-                                {showNoteLabels ? 'Hide Labels' : 'Show Labels'}
-                            </button>
-
-                            {/* Mic Controls */}
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={isMicActive ? stopMic : startMic}
-                                    className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${isMicActive
-                                        ? 'bg-rose-500 text-white animate-pulse'
-                                        : (isDarkMode ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-500')
-                                        }`}
-                                >
-                                    {isMicActive ? '🎤 On' : '🎤 Off'}
-                                </button>
-                                {isMicActive && (
-                                    <div className="w-2 h-8 bg-gray-300 dark:bg-gray-700 rounded-full overflow-hidden flex items-end" title="Mic Level">
-                                        <div
-                                            className="w-full bg-green-500 transition-all duration-75"
-                                            style={{ height: `${Math.min(100, micVolume * 400)}%` }}
-                                        />
-                                    </div>
                                 )}
+                                <div className="flex gap-2 mt-auto">
+                                    <button onClick={testAudio} disabled={!audioStarted} className="flex-1 py-1 text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-200">
+                                        Test Sound
+                                    </button>
+                                    <button onClick={() => setShowNoteLabels(!showNoteLabels)} className="flex-1 py-1 text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-200">
+                                        {showNoteLabels ? 'Hide Labels' : 'Show Labels'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
+
                     </div>
+                )}
 
-
-
-                    <StatisticsPanel
-                        hitStats={hitStats}
-                        errorStats={errorStats}
-                        isDarkMode={isDarkMode}
-                        onReset={() => {
-                            if (confirm("Are you sure you want to reset ALL progress (XP, Level, Stats)? This cannot be undone.")) {
-                                localStorage.removeItem('piano_gamification');
-                                localStorage.removeItem('pianopilot_stats');
-                                localStorage.removeItem('pianopilot_achievements');
-                                window.location.reload();
-                            }
-                        }}
-                    />
-
-                    {
-                        error && (
-                            <div className="p-4 bg-red-50 text-red-700 border border-red-200 text-sm">
-                                {error}
+                {/* MUSICXML VIEW */}
+                {currentView === 'musicxml' && (
+                    <div className="w-full flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {uploadedFile || xmlData ? (
+                            <>
+                                <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between mb-4">
+                                    <span className="font-bold text-gray-700 dark:text-gray-200">Current Score: {fileName || 'Loaded Score'}</span>
+                                    <button
+                                        onClick={handleClearScore}
+                                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-bold text-sm transition"
+                                    >
+                                        ← Back to Library
+                                    </button>
+                                </div>
+                                <ScoreDisplay
+                                    file={uploadedFile || undefined}
+                                    xmlContent={xmlData || undefined}
+                                    isDarkMode={isDarkMode}
+                                    onAddXp={handleAddXp}
+                                />
+                            </>
+                        ) : (
+                            <div className="w-full">
+                                <MusicLibrary onSelectScore={handleScoreSelect} />
                             </div>
-                        )
-                    }
+                        )}
+                    </div>
+                )}
 
+                {/* REFERENCE VIEW */}
+                {currentView === 'reference' && (
+                    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <ReferencePanel />
+                    </div>
+                )}
+            </main>
 
-                </>
+            {/* Level Up Modal (Existing) */}
+            {levelUp && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in">
+                    <div className="relative bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-2xl text-center transform animate-bounce overflow-hidden max-w-sm w-full mx-4">
+                        {/* Confetti Particles */}
+                        {[...Array(12)].map((_, i) => (
+                            <div
+                                key={i}
+                                className="absolute top-1/2 left-1/2 w-2 h-2 bg-yellow-400 rounded-full animate-ping"
+                                style={{
+                                    transform: `translate(${(Math.random() - 0.5) * 200}px, ${(Math.random() - 0.5) * 200}px)`,
+                                    animationDelay: `${Math.random() * 0.5}s`,
+                                    animationDuration: '1s'
+                                }}
+                            />
+                        ))}
+
+                        <div className="text-6xl mb-4 relative z-10">🎉</div>
+                        <h2 className="text-3xl font-bold text-[#D4AF37] mb-2 relative z-10">Level Up!</h2>
+                        <p className="text-xl text-gray-600 dark:text-gray-300 relative z-10">You reached Level {levelUp}!</p>
+                        <button
+                            onClick={clearLevelUp}
+                            className="mt-6 w-full py-3 bg-blue-600 text-white rounded-xl font-bold shadow-lg hover:scale-105 transition relative z-10"
+                        >
+                            Awesome!
+                        </button>
+                    </div>
+                </div>
             )}
 
+            {/* Footer */}
+            <div className="mt-8 opacity-50 text-xs">
+                Piano Sight v0.1.0 • Built with React & Vexflow
+            </div>
+
+            {/* Hidden Components (Modals/Toasts) */}
             <AchievementsModal
                 isOpen={isAchievementsOpen}
                 onClose={() => setIsAchievementsOpen(false)}
@@ -882,7 +825,8 @@ function App() {
                     clearNewDaily();
                 }}
             />
-        </div >
+
+        </div>
     );
 }
 

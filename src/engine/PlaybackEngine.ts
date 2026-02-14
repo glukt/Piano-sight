@@ -115,16 +115,32 @@ export class PlaybackEngine {
         return measures[measureIndex].AbsoluteTimestamp.RealValue;
     }
 
-    public getNotesAtCurrentPosition(): number[] {
+    public getNotesAtCurrentPosition(): { midi: number, isTied: boolean }[] {
         if (!this.cursor) return [];
         const notes = this.cursor.NotesUnderCursor();
-        const midiNotes: number[] = [];
+        const result: { midi: number, isTied: boolean }[] = [];
         notes.forEach(note => {
             if (!note.isRest() && note.Pitch) {
-                midiNotes.push(note.Pitch.getHalfTone() + 12);
+                // Check if this note is a tied note (continuation)
+                // If NoteTie exists, check if we are the StartNote.
+                // If we are NOT the StartNote, then we are a continuation (isTied = true).
+                let isTied = false;
+                if (note.NoteTie) {
+                    // NoteTie exists. 
+                    // If StartNote is this note, we are the start (isTied = false, fresh attack needed).
+                    // If StartNote is DIFFERENT, we are continuation (isTied = true).
+                    if (note.NoteTie.StartNote !== note) {
+                        isTied = true;
+                    }
+                }
+
+                result.push({
+                    midi: note.Pitch.getHalfTone() + 12,
+                    isTied: isTied
+                });
             }
         });
-        return midiNotes;
+        return result;
     }
 
     public nextStep() {

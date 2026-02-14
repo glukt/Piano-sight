@@ -92,6 +92,8 @@ export function usePracticeMode({
 
         const startTs = playbackEngine?.getMeasureTimestamp(currentSection.startMeasure);
         if (startTs !== null && startTs !== undefined) {
+            // Ensure stop is called to clear any pending timeouts/intervals
+            playbackEngine?.stop();
             playbackEngine?.seek(startTs);
         }
     }, [currentSection, playbackEngine]);
@@ -134,12 +136,15 @@ export function usePracticeMode({
     useEffect(() => {
         if (mode === 'preview' && previewLoopCount >= 2) {
             setMode('wait');
+            // Stop immediately when switching to wait
+            // playbackEngine?.stop(); // This is called in cleanup/effect but let's be explicit if needed.
+            // Actually, useEffect above handles "Wait mode: Stop and wait".
+            // So just setting mode is enough.
             setFeedback("Now you try! Play the notes.");
-            playbackEngine?.stop();
-            const startTs = playbackEngine?.getMeasureTimestamp(currentSection.startMeasure);
-            if (startTs !== null && startTs !== undefined) {
-                playbackEngine?.seek(startTs);
-            }
+            // We do NOT need to seek here, the loop effect will do it.
+            // But let's verify if 'wait' mode triggers loop effect seeking.
+            // Yes: mode change -> useEffect -> setupLoop -> if mode != preview/tempo -> stop & seek.
+            // So we can remove manual stop/seek here to avoid double seek.
         }
     }, [previewLoopCount, mode, playbackEngine, currentSection.startMeasure]);
 
@@ -152,11 +157,12 @@ export function usePracticeMode({
         if (!isActive || mode !== 'wait' || !playbackEngine) return;
 
         const checkInput = () => {
-            const currentExpected = playbackEngine.getNotesAtCurrentPosition();
-            const currentExpectedStr = currentExpected.slice().sort().join(',');
+            const currentExpectedObjs = playbackEngine.getNotesAtCurrentPosition();
+            const currentExpectedMidis = currentExpectedObjs.map(n => n.midi);
+            const currentExpectedStr = currentExpectedMidis.slice().sort().join(',');
 
             // Check Stuck Timer
-            if (currentExpected.length > 0) {
+            if (currentExpectedObjs.length > 0) {
                 if (currentExpectedStr === prevExpectedNotesRef.current) {
                     stuckTimerRef.current += 50; // Add 50ms
                     if (stuckTimerRef.current > 3000 && !showHint) {
@@ -199,7 +205,7 @@ export function usePracticeMode({
             }
 
             // 2. Handle Rests / Empty Steps
-            if (currentExpected.length === 0) {
+            if (currentExpectedObjs.length === 0) {
                 playbackEngine.nextStep();
                 setLastSuccessfulNotes(new Set());
                 return;
@@ -207,14 +213,20 @@ export function usePracticeMode({
 
             // 3. Highlight Notes
             playbackEngine.highlightCurrentNotes();
-            setExpectedNotes(currentExpected);
+            setExpectedNotes(currentExpectedMidis);
 
             // 4. Repeated Note Logic (Re-trigger check)
             // Identify notes that were correctly played in the PREVIOUS step
             // AND are still currently held by the user.
             // These notes must be released before they can count for the CURRENT step
-            // (if the current step requires them).
-            const stillHeldFromPrevious = currentExpected.filter(n => lastSuccessfulNotes.has(n) && userActiveNotes.has(n));
+            // UNLESS they are tied notes (isTied = true).
+            const stillHeldFromPrevious = currentExpectedObjs.filter(n => {
+                // If it is TIED, we ignore the "must release" rule.
+                if (n.isTied) return false;
+
+                // Otherwise, check if it was last successful AND is still held
+                return lastSuccessfulNotes.has(n.midi) && userActiveNotes.has(n.midi);
+            });
 
             if (stillHeldFromPrevious.length > 0) {
                 // User must release these notes first.
@@ -237,8 +249,14 @@ export function usePracticeMode({
                 return;
             }
 
+
             // 5. Check Input
-            const allNotesPressed = currentExpected.every(note => userActiveNotes.has(note));
+            const allNotesPressed = currentExpectedObjs.every(noteObj => {
+                // If tied, and we are holding it (from previous success or just holding), it counts?
+                // Wait, if it IS tied, we still require it to be ACTIVE.
+                // But we filtered out the "blocker" above.
+                return userActiveNotes.has(noteObj.midi);
+            });
 
             if (allNotesPressed) {
                 setFeedback("Good!");
@@ -247,14 +265,14 @@ export function usePracticeMode({
                 if (onNoteCorrect) onNoteCorrect(); // Minor XP event
 
                 // Mark these notes as successful so we require re-trigger next time if needed
-                setLastSuccessfulNotes(new Set(currentExpected));
+                setLastSuccessfulNotes(new Set(currentExpectedMidis));
                 // Reset hint immediately on success
                 // (though next tick will do it too via currentExpected change, this feels snappier)
                 setShowHint(false);
             } else {
                 // 6. Mistake Tracking
                 // Count any active note that is NOT in expected notes
-                const activeWrongNotes = [...userActiveNotes].filter(n => !currentExpected.includes(n));
+                const activeWrongNotes = [...userActiveNotes].filter(n => !currentExpectedMidis.includes(n));
 
                 let newMistakes = 0;
 

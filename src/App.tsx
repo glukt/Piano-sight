@@ -19,12 +19,7 @@ function App() {
     const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
 
-    // Context for MusicXML
-    const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-    const [fileName, setFileName] = useState<string | null>(null);
-    const [xmlData, setXmlData] = useState<string | null>(null);
-
-    // Initialize Game Logic Hook
+    // Initialise Game Logic Hook
     const gameLogic = useGameLogic();
     const {
         playMode, currentLesson, lessonComplete, starsEarned, courseProgress,
@@ -67,15 +62,9 @@ function App() {
 
     // Handlers for MusicXML View
     const handleScoreSelect = (file: File) => {
-        setFileName(file.name);
-        setUploadedFile(file);
-        setXmlData(null);
-    };
-
-    const handleClearScore = () => {
-        setXmlData(null);
-        setUploadedFile(null);
-        setFileName(null);
+        console.log("Score selected:", file.name);
+        // TODO: Implement custom score loading in GameLogic
+        setCurrentView('game');
     };
 
     // View State for Course Selection
@@ -210,11 +199,6 @@ function App() {
                 isOpen={currentView === 'musicxml'}
                 onClose={() => setCurrentView('game')}
                 onSelectScore={handleScoreSelect}
-                uploadedFile={uploadedFile}
-                fileName={fileName}
-                xmlData={xmlData}
-                setXmlData={setXmlData}
-                onClearScore={handleClearScore}
             />
 
             {/* Reference Panel */}

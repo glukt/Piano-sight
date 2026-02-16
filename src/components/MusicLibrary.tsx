@@ -5,22 +5,12 @@ interface MusicLibraryProps {
     isOpen: boolean;
     onClose: () => void;
     onSelectScore: (file: File) => void;
-    uploadedFile?: File | null;
-    fileName?: string | null;
-    xmlData?: string | null;
-    setXmlData?: (data: string | null) => void;
-    onClearScore?: () => void;
 }
 
 export const MusicLibrary: React.FC<MusicLibraryProps> = ({
     isOpen,
     onClose,
     onSelectScore,
-    uploadedFile,
-    fileName,
-    xmlData,
-    setXmlData,
-    onClearScore
 }) => {
     const { scores, loading, error, addScore, deleteScore } = useMusicLibrary();
     const [searchTerm, setSearchTerm] = useState('');

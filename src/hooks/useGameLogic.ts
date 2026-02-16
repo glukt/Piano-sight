@@ -9,7 +9,7 @@ import { audio } from '../audio/Synth';
 import { LevelGenerator, Difficulty } from '../engine/LevelGenerator';
 import { StaveNoteData } from '../components/MusicDisplay';
 import { midiToNoteName } from '../utils/midiUtils';
-import { Lesson, COURSES } from '../utils/music/CourseData';
+import { Lesson } from '../utils/music/CourseData';
 
 type CourseProgress = Record<string, { stars: number }>;
 const STORAGE_KEY = 'pianoPilot_courseProgress';

@@ -94,7 +94,7 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
         const noteY = bottomLineY - (stepDiff * (lineSpacing / 2));
 
         return (
-            <div className="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none opacity-80">
+            <div className="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none opacity-90 z-10">
                 <svg width="40" height="50" viewBox="0 0 40 50" className="overflow-visible">
                     {/* Staff Lines (5 lines) */}
                     {[0, 1, 2, 3, 4].map(i => (

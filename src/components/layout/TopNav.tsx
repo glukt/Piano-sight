@@ -10,6 +10,7 @@ interface TopNavProps {
     onOpenAchievements: () => void;
     isDarkMode: boolean;
     setIsDarkMode: (isDark: boolean) => void;
+    onOpenSettings: () => void;
 }
 
 export const TopNav: React.FC<TopNavProps> = ({
@@ -20,7 +21,8 @@ export const TopNav: React.FC<TopNavProps> = ({
     newUnlocksCount,
     onOpenAchievements,
     isDarkMode,
-    setIsDarkMode
+    setIsDarkMode,
+    onOpenSettings
 }) => {
     return (
         <nav className={`w-full max-w-6xl mb-8 flex justify-between items-center p-2 rounded-2xl shadow-sm border ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
@@ -75,6 +77,13 @@ export const TopNav: React.FC<TopNavProps> = ({
                     title="Toggle Theme"
                 >
                     {isDarkMode ? '🌙' : '☀️'}
+                </button>
+                <button
+                    onClick={onOpenSettings}
+                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-xl transition"
+                    title="Settings"
+                >
+                    ⚙️
                 </button>
             </div>
         </nav>

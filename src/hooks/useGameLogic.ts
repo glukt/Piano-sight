@@ -9,6 +9,10 @@ import { audio } from '../audio/Synth';
 import { LevelGenerator, Difficulty } from '../engine/LevelGenerator';
 import { StaveNoteData } from '../components/MusicDisplay';
 import { midiToNoteName } from '../utils/midiUtils';
+import { Lesson, COURSES } from '../utils/music/CourseData';
+
+type CourseProgress = Record<string, { stars: number }>;
+const STORAGE_KEY = 'pianoPilot_courseProgress';
 
 // Helper
 const parseKeyToMidi = (key: string): number => {
@@ -146,6 +150,22 @@ export const useGameLogic = () => {
     // -------------------------------------------------------------------------
     const [cursorIndex, setCursorIndex] = useState(0);
     const [inputStatus, setInputStatus] = useState<'waiting' | 'correct' | 'incorrect' | 'perfect'>('waiting');
+
+    // Mode State
+    const [playMode, setPlayMode] = useState<'PRACTICE' | 'COURSE'>('PRACTICE');
+    const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
+    const [lessonComplete, setLessonComplete] = useState(false);
+    const [courseProgress, setCourseProgress] = useState<CourseProgress>(() => {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            return saved ? JSON.parse(saved) : {};
+        } catch (e) {
+            console.error("Failed to load progress", e);
+            return {};
+        }
+    });
+    const [starsEarned, setStarsEarned] = useState(0);
+
     const [gameMode, setGameMode] = useState<'both' | 'treble' | 'bass'>('both');
     const [isRhythmMode, setIsRhythmMode] = useState(false);
     const [countDown, setCountDown] = useState<number | null>(null);
@@ -189,6 +209,33 @@ export const useGameLogic = () => {
             stopRhythm();
         }
     }, [errorStats, startRhythm, stopRhythm]); // errorStats? Refactor to ref if causes loop. LevelGenerator is external.
+
+    const loadLesson = useCallback((lesson: Lesson) => {
+        setPlayMode('COURSE');
+        setCurrentLesson(lesson);
+        setDifficulty(Difficulty.NOVICE); // Or lesson.difficulty mapped
+
+        // Parse Lesson Data to LevelData
+        const treble: StaveNoteData[] = lesson.treble.map(k => ({ keys: [k], duration: 'q' }));
+        const bass: StaveNoteData[] = lesson.bass.map(k => ({ keys: [k], duration: 'q' }));
+
+        // Fill empty if needed to match length?
+        // For now, assume lesson data is valid StaveNoteData keys "c/4"
+
+        setLevelData({ treble, bass });
+        setCursorIndex(0);
+        setStreak(0);
+        setScore({ correct: 0, incorrect: 0 });
+        setInputStatus('waiting');
+        setLessonComplete(false);
+        stopRhythm();
+    }, [stopRhythm]);
+
+    const exitCourse = useCallback(() => {
+        setPlayMode('PRACTICE');
+        setCurrentLesson(null);
+        generateNewLevel(difficulty);
+    }, [difficulty, generateNewLevel]);
 
     const handleStartRhythm = useCallback(() => {
         if (isRhythmPlaying || isRhythmMode) {
@@ -279,8 +326,37 @@ export const useGameLogic = () => {
         const levelLength = levelData.treble.length;
         if (cursorIndex >= levelLength) {
             if (cursorIndex === levelLength) {
-                handleAddXp(50);
-                setTimeout(() => generateNewLevel(difficulty, isRhythmMode), 500);
+                if (playMode === 'PRACTICE') {
+                    handleAddXp(50);
+                    setTimeout(() => generateNewLevel(difficulty, isRhythmMode), 500);
+                } else {
+                    // Course Mode Complete
+                    if (!lessonComplete && currentLesson) { // Check currentLesson is not null
+                        setLessonComplete(true);
+                        // Calculate Stars
+                        const total = score.correct + score.incorrect;
+                        const accuracy = total > 0 ? score.correct / total : 0;
+                        let stars = 0;
+                        if (accuracy >= (currentLesson.criteria?.[3] || 0.95)) stars = 3;
+                        else if (accuracy >= (currentLesson.criteria?.[2] || 0.80)) stars = 2;
+                        else if (accuracy >= (currentLesson.criteria?.[1] || 0.60)) stars = 1;
+
+                        setStarsEarned(stars);
+                        handleAddXp(100 * (stars || 1)); // Bonus XP based on stars
+
+                        // Save Progress
+                        if (stars > 0) {
+                            setCourseProgress(prev => {
+                                const newProgress = {
+                                    ...prev,
+                                    [currentLesson.id]: { stars: Math.max(stars, prev[currentLesson.id]?.stars || 0) }
+                                };
+                                localStorage.setItem(STORAGE_KEY, JSON.stringify(newProgress));
+                                return newProgress;
+                            });
+                        }
+                    }
+                }
             }
             return;
         }
@@ -397,6 +473,12 @@ export const useGameLogic = () => {
     }, [effectiveActiveNotes, cursorIndex, levelData, audioStarted, difficulty, gameMode, isRhythmMode, isRhythmPlaying, elapsedTime, inputStatus, preHeld, streak, maxStreak, addXp, handleAddXp, levelUp, generateNewLevel]);
 
 
+    const enterCourseSelection = useCallback(() => {
+        setPlayMode('COURSE');
+        setCurrentLesson(null);
+        stopRhythm();
+    }, [stopRhythm]);
+
     return {
         // State
         audioStarted, isAudioLoading,
@@ -414,12 +496,16 @@ export const useGameLogic = () => {
         showMicPopup, setShowMicPopup,
         isMicListening, startMic, stopMic,
         score, difficulty, levelData,
+        playMode, currentLesson, lessonComplete, starsEarned, courseProgress,
         playheadX: getPlayheadPixelX(),
 
         // Actions
         startAudio, testAudio,
         generateNewLevel,
         handleStartRhythm,
-        parseKeyToMidi
+        parseKeyToMidi,
+        loadLesson,
+        exitCourse,
+        enterCourseSelection
     };
 };

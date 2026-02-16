@@ -82,15 +82,20 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
         const lineSpacing = 4;
         const radius = 3;
 
-        // Note Y: 0 is bottom line? No, 0 is usually top in SVG.
-        // Let's say Bottom line is Y=30.
-        // Each step up is -lineSpacing/2 pixels.
-        const bottomLineY = 30;
+        // Positioning for "Lip" of white key (approx bottom 48px)
+        // Set SVG to cover bottom 50px.
+        // Center of lip is ~25px.
+        // Staff height (4 gaps * 4px) = 16px.
+        // We want 5 lines centered at y=25 in SVG.
+        // Top line (i=4) at y = 25 - 8 = 17.
+        // Bottom line (i=0) at y = 25 + 8 = 33.
+
+        const bottomLineY = 34;
         const noteY = bottomLineY - (stepDiff * (lineSpacing / 2));
 
         return (
-            <div className="absolute bottom-6 left-0 right-0 flex justify-center pointer-events-none opacity-80">
-                <svg width="40" height="60" viewBox="0 0 40 60" className="overflow-visible">
+            <div className="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none opacity-80">
+                <svg width="40" height="50" viewBox="0 0 40 50" className="overflow-visible">
                     {/* Staff Lines (5 lines) */}
                     {[0, 1, 2, 3, 4].map(i => (
                         <line

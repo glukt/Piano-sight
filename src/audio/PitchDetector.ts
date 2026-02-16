@@ -20,7 +20,16 @@ export class PitchDetector {
         if (this.mediaStreamSource) return;
 
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: false // Disable AGC to avoid volume pumping affecting detection? Or True? 
+                    // Usually AGC is good for voice but maybe bad for music pitch? 
+                    // Let's try true for now as standard speech optimized, or false for cleaner signal?
+                    // "echoCancellation: true" is key.
+                }
+            });
             this.mediaStreamSource = this.audioContext.createMediaStreamSource(stream);
             this.mediaStreamSource.connect(this.analyser);
         } catch (err) {
@@ -111,8 +120,8 @@ export class PitchDetector {
 
     public stop() {
         if (this.mediaStreamSource) {
-            this.mediaStreamSource.disconnect();
             this.mediaStreamSource.mediaStream.getTracks().forEach(track => track.stop());
+            this.mediaStreamSource.disconnect();
             this.mediaStreamSource = null;
         }
     }

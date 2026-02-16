@@ -12,29 +12,44 @@ export function useAudioInput() {
     // Audio Context is usually suspended until user interaction
     const audioContextRef = useRef<AudioContext | null>(null);
 
+    // Smoothing State
+    const historyRef = useRef<number[]>([]);
+    const HISTORY_SIZE = 5; // Require consistent note for X frames
+
     const updatePitch = useCallback(() => {
         if (!detectorRef.current) return;
 
         const pitch = detectorRef.current.getPitch();
+        let currentNote: number | null = null;
         if (pitch && pitch > 0) {
             const note = detectorRef.current.noteFromPitch(pitch);
-            // Basic smoothing/range check: Piano range 21 (A0) to 108 (C8)
             if (note >= 21 && note <= 108) {
-                setDetectedNote(note);
-            } else {
+                currentNote = note;
+            }
+        }
+
+        // Add to history
+        const history = historyRef.current;
+        history.push(currentNote !== null ? currentNote : -1);
+        if (history.length > HISTORY_SIZE) history.shift();
+
+        // Check for consistency
+        // If history is full and all values are equal (and not -1), setNote
+        if (history.length === HISTORY_SIZE) {
+            const candidate = history[0];
+            if (candidate !== -1 && history.every(n => n === candidate)) {
+                setDetectedNote(candidate);
+            } else if (history.every(n => n === -1)) {
+                // only clear if we have consistent silence? or clearer faster?
+                // Fast release is better.
                 setDetectedNote(null);
             }
-        } else {
-            setDetectedNote(null);
         }
 
         // Get volume from detector for UI feedback
-        // Throttle volume updates to avoid excessive re-renders (e.g., every 100ms)
         const now = performance.now();
         if (now - lastVolumeUpdate.current > 100) {
             const vol = detectorRef.current.lastVolume;
-            // Only update if changes significantly to further reduce renders? 
-            // For smoothing, we might want regular updates, but 10fps is enough for visual meter.
             setVolume(vol);
             lastVolumeUpdate.current = now;
         }

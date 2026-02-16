@@ -30,8 +30,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
     cursorIndex = 0,
     inputStatus = 'waiting',
     onLayout,
-    isDarkMode = false,
-    gameMode = 'both'
+    isDarkMode = false
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const prevPositionsRef = useRef<number[] | null>(null);

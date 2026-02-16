@@ -13,6 +13,8 @@ interface ControlPanelProps {
     onTestAudio: () => void;
     showNoteLabels: boolean;
     setShowNoteLabels: (show: boolean) => void;
+    showStaff: boolean;
+    setShowStaff: (show: boolean) => void;
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -26,7 +28,9 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     audioStarted,
     onTestAudio,
     showNoteLabels,
-    setShowNoteLabels
+    setShowNoteLabels,
+    showStaff,
+    setShowStaff
 }) => {
     return (
         <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -99,6 +103,9 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                     </button>
                     <button onClick={() => setShowNoteLabels(!showNoteLabels)} className="flex-1 py-1 text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-200">
                         {showNoteLabels ? 'Hide Labels' : 'Show Labels'}
+                    </button>
+                    <button onClick={() => setShowStaff(!showStaff)} className="flex-1 py-1 text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-200">
+                        {showStaff ? 'Hide Staff' : 'Show Staff'}
                     </button>
                 </div>
             </div>

@@ -60,11 +60,11 @@ export const useGameLogic = () => {
     });
 
     // MIDI & Mic
-    const { activeNotes, isEnabled: isMidiEnabled } = useMidi({
+    const { activeNotes, isEnabled: isMidiEnabled, inputs: midiInputs } = useMidi({
         onNoteOn: (n, v) => onNoteOn.current(n, v),
         onNoteOff: (n) => onNoteOff.current(n)
     });
-    const { detectedNote: micNote } = useAudioInput();
+    const { detectedNote: micNote, isListening: isMicListening, startListening: startMic, stopListening: stopMic } = useAudioInput();
 
     // Merge Inputs
     const effectiveActiveNotes = useMemo(() => {
@@ -83,6 +83,44 @@ export const useGameLogic = () => {
         }
         prevMicNote.current = micNote;
     }, [micNote]);
+
+    // MIDI / Mic Auto-Switching Logic
+    useEffect(() => {
+        // 1. If MIDI connects, disable Mic and notify (console for now, UI can reflect via state)
+        if (isMidiEnabled && midiInputs.length > 0) {
+            if (isMicListening) {
+                stopMic();
+                setShowMicPopup(false); // Close if open
+                // Optional: Toast "MIDI Connected: Microphone disabled"
+            }
+        }
+        // 2. If NO MIDI on startup (simulated by timeout or just effect run), ask for Mic
+        // We need a flag to know if we've already checked/asked this session?
+        // For now, if not enabled and no inputs, show popup.
+        else if (!isMidiEnabled && !isMicListening) {
+            // Wait a bit for MIDI to initialize?
+            // Actually, useMidi might take a moment.
+            // Let's rely on a timeout check or just check if isMidiEnabled is false after mount.
+            const timer = setTimeout(() => {
+                // Check refs or current state inside timeout closure? 
+                // We need to be careful.
+                // Simplification: logic inside existing component render cycle.
+                // We'll set showMicPopup only if we haven't dismissed it? 
+                // Let's add a "checkedMidi" state if needed, or just rely on:
+                setShowMicPopup(true);
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [isMidiEnabled, midiInputs.length, isMicListening, stopMic]);
+
+    // Cleanup Mic interaction when MIDI connects is handled above.
+    // Confirm logic:
+    // - App loads. isMidiEnabled=false initially.
+    // - Effect 2 runs, sets timeout.
+    // - 100ms later, useMidi might set isEnabled=true.
+    // - Effect 1 runs. If inputs>0, we are good. Timeout from Effect 2 might still fire?
+    // - If Effect 2 dependency changes, timeout is cleared.
+    // - So if isMidiEnabled flips to true, the "Show Popup" timer is cancelled. Perfect.
 
     // Audio Auto-Start
     const startAudio = async () => {
@@ -117,6 +155,8 @@ export const useGameLogic = () => {
     const [preHeld, setPreHeld] = useState(false);
     const [notePositions, setNotePositions] = useState<number[]>([]);
     const [showNoteLabels, setShowNoteLabels] = useState(false);
+    const [showStaff, setShowStaff] = useState(false);
+    const [showMicPopup, setShowMicPopup] = useState(false);
 
     // Scoring
     const [score, setScore] = useState({ correct: 0, incorrect: 0 });
@@ -370,6 +410,9 @@ export const useGameLogic = () => {
         isRhythmMode, countDown, streak, maxStreak, lastHitType,
         notePositions, setNotePositions,
         showNoteLabels, setShowNoteLabels,
+        showStaff, setShowStaff,
+        showMicPopup, setShowMicPopup,
+        isMicListening, startMic, stopMic,
         score, difficulty, levelData,
         playheadX: getPlayheadPixelX(),
 

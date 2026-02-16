@@ -26,6 +26,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         isRhythmMode, countDown, streak, lastHitType,
         setNotePositions,
         showNoteLabels, setShowNoteLabels,
+        showStaff, setShowStaff,
+        showMicPopup, setShowMicPopup,
         score, difficulty, levelData,
         playheadX,
 
@@ -33,7 +35,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         testAudio,
         generateNewLevel,
         handleStartRhythm,
-        parseKeyToMidi
+        parseKeyToMidi,
+        startMic
     } = gameLogic;
 
     // Calculate expected notes for Virtual Keyboard visualization
@@ -70,6 +73,36 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                     </div>
                 )}
 
+                {/* Microphone Popup Overlay */}
+                {showMicPopup && (
+                    <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-xl">
+                        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-2xl max-w-md text-center border-2 border-indigo-500 animate-in zoom-in-95 duration-200">
+                            <div className="text-4xl mb-4">🎤</div>
+                            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Enable Microphone?</h3>
+                            <p className="text-gray-600 dark:text-gray-300 mb-6">
+                                No MIDI device detected. Would you like to use your microphone to play with an acoustic piano?
+                            </p>
+                            <div className="flex gap-3 justify-center">
+                                <button
+                                    onClick={() => setShowMicPopup(false)}
+                                    className="px-4 py-2 text-gray-500 font-bold hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+                                >
+                                    No, thanks
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        startMic();
+                                        setShowMicPopup(false);
+                                    }}
+                                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-lg transition transform hover:scale-105"
+                                >
+                                    Enable Microphone
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Music Display Container */}
                 <div className="bg-white dark:bg-gray-800 p-2 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 relative overflow-hidden" style={{ backgroundColor: isDarkMode ? '' : 'white' }}>
                     <MusicDisplay
@@ -103,6 +136,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                         userActiveNotes={effectiveActiveNotes}
                         expectedNotes={expectedNotes}
                         showLabels={showNoteLabels}
+                        showStaff={showStaff}
                     />
                 </div>
 
@@ -142,6 +176,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 onTestAudio={testAudio}
                 showNoteLabels={showNoteLabels}
                 setShowNoteLabels={setShowNoteLabels}
+                showStaff={showStaff}
+                setShowStaff={setShowStaff}
             />
         </div>
     );

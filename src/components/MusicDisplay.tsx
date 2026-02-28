@@ -121,7 +121,21 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                 }
                 return staveNote;
             });
-            const voice = new VF.Voice({ num_beats: notes.length, beat_value: 4 });
+
+            // Calculate total beats to satisfy VexFlow
+            const totalBeats = notesData.reduce((sum, current) => {
+                const durStr = current.duration.replace('r', '');
+                let beats = 1; // 'q'
+                if (durStr === 'h') beats = 2;
+                if (durStr === 'w') beats = 4;
+                if (durStr === '8') beats = 0.5;
+                if (durStr === '16') beats = 0.25;
+                return sum + beats;
+            }, 0);
+
+            // VexFlow requires exact capacity. We use 4/4 time (beat_value 4), so num_beats is just total quarter notes
+            const voice = new VF.Voice({ num_beats: Math.ceil(totalBeats), beat_value: 4 });
+            voice.setStrict(false); // Allowing some flexibility prevents strict tick crashes when randomly generated
             voice.addTickables(notes);
             return voice;
         };

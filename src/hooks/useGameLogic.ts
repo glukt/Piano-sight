@@ -9,6 +9,7 @@ import { audio } from '../audio/Synth';
 import { LevelGenerator, Difficulty } from '../engine/LevelGenerator';
 import { StaveNoteData } from '../components/MusicDisplay';
 import { midiToNoteName } from '../utils/midiUtils';
+import { Lesson } from '../utils/music/CourseData';
 
 // Helper
 const parseKeyToMidi = (key: string): number => {
@@ -164,6 +165,7 @@ export const useGameLogic = () => {
 
     // Level
     const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.NOVICE);
+    const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
     const [levelData, setLevelData] = useState<{ treble: StaveNoteData[], bass: StaveNoteData[] }>(
         LevelGenerator.generate(Difficulty.NOVICE, errorStats)
     );
@@ -177,9 +179,16 @@ export const useGameLogic = () => {
     // -------------------------------------------------------------------------
     // 3. Game Logic Handlers
     // -------------------------------------------------------------------------
-    const generateNewLevel = useCallback((diff: Difficulty, keepRhythm = false) => {
+    const generateNewLevel = useCallback((diff: Difficulty, keepRhythm = false, lesson?: Lesson | null) => {
         setDifficulty(diff);
-        setLevelData(LevelGenerator.generate(diff, errorStats));
+        const targetLesson = lesson !== undefined ? lesson : currentLesson;
+
+        if (targetLesson?.constraints) {
+            setLevelData(LevelGenerator.generateFromConstraints(targetLesson.constraints));
+        } else {
+            setLevelData(LevelGenerator.generate(diff, errorStats));
+        }
+
         setCursorIndex(0);
         setStreak(0);
         setInputStatus('waiting');
@@ -188,7 +197,17 @@ export const useGameLogic = () => {
         } else {
             stopRhythm();
         }
-    }, [errorStats, startRhythm, stopRhythm]); // errorStats? Refactor to ref if causes loop. LevelGenerator is external.
+    }, [errorStats, startRhythm, stopRhythm, currentLesson]); // errorStats? Refactor to ref if causes loop. LevelGenerator is external.
+
+    const loadLesson = useCallback((lesson: Lesson) => {
+        setCurrentLesson(lesson);
+        // Switch hand mode based on topic
+        if (lesson.topic === 'treble') setGameMode('treble');
+        else if (lesson.topic === 'bass') setGameMode('bass');
+        else setGameMode('both');
+
+        generateNewLevel(difficulty, false, lesson);
+    }, [difficulty, generateNewLevel]);
 
     const handleStartRhythm = useCallback(() => {
         if (isRhythmPlaying || isRhythmMode) {
@@ -425,6 +444,14 @@ export const useGameLogic = () => {
         startAudio, testAudio,
         generateNewLevel,
         handleStartRhythm,
-        parseKeyToMidi
+        parseKeyToMidi,
+
+        // Course specific
+        currentLesson,
+        loadLesson,
+        exitLesson: () => setCurrentLesson(null),
+
+        // Progression
+        awardXp: handleAddXp
     };
 };

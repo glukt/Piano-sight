@@ -1,4 +1,5 @@
 import { StaveNoteData } from '../components/MusicDisplay';
+import { LessonConstraints } from '../utils/music/CourseData';
 
 export enum Difficulty {
     NOVICE = 'NOVICE',
@@ -26,7 +27,7 @@ const RANGE_TREBLE = [
 
 // Helper to get weighted random element based on error stats
 const getWeightedRandom = (arr: string[], errorStats?: Record<string, number>): string => {
-    if (!errorStats) return arr[Math.floor(Math.random() * arr.length)];
+    if (!errorStats || Object.keys(errorStats).length === 0) return arr[Math.floor(Math.random() * arr.length)];
 
     const weights = arr.map(note => {
         // Parse key "c/4" -> "C4"
@@ -51,17 +52,87 @@ export const LevelGenerator = {
     generate(difficulty: Difficulty, errorStats: Record<string, number> = {}, length: number = 8): LevelData {
         switch (difficulty) {
             case Difficulty.NOVICE:
-                return this.generateNovice(length, errorStats);
+                return this.generateNovice(length);
             case Difficulty.INTERMEDIATE:
                 return this.generateIntermediate(length, errorStats);
             case Difficulty.ADVANCED:
                 return this.generateAdvanced(length, errorStats);
             default:
-                return this.generateNovice(length, errorStats);
+                return this.generateNovice(length);
         }
     },
 
-    generateNovice(length: number, errorStats: Record<string, number>): LevelData {
+    generateFromConstraints(constraints: LessonConstraints): LevelData {
+        const treble: StaveNoteData[] = [];
+        const bass: StaveNoteData[] = [];
+
+        const length = constraints.numNotes;
+
+        let currentTrebleIdx = Math.floor(Math.random() * constraints.trebleRange.length);
+        let currentBassIdx = Math.floor(Math.random() * constraints.bassRange.length);
+
+        const getNextIdx = (currentIdx: number, rangeLen: number, maxJumps: number) => {
+            if (rangeLen <= 1) return 0;
+            if (maxJumps === 0) return Math.floor(Math.random() * rangeLen); // Any note
+
+            // Randomly jump up or down by at most maxJumps
+            const jump = Math.floor(Math.random() * maxJumps) + 1;
+            const direction = Math.random() > 0.5 ? 1 : -1;
+            let nextIdx = currentIdx + (jump * direction);
+
+            // Bounce bounds
+            if (nextIdx < 0) nextIdx = Math.abs(nextIdx);
+            if (nextIdx >= rangeLen) nextIdx = rangeLen - (nextIdx - rangeLen) - 2;
+
+            // Failsafe
+            if (nextIdx < 0) nextIdx = 0;
+            if (nextIdx >= rangeLen) nextIdx = rangeLen - 1;
+
+            return nextIdx;
+        };
+
+        for (let i = 0; i < length; i++) {
+            const rhythm = constraints.rhythms[Math.floor(Math.random() * constraints.rhythms.length)];
+
+            const tRange = constraints.trebleRange;
+            const bRange = constraints.bassRange;
+
+            let tKeys: string[] = [];
+            let bKeys: string[] = [];
+
+            if (tRange.length > 0) {
+                if (constraints.chordsAllowed && Math.random() > 0.5 && tRange.length >= 3) {
+                    // Grab a triad if possible
+                    const rootIdx = Math.floor(Math.random() * (tRange.length - 2));
+                    tKeys = [tRange[rootIdx], tRange[rootIdx + 1], tRange[rootIdx + 2]]; // simple cluster
+                } else {
+                    currentTrebleIdx = getNextIdx(currentTrebleIdx, tRange.length, constraints.maxJumps);
+                    tKeys = [tRange[currentTrebleIdx]];
+                }
+            }
+
+            if (bRange.length > 0) {
+                if (constraints.chordsAllowed && Math.random() > 0.5 && bRange.length >= 3) {
+                    const rootIdx = Math.floor(Math.random() * (bRange.length - 2));
+                    bKeys = [bRange[rootIdx], bRange[rootIdx + 1], bRange[rootIdx + 2]];
+                } else {
+                    currentBassIdx = getNextIdx(currentBassIdx, bRange.length, constraints.maxJumps);
+                    bKeys = [bRange[currentBassIdx]];
+                }
+            }
+
+            // Fill rests if one hand is empty for this lesson
+            if (tKeys.length === 0) tKeys = ["b/4"]; // Rest placeholder (VexFlow won't care if we just make it a rest symbol later, but for active notes just pass empty or a dummy that gets ignored by game mode)
+            if (bKeys.length === 0) bKeys = ["d/3"];
+
+            treble.push({ keys: tRange.length > 0 ? tKeys : ["b/4"], duration: tRange.length > 0 ? rhythm : `${rhythm}r` });
+            bass.push({ keys: bRange.length > 0 ? bKeys : ["d/3"], duration: bRange.length > 0 ? rhythm : `${rhythm}r` });
+        }
+
+        return { treble, bass };
+    },
+
+    generateNovice(length: number): LevelData {
         const treble: StaveNoteData[] = [];
         const bass: StaveNoteData[] = [];
 
@@ -84,7 +155,7 @@ export const LevelGenerator = {
         let repeatCount = 0;
 
         for (let i = 0; i < length; i++) {
-            let note = getWeightedRandom(selectedPos, errorStats);
+            let note = getWeightedRandom(selectedPos);
 
             // Prevent >2 repeats
             if (note === lastNote) {
@@ -103,7 +174,7 @@ export const LevelGenerator = {
             treble.push({ keys: [note], duration: "q" });
 
             // Pick a random bass note from the bass position (e.g. C3 to G3)
-            const bNote = getWeightedRandom(bassPos, errorStats);
+            const bNote = getWeightedRandom(bassPos);
             bass.push({ keys: [bNote], duration: "q" });
         }
         return { treble, bass };

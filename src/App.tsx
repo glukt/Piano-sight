@@ -11,15 +11,20 @@ import { ReferencePanel } from './components/ReferencePanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import { AchievementsModal } from './components/AchievementsModal';
 import { NotificationToast } from './components/NotificationToast';
+import { CourseSelection } from './components/game/CourseSelection';
+import { LessonIntro } from './components/game/LessonIntro';
+import { Lesson } from './utils/music/CourseData';
 
 function App() {
     const { width: windowWidth } = useWindowSize();
     const [isDarkMode, setIsDarkMode] = useState(false);
-    const [currentView, setCurrentView] = useState<'game' | 'musicxml' | 'reference' | 'settings'>('game');
+    const [currentView, setCurrentView] = useState<'game' | 'musicxml' | 'reference' | 'settings' | 'courseSelection' | 'intro'>('courseSelection');
+    const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
     const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [fileName, setFileName] = useState<string | null>(null);
     const [xmlData, setXmlData] = useState<string | null>(null);
+    const [songUrl, setSongUrl] = useState<string | null>(null);
 
     // Initialize Game Logic Hook
     // This hook manages the game state, audio, and gamification
@@ -58,12 +63,15 @@ function App() {
         setFileName(file.name);
         setUploadedFile(file);
         setXmlData(null);
+        setSongUrl(null);
     };
 
     const handleClearScore = () => {
         setXmlData(null);
         setUploadedFile(null);
         setFileName(null);
+        setSongUrl(null);
+        gameLogic.exitLesson();
     };
 
     return (
@@ -84,6 +92,42 @@ function App() {
             {/* Main Content Area */}
             <main className="w-full max-w-6xl flex flex-col items-center">
 
+                {/* COURSE SELECTION VIEW */}
+                {currentView === 'courseSelection' && (
+                    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <CourseSelection
+                            userXp={gameLogic.gameState.xp}
+                            onSelectLesson={(lesson) => {
+                                setSelectedLesson(lesson);
+                                setCurrentView('intro');
+                            }}
+                        />
+                    </div>
+                )}
+
+                {/* LESSON INTRO VIEW */}
+                {currentView === 'intro' && selectedLesson && (
+                    <LessonIntro
+                        lesson={selectedLesson}
+                        onBack={() => {
+                            setSelectedLesson(null);
+                            setCurrentView('courseSelection');
+                        }}
+                        onStart={() => {
+                            gameLogic.loadLesson(selectedLesson);
+                            if (selectedLesson.type === 'song' && selectedLesson.songUrl) {
+                                setSongUrl(selectedLesson.songUrl);
+                                setFileName(selectedLesson.name);
+                                setUploadedFile(null);
+                                setXmlData(null);
+                                setCurrentView('musicxml');
+                            } else {
+                                setCurrentView('game');
+                            }
+                        }}
+                    />
+                )}
+
                 {/* GAME VIEW */}
                 {currentView === 'game' && (
                     <GameContainer
@@ -96,7 +140,7 @@ function App() {
                 {/* MUSICXML VIEW */}
                 {currentView === 'musicxml' && (
                     <div className="w-full flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        {uploadedFile || xmlData ? (
+                        {uploadedFile || xmlData || songUrl ? (
                             <>
                                 <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between mb-4">
                                     <span className="font-bold text-gray-700 dark:text-gray-200">Current Score: {fileName || 'Loaded Score'}</span>
@@ -110,8 +154,9 @@ function App() {
                                 <ScoreDisplay
                                     file={uploadedFile || undefined}
                                     xmlContent={xmlData || undefined}
+                                    xmlUrl={songUrl || undefined}
                                     isDarkMode={isDarkMode}
-                                    onAddXp={() => { }} // TODO: Add XP handler for MusicXML mode if needed
+                                    onAddXp={() => gameLogic.awardXp(10)} // Flat XP for custom practice
                                     userActiveNotes={gameLogic.effectiveActiveNotes}
                                 />
                             </>

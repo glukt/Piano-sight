@@ -2,8 +2,8 @@ import React from 'react';
 
 
 interface TopNavProps {
-    currentView: 'game' | 'musicxml' | 'reference' | 'settings';
-    setCurrentView: (view: 'game' | 'musicxml' | 'reference' | 'settings') => void;
+    currentView: 'game' | 'musicxml' | 'reference' | 'settings' | 'courseSelection' | 'intro';
+    setCurrentView: (view: 'game' | 'musicxml' | 'reference' | 'settings' | 'courseSelection' | 'intro') => void;
     level: number;
     xp: number;
     newUnlocksCount: number;
@@ -36,7 +36,7 @@ export const TopNav: React.FC<TopNavProps> = ({
 
             {/* Center Tabs */}
             <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 p-1 rounded-xl">
-                {(['game', 'musicxml', 'reference', 'settings'] as const).map(view => (
+                {(['courseSelection', 'game', 'musicxml', 'reference', 'settings'] as const).map(view => (
                     <button
                         key={view}
                         onClick={() => setCurrentView(view)}
@@ -45,7 +45,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                             : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                             }`}
                     >
-                        {view === 'musicxml' ? 'MusicXML' : view.charAt(0).toUpperCase() + view.slice(1)}
+                        {view === 'musicxml' ? 'Library' : view === 'courseSelection' ? 'Courses' : view.charAt(0).toUpperCase() + view.slice(1)}
                     </button>
                 ))}
             </div>

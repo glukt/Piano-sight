@@ -322,15 +322,20 @@ export const useGameLogic = () => {
         }
 
         const relevantArray = Array.from(relevantActiveNotes);
-        const allFound = Array.from(requiredNotes).every(n => effectiveActiveNotes.has(n));
         const hasIncorrect = relevantArray.some(n => !requiredNotes.has(n));
+        const allFound = requiredNotes.size > 0 && Array.from(requiredNotes).every(n => relevantActiveNotes.has(n));
 
         if (preHeld) {
-            const stillHolding = Array.from(requiredNotes).some(n => effectiveActiveNotes.has(n));
-            if (!stillHolding) setPreHeld(false);
+            // Wait for user to completely release the chord before letting them try again
+            // Or wait until they are no longer holding ALL required notes from the previous level
+            const stillHoldingAll = Array.from(requiredNotes).every(n => effectiveActiveNotes.has(n));
+
+            // To be safe, wait until they release at least one required note to break the pre-held lock
+            if (!stillHoldingAll) setPreHeld(false);
             return;
         }
 
+        // Penalty: Only if they press a WRONG note for their current Hand mode
         if (hasIncorrect) {
             if (inputStatus !== 'incorrect') {
                 setInputStatus('incorrect');
@@ -344,8 +349,8 @@ export const useGameLogic = () => {
             return;
         }
 
+        // Success: Only if they have pressed ALL required notes for their current Hand mode 
         if (allFound) {
-            if (requiredNotes.size === 0 || relevantActiveNotes.size === 0) return;
 
             if (isRhythmMode && isRhythmPlaying) {
                 const diff = Math.abs(elapsedTime - targetTime);

@@ -73,6 +73,12 @@ export const LevelGenerator = {
             ["g/4", "a/4", "b/4", "c/5", "d/5"]  // G Pos
         ];
         const selectedPos = positions[Math.floor(Math.random() * positions.length)];
+        // Create matching Bass position for Novice
+        const bassPos: string[] = [];
+        selectedPos.forEach(note => {
+            const split = note.split('/');
+            bassPos.push(`${split[0]}/3`); // Shift down 1 octave
+        });
 
         let lastNote = "";
         let repeatCount = 0;
@@ -96,9 +102,9 @@ export const LevelGenerator = {
 
             treble.push({ keys: [note], duration: "q" });
 
-            // Simple Bass: Root of position (e.g. C3, F3, G3)
-            const root = selectedPos[0].split('/')[0] + "/3";
-            bass.push({ keys: [root], duration: "q" });
+            // Pick a random bass note from the bass position (e.g. C3 to G3)
+            const bNote = getWeightedRandom(bassPos, errorStats);
+            bass.push({ keys: [bNote], duration: "q" });
         }
         return { treble, bass };
     },

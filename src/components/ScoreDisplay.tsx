@@ -27,8 +27,8 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
     const [loading, setLoading] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false);
     const [activeNotes, setActiveNotes] = useState<Set<number>>(new Set());
-    // REMOVED: const { activeNotes: userActiveNotes } = useMidi(); -> Now using prop
     const [error, setError] = useState<string | null>(null);
+    const [layoutMode, setLayoutMode] = useState<'standard' | 'scrolling'>('standard');
 
     // Practice Mode
     const {
@@ -72,15 +72,17 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
     useEffect(() => {
         if (!containerRef.current) return;
 
-        // Initialize OSMD if not already done
-        if (!osmdRef.current) {
-            // @ts-ignore - OSMD constructor types might be loose
-            osmdRef.current = new OSMD(containerRef.current, {
-                autoResize: true,
-                backend: "svg",
-                drawingParameters: "compacttight", // Try to fit well
-            });
-        }
+        // Clear previous container contents to re-initialize layout cleanly
+        containerRef.current.innerHTML = '';
+
+        // Initialize OSMD
+        // @ts-ignore - OSMD constructor types might be loose
+        osmdRef.current = new OSMD(containerRef.current, {
+            autoResize: true,
+            backend: "svg",
+            drawingParameters: "compacttight", // Try to fit well
+            renderSingleHorizontalStaffline: layoutMode === 'scrolling',
+        });
 
         const loadScore = async () => {
             if (!osmdRef.current) return;
@@ -89,9 +91,6 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
 
             try {
                 if (file) {
-                    // If file is provided (e.g. .mxl), load it directly. 
-                    // OSMD load() supports File objects. 
-                    // It handles unzipping .mxl internally if strict mode is off or proper file type is detected.
                     await osmdRef.current.load(file);
                 } else if (xmlContent) {
                     await osmdRef.current.load(xmlContent);
@@ -105,13 +104,15 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
                     }
                     await osmdRef.current.load(resolvedUrl);
                 } else {
-                    // Default fallback (maybe a hardcoded simple XML for demo)
-                    // For now, just return
                     setLoading(false);
                     return;
                 }
 
                 osmdRef.current.render();
+
+                // Show cursor immediately on load
+                osmdRef.current.cursor.show();
+                osmdRef.current.cursor.reset();
 
                 // Init Playback Engine
                 playbackRef.current = new PlaybackEngine(osmdRef.current);
@@ -150,97 +151,121 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
             } catch (e: any) {
                 console.error("OSMD Load Error:", e);
                 setError(e.message || "Failed to load score.");
-            } finally {
-                // setLoading(false); // Moved above
             }
         };
 
         loadScore();
 
-        // Cleanup? OSMD doesn't have a strict destroy, but we can clear container
-        // However, react might handle this fine.
-
-    }, [xmlUrl, xmlContent, file]);
+    }, [xmlUrl, xmlContent, file, layoutMode]);
 
 
-    // Helper to draw/remove note labels
+    // Combined OSMD styling, rendering, and interaction handler
     useEffect(() => {
-        if (!osmdRef.current || !osmdRef.current.GraphicSheet) return;
+        if (!osmdRef.current || loading) return;
 
-        // Container for labels
-        const container = containerRef.current?.querySelector('svg');
-        if (!container) return;
+        try {
+            // Apply theme options and re-render
+            osmdRef.current.setOptions({
+                darkMode: isDarkMode,
+                defaultColorMusic: isDarkMode ? "#f3f4f6" : "#000000",
+            });
+            osmdRef.current.render();
 
-        // Clear existing labels
-        const existingLabels = container.querySelectorAll('.osmd-note-label');
-        existingLabels.forEach(el => el.remove());
+            // Ensure cursor stays shown
+            osmdRef.current.cursor.show();
 
-        if (showNoteNames) {
-            // Iterate all notes and draw labels
-            // This requires traversing the GraphicalSheet
-            try {
-                // @ts-ignore - Accessing internal structure
-                const pages = osmdRef.current.GraphicSheet.MusicPages;
-                pages.forEach((page: any) => {
-                    page.MusicSystems.forEach((system: any) => {
-                        system.StaffLines.forEach((staff: any) => {
-                            staff.Measures.forEach((measure: any) => {
-                                measure.staffEntries.forEach((se: any) => {
-                                    se.graphicalVoiceEntries.forEach((ve: any) => {
-                                        ve.notes.forEach((note: VexFlowGraphicalNote) => {
-                                            if (!note.sourceNote || note.sourceNote.isRest()) return;
+            const container = containerRef.current?.querySelector('svg');
+            if (!container) return;
 
-                                            // Get Note ID/Position
-                                            // VexFlowGraphicalNote has getSVGGElement
-                                            const svgEl = note.getSVGGElement();
-                                            if (!svgEl) return;
+            // Clear existing labels
+            const existingLabels = container.querySelectorAll('.osmd-note-label');
+            existingLabels.forEach(el => el.remove());
 
-                                            // Calculate position
-                                            // Use getBoundingClientRect? No, relative to SVG.
-                                            // We can append text straight to the note's group or calculate offset.
+            // Traverse graphical notes to attach clicks, hover states, and draw optional note name labels
+            // @ts-ignore - Accessing internal structure
+            const pages = osmdRef.current.GraphicSheet.MusicPages;
+            pages.forEach((page: any) => {
+                page.MusicSystems.forEach((system: any) => {
+                    system.StaffLines.forEach((staff: any) => {
+                        staff.Measures.forEach((measure: any) => {
+                            measure.staffEntries.forEach((se: any) => {
+                                se.graphicalVoiceEntries.forEach((ve: any) => {
+                                    ve.notes.forEach((note: VexFlowGraphicalNote) => {
+                                        if (!note.sourceNote || note.sourceNote.isRest()) return;
 
-                                            // Simpler: note.PositionAndShape
-                                            // But that is relative to System/Staff.
+                                        const svgEl = note.getSVGGElement();
+                                        if (!svgEl) return;
 
-                                            // Best check: Just append text to the note's SVG group?
-                                            // If we append to `svgEl` (which is a <g>), it moves with the note.
+                                        // 1. Pointer style and hover highlights
+                                        svgEl.style.cursor = 'pointer';
 
+                                        const onMouseEnter = () => {
+                                            const paths = svgEl.querySelectorAll('path');
+                                            paths.forEach(path => {
+                                                if (!path.hasAttribute('data-original-fill')) {
+                                                    path.setAttribute('data-original-fill', path.getAttribute('fill') || (isDarkMode ? '#f3f4f6' : '#000000'));
+                                                }
+                                                if (!path.hasAttribute('data-original-stroke')) {
+                                                    path.setAttribute('data-original-stroke', path.getAttribute('stroke') || (isDarkMode ? '#f3f4f6' : '#000000'));
+                                                }
+                                                path.setAttribute('fill', '#3b82f6'); // Highlight blue
+                                                path.setAttribute('stroke', '#3b82f6');
+                                            });
+                                        };
+
+                                        const onMouseLeave = () => {
+                                            const paths = svgEl.querySelectorAll('path');
+                                            paths.forEach(path => {
+                                                const origFill = path.getAttribute('data-original-fill') || (isDarkMode ? '#f3f4f6' : '#000000');
+                                                const origStroke = path.getAttribute('data-original-stroke') || (isDarkMode ? '#f3f4f6' : '#000000');
+                                                path.setAttribute('fill', origFill);
+                                                path.setAttribute('stroke', origStroke);
+                                            });
+                                        };
+
+                                        const onClick = () => {
+                                            if (note.sourceNote) {
+                                                const absTs = note.sourceNote.getAbsoluteTimestamp();
+                                                if (absTs) {
+                                                    handleSeek(absTs.RealValue);
+                                                }
+                                            }
+                                        };
+
+                                        // Bind interactions
+                                        svgEl.addEventListener('mouseenter', onMouseEnter);
+                                        svgEl.addEventListener('mouseleave', onMouseLeave);
+                                        svgEl.addEventListener('click', onClick);
+
+                                        // 2. Note Name Labels
+                                        if (showNoteNames) {
                                             const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-
-                                            // Determine Note Name
-                                            // note.sourceNote.Pitch
                                             const pitch = note.sourceNote.Pitch;
                                             let text = pitch.ToString(); // e.g. "C4"
-
-                                            // Simplify text? "C" vs "C4"
-                                            text = text.replace(/\d/, ''); // Remove octave for cleaner look? User asked for "labels", usually just Note Name is enough, but Octave helps beginners.
-                                            // Let's keep it short: "C", "C#"
-                                            // Actually Pitch.ToString() is "C4".
+                                            text = text.replace(/\d/, ''); // Remove octave
 
                                             label.textContent = text;
                                             label.setAttribute("class", "osmd-note-label");
-                                            // Make it a beautiful semi-transparent blue watermark behind the notehead
-                                            label.setAttribute("fill", "rgba(59, 130, 246, 0.25)");
+                                            label.setAttribute("fill", isDarkMode ? "rgba(59, 130, 246, 0.45)" : "rgba(59, 130, 246, 0.25)");
                                             label.setAttribute("font-family", "Outfit, sans-serif");
                                             label.setAttribute("font-weight", "800");
                                             label.setAttribute("font-size", "28");
                                             label.setAttribute("text-anchor", "middle");
-                                            label.setAttribute("y", "8"); // Align center with notehead
+                                            label.setAttribute("y", "8"); // Center with notehead
 
-                                            // Prepend to render behind the notehead paths
                                             svgEl.insertBefore(label, svgEl.firstChild);
-                                        });
+                                        }
                                     });
                                 });
                             });
                         });
                     });
                 });
-            } catch (e) {
-                console.warn("Error drawing labels:", e);
-            }
+            });
+        } catch (e) {
+            console.error("Error drawing labels or binding interactions:", e);
         }
-    }, [showNoteNames, loading]); // Re-run when toggle changes or load finishes
+    }, [showNoteNames, loading, isDarkMode, layoutMode]);
 
     // Update Highlight Settings when toggled
     useEffect(() => {
@@ -249,6 +274,30 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
         }
     }, [highlightNotes, loading]); // loading dependency ensures it sets after init
 
+    // Simply Piano / Flowkey Style Horizontal Scroll Controller
+    useEffect(() => {
+        if (layoutMode !== 'scrolling' || !osmdRef.current || loading) return;
+
+        const cursor = osmdRef.current.cursor;
+        const container = containerRef.current;
+        if (!container || !cursor || !cursor.cursorElement) return;
+
+        try {
+            const cursorEl = cursor.cursorElement;
+            const containerRect = container.getBoundingClientRect();
+            const cursorRect = cursorEl.getBoundingClientRect();
+
+            // Target scroll left so the cursor is exactly at 25% of the container width
+            const targetLeft = container.scrollLeft + (cursorRect.left - containerRect.left) - (containerRect.width * 0.25);
+
+            container.scrollTo({
+                left: targetLeft,
+                behavior: 'smooth'
+            });
+        } catch (e) {
+            // Cursor element might not be fully ready in DOM
+        }
+    }, [currentTimestamp, layoutMode, loading]);
 
     useEffect(() => {
         return () => {
@@ -276,19 +325,16 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
         }
     };
 
-    const handleSetLoopStart = () => {
+    const handleSetLoopStart = (val?: number | null) => {
         if (!playbackRef.current) return;
-        const current = playbackRef.current.CurrentTimestamp;
+        const current = val !== undefined && val !== null ? val : playbackRef.current.CurrentTimestamp;
         setLoopStart(current);
         playbackRef.current.setLoop(current, loopEnd);
     };
 
-    const handleSetLoopEnd = () => {
+    const handleSetLoopEnd = (val?: number | null) => {
         if (!playbackRef.current) return;
-        const current = playbackRef.current.CurrentTimestamp;
-
-        // Validate logic: End must be > Start??
-        // For now just set it.
+        const current = val !== undefined && val !== null ? val : playbackRef.current.CurrentTimestamp;
         setLoopEnd(current);
         playbackRef.current.setLoop(loopStart, current);
     };
@@ -308,9 +354,9 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
     };
 
     return (
-        <div className="flex flex-col items-center w-full h-full bg-white p-4 rounded shadow-xl overflow-auto min-h-[500px]">
-            {loading && <div className="text-blue-500 font-bold animate-pulse">Loading Score...</div>}
-            {error && <div className="text-red-500 font-bold">Error: {error}</div>}
+        <div className={`flex flex-col items-center w-full h-full p-4 rounded-xl shadow-xl overflow-auto min-h-[500px] transition-colors duration-300 ${isDarkMode ? 'bg-gray-800 border border-gray-700 text-gray-100' : 'bg-white border border-gray-100 text-gray-900'}`}>
+            {loading && <div className="text-blue-500 font-bold animate-pulse mb-2">Loading Score...</div>}
+            {error && <div className="text-red-500 font-bold mb-2">Error: {error}</div>}
 
             {/* Controls Bar */}
             <ScoreControls
@@ -322,6 +368,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
                 highlightNotes={highlightNotes}
                 showNoteNames={showNoteNames}
                 isPracticeActive={isPracticeActive}
+                layoutMode={layoutMode}
                 onTogglePlayback={togglePlayback}
                 onReset={stopPlayback}
                 onToggleKeyboard={setShowKeyboard}
@@ -329,6 +376,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
                 onToggleHighlight={setHighlightNotes}
                 onToggleNoteNames={setShowNoteNames}
                 onTogglePractice={isPracticeActive ? stopPractice : startPractice}
+                onChangeLayoutMode={setLayoutMode}
             />
 
             {/* Practice Mode Overlay - Compact Bottom Bar */}
@@ -372,7 +420,26 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
                 </div>
             )}
 
-            <div ref={containerRef} className="w-full overflow-auto bg-white p-4 rounded shadow" style={{ minHeight: '400px' }} />
+            {/* Sheet Music Rendering Container */}
+            <div className="relative w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 mb-4">
+                {/* Simply Piano / Flowkey Playhead Line Overlay */}
+                {layoutMode === 'scrolling' && (
+                    <div 
+                        className="absolute top-0 bottom-0 w-0.5 bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.9)] z-20 pointer-events-none"
+                        style={{ left: '25%' }}
+                    >
+                        <div className="absolute top-3 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow whitespace-nowrap uppercase tracking-widest leading-none pointer-events-none select-none">
+                            Playhead
+                        </div>
+                    </div>
+                )}
+
+                <div 
+                    ref={containerRef} 
+                    className={`w-full overflow-auto p-4 ${layoutMode === 'scrolling' ? 'no-scrollbar' : ''}`} 
+                    style={{ minHeight: '400px' }} 
+                />
+            </div>
         </div>
     );
 };

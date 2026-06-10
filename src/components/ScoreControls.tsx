@@ -9,6 +9,7 @@ interface ScoreControlsProps {
     highlightNotes: boolean;
     showNoteNames: boolean;
     isPracticeActive: boolean;
+    layoutMode: 'standard' | 'scrolling';
     onTogglePlayback: () => void;
     onReset: () => void;
     onToggleKeyboard: (val: boolean) => void;
@@ -16,6 +17,7 @@ interface ScoreControlsProps {
     onToggleHighlight: (val: boolean) => void;
     onToggleNoteNames: (val: boolean) => void;
     onTogglePractice: () => void;
+    onChangeLayoutMode: (mode: 'standard' | 'scrolling') => void;
 }
 
 export const ScoreControls: React.FC<ScoreControlsProps> = ({
@@ -27,13 +29,15 @@ export const ScoreControls: React.FC<ScoreControlsProps> = ({
     highlightNotes,
     showNoteNames,
     isPracticeActive,
+    layoutMode,
     onTogglePlayback,
     onReset,
     onToggleKeyboard,
     onTogglePianoLabels,
     onToggleHighlight,
     onToggleNoteNames,
-    onTogglePractice
+    onTogglePractice,
+    onChangeLayoutMode
 }) => {
     return (
         <div className={`w-full max-w-4xl p-4 rounded-xl shadow-lg border flex flex-col gap-4 mb-6 transition-colors duration-500
@@ -72,10 +76,27 @@ export const ScoreControls: React.FC<ScoreControlsProps> = ({
             </div>
 
             {/* Bottom Row: Toggles */}
-            <div className={`flex flex-wrap items-center justify-center gap-6 p-4 rounded-lg border w-full max-w-4xl mb-4 font-sans text-sm transition-colors duration-500
+            <div className={`flex flex-wrap items-center justify-center gap-4 p-4 rounded-lg border w-full max-w-4xl mb-4 font-sans text-sm transition-colors duration-500
                 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-gray-50 border-gray-200 text-gray-800'}
             `}>
-                <div className={`font-serif font-bold mr-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Display:</div>
+                {/* Layout Mode Segmented Picker */}
+                <div className="flex bg-gray-200 dark:bg-gray-850 p-1 rounded-full mr-2 border border-gray-300 dark:border-gray-600">
+                    <button
+                        onClick={() => onChangeLayoutMode('standard')}
+                        className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${layoutMode === 'standard' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-350 hover:text-gray-800 dark:hover:text-white'}`}
+                    >
+                        Standard Page
+                    </button>
+                    <button
+                        onClick={() => onChangeLayoutMode('scrolling')}
+                        className={`px-3 py-1 text-xs font-bold rounded-full transition-all flex items-center gap-1.5 ${layoutMode === 'scrolling' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-355 hover:text-gray-800 dark:hover:text-white'}`}
+                    >
+                        <span>Scrolling View</span>
+                        <span className="text-[9px] bg-red-500 text-white font-extrabold px-1 py-0.5 rounded-full leading-none animate-pulse">Simply</span>
+                    </button>
+                </div>
+
+                <div className={`font-serif font-bold mr-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Display:</div>
 
                 <label className={`flex items-center gap-2 cursor-pointer select-none transition ${isDarkMode ? 'hover:text-blue-400' : 'hover:text-blue-600'}`}>
                     <input

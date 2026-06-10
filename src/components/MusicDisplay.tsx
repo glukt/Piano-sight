@@ -93,6 +93,9 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
 
                 // Apply Theme Styles (Default notes)
                 staveNote.setStyle({ fillStyle: foregroundColor, strokeStyle: foregroundColor });
+                n.keys.forEach((_, keyIndex) => {
+                    staveNote.setKeyStyle(keyIndex, { fillStyle: foregroundColor, strokeStyle: foregroundColor });
+                });
 
                 if (cursorIndex !== undefined) {
                     if (i === cursorIndex) {
@@ -103,8 +106,15 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                         if (inputStatus === 'perfect') color = "#FFD700"; // Gold
 
                         staveNote.setStyle({ fillStyle: color, strokeStyle: color });
+                        n.keys.forEach((_, keyIndex) => {
+                            staveNote.setKeyStyle(keyIndex, { fillStyle: color, strokeStyle: color });
+                        });
                     } else if (i < cursorIndex) {
-                        staveNote.setStyle({ fillStyle: "#9ca3af", strokeStyle: "#9ca3af" }); // Gray 400
+                        const pastColor = "#9ca3af";
+                        staveNote.setStyle({ fillStyle: pastColor, strokeStyle: pastColor }); // Gray 400
+                        n.keys.forEach((_, keyIndex) => {
+                            staveNote.setKeyStyle(keyIndex, { fillStyle: pastColor, strokeStyle: pastColor });
+                        });
                     }
                 }
 
@@ -177,27 +187,14 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
             const oldCustom = svgElement.querySelectorAll('.custom-watermark');
             oldCustom.forEach(el => el.remove());
 
-            const keyText = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            keyText.textContent = "C Major";
-            keyText.setAttribute("class", "custom-watermark");
-            keyText.setAttribute("x", (width / 2).toString());
-            keyText.setAttribute("y", (height / 2).toString());
-            keyText.setAttribute("fill", isDarkMode ? "rgba(255, 255, 255, 0.04)" : "rgba(59, 130, 246, 0.04)");
-            keyText.setAttribute("font-size", "64");
-            keyText.setAttribute("font-weight", "900");
-            keyText.setAttribute("text-anchor", "middle");
-            keyText.setAttribute("transform", `rotate(-12, ${width / 2}, ${height / 2})`);
-            keyText.setAttribute("pointer-events", "none");
-            svgElement.insertBefore(keyText, svgElement.firstChild);
-
             const noteColors: Record<string, string> = {
-                'C': 'rgba(239, 68, 68, 0.06)',
-                'D': 'rgba(249, 115, 22, 0.06)',
-                'E': 'rgba(234, 179, 8, 0.06)',
-                'F': 'rgba(16, 185, 129, 0.06)',
-                'G': 'rgba(59, 130, 246, 0.06)',
-                'A': 'rgba(99, 102, 241, 0.06)',
-                'B': 'rgba(168, 85, 247, 0.06)'
+                'C': 'rgba(239, 68, 68, 0.03)',
+                'D': 'rgba(249, 115, 22, 0.03)',
+                'E': 'rgba(234, 179, 8, 0.03)',
+                'F': 'rgba(16, 185, 129, 0.03)',
+                'G': 'rgba(59, 130, 246, 0.03)',
+                'A': 'rgba(99, 102, 241, 0.03)',
+                'B': 'rgba(168, 85, 247, 0.03)'
             };
 
             const getTrebleY = (key: string) => {
@@ -231,12 +228,12 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
 
                     const lane = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     lane.setAttribute("class", "custom-watermark");
-                    lane.setAttribute("x", (x - 10).toString());
+                    lane.setAttribute("x", (x - 2).toString());
                     lane.setAttribute("y", "20");
-                    lane.setAttribute("width", "20");
+                    lane.setAttribute("width", "4");
                     lane.setAttribute("height", "180");
-                    lane.setAttribute("rx", "4");
-                    lane.setAttribute("fill", laneColor || "rgba(0,0,0,0.02)");
+                    lane.setAttribute("rx", "2");
+                    lane.setAttribute("fill", laneColor || "rgba(0,0,0,0.01)");
                     lane.setAttribute("pointer-events", "none");
                     svgElement.insertBefore(lane, svgElement.firstChild);
                 }
@@ -300,5 +297,15 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
 
     }, [trebleNotes, bassNotes, width, height, showLabels, cursorIndex, inputStatus, isDarkMode, onLayout]);
 
-    return <div ref={containerRef} className="w-full h-full flex justify-center items-center relative" style={{ backgroundColor: isDarkMode ? '' : 'white' }} />;
+    return (
+        <div className="w-full h-full flex justify-center items-center relative overflow-hidden bg-white dark:bg-gray-800 transition-colors duration-300">
+            {/* Floating Scale Pill Badge */}
+            <div className="absolute top-3 right-3 px-3 py-1 bg-blue-50/90 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-full font-bold text-xs shadow-sm border border-blue-100 dark:border-blue-900/50 flex items-center gap-1.5 pointer-events-none select-none z-10">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                <span>🎵 C Major Scale</span>
+            </div>
+            
+            <div ref={containerRef} className="w-full h-full flex justify-center items-center" />
+        </div>
+    );
 };

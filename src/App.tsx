@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useWindowSize } from './hooks/useWindowSize';
 import { useGameLogic } from './hooks/useGameLogic';
 
@@ -19,6 +19,16 @@ import { LevelUpModal } from './components/game/LevelUpModal';
 function App() {
     const { width: windowWidth } = useWindowSize();
     const [isDarkMode, setIsDarkMode] = useState(false);
+    
+    // Sync dark mode class to HTML document root for Tailwind dark support
+    useEffect(() => {
+        if (isDarkMode) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    }, [isDarkMode]);
+
     const [currentView, setCurrentView] = useState<'game' | 'musicxml' | 'reference' | 'settings' | 'courseSelection' | 'intro'>('courseSelection');
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
     const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);

@@ -374,19 +374,49 @@ export class PlaybackEngine {
 
         const currentBpm = this.bpm;
 
-        // 4. Calculate Delay to next step
-        // ... (existing heuristic for stepDuration) ...
+        // 4. Calculate Delay to next step using the exact difference to the next voice entry.
+        // This solves the rushing/skipping bug in multi-voice scores where a note in one voice
+        // overlaps with a rest or note of a different duration in another voice.
         let stepDuration = 0.05; // Fallback
 
-        if (notes.length > 0) {
-            let minDuration = 100;
-            notes.forEach(n => {
-                const d = n.Length.RealValue;
-                if (d < minDuration && d > 0) minDuration = d;
-            });
-            stepDuration = minDuration;
-        } else {
-            stepDuration = 0.125; // 8th note
+        if (iterator) {
+            try {
+                const nextIterator = iterator.clone();
+                nextIterator.moveToNext();
+                if (!nextIterator.EndReached) {
+                    const currentVal = iterator.currentTimeStamp.RealValue;
+                    const nextVal = nextIterator.currentTimeStamp.RealValue;
+                    const diff = nextVal - currentVal;
+                    if (diff > 0) {
+                        stepDuration = diff;
+                    }
+                } else {
+                    // Fallback for the final step of the score
+                    if (notes.length > 0) {
+                        let maxDuration = 0;
+                        notes.forEach(n => {
+                            const d = n.Length.RealValue;
+                            if (d > maxDuration) maxDuration = d;
+                        });
+                        stepDuration = maxDuration > 0 ? maxDuration : 0.25;
+                    } else {
+                        stepDuration = 0.25;
+                    }
+                }
+            } catch (e) {
+                console.warn("Failed to calculate exact step duration via iterator clone:", e);
+                // Fallback to legacy note-based heuristic
+                if (notes.length > 0) {
+                    let minDuration = 100;
+                    notes.forEach(n => {
+                        const d = n.Length.RealValue;
+                        if (d < minDuration && d > 0) minDuration = d;
+                    });
+                    stepDuration = minDuration;
+                } else {
+                    stepDuration = 0.125;
+                }
+            }
         }
 
         // Convert Whole Note duration to seconds for NEXT STEP

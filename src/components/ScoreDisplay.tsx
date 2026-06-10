@@ -96,7 +96,14 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
                 } else if (xmlContent) {
                     await osmdRef.current.load(xmlContent);
                 } else if (xmlUrl) {
-                    await osmdRef.current.load(xmlUrl);
+                    let resolvedUrl = xmlUrl;
+                    if (xmlUrl.startsWith('/')) {
+                        const baseUrl = import.meta.env.BASE_URL; // e.g. "/Piano-sight/" or "/"
+                        if (baseUrl !== '/' && !xmlUrl.startsWith(baseUrl)) {
+                            resolvedUrl = `${baseUrl}${xmlUrl.substring(1)}`;
+                        }
+                    }
+                    await osmdRef.current.load(resolvedUrl);
                 } else {
                     // Default fallback (maybe a hardcoded simple XML for demo)
                     // For now, just return

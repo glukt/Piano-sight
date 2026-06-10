@@ -39,6 +39,7 @@ export class PitchDetector {
     }
 
     public lastVolume: number = 0;
+    public noiseGateThreshold: number = 0.01;
 
     public getPitch(): number | null {
         this.analyser.getFloatTimeDomainData(this.buffer as any);
@@ -65,7 +66,7 @@ export class PitchDetector {
         this.lastVolume = rms; // Store volume
 
         // Noise gate
-        if (rms < 0.01) return -1;
+        if (rms < this.noiseGateThreshold) return -1;
 
         let r1 = 0, r2 = SIZE - 1;
         const thres = 0.2;
@@ -78,6 +79,7 @@ export class PitchDetector {
             if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
         }
 
+        if (r1 >= r2 || (r2 - r1) < 4) return -1;
         const buf2 = buf.slice(r1, r2);
         const c = new Array(buf2.length).fill(0);
 

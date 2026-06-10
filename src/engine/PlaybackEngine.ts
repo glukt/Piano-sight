@@ -7,6 +7,13 @@ export class PlaybackEngine {
     private osmd: OpenSheetMusicDisplay;
     private cursor: Cursor | null = null;
     private isPlaying: boolean = false;
+
+    private getCursor(): Cursor | null {
+        if (!this.cursor) {
+            this.cursor = this.osmd.cursor || null;
+        }
+        return this.cursor;
+    }
     private intervalId: number | null = null;
     private noteTimeouts: number[] = [];
     private bpm: number = 100;
@@ -70,20 +77,20 @@ export class PlaybackEngine {
         this.currentStyledNotes = [];
     }
     public highlightCurrentNotes() {
-        if (!this.cursor) return;
+        const cursor = this.getCursor();
+        if (!cursor) return;
 
         // 1. Clear previous highlights
         this.clearHighlights();
 
         // 2. Highlight notes under cursor
-        const gNotes = this.cursor.GNotesUnderCursor();
+        const gNotes = cursor.GNotesUnderCursor();
         gNotes.forEach(gn => {
             // @ts-ignore
             if (gn.setColor) {
                 // Use a distinct color for Wait Mode? Or standard Blue?
                 // Let's use Orange/Yellow if we passed an argument, but for now standard Blue.
                 // Wait, user wants "Wait Mode" highlighting.
-                // Maybe add color argument.
                 // @ts-ignore
                 gn.setColor("#f59e0b", { applyToNoteheads: true, applyToStem: true, applyToBeams: true }); // Amber/Orange
                 this.currentStyledNotes.push(gn as unknown as GraphicalNote);
@@ -104,8 +111,9 @@ export class PlaybackEngine {
     }
 
     public get CurrentTimestamp(): number {
-        if (!this.cursor) return 0;
-        return this.cursor.Iterator.currentTimeStamp.RealValue;
+        const cursor = this.getCursor();
+        if (!cursor) return 0;
+        return cursor.Iterator.currentTimeStamp.RealValue;
     }
 
     public getMeasureTimestamp(measureIndex: number): number | null {
@@ -122,8 +130,9 @@ export class PlaybackEngine {
     }
 
     public getNotesAtCurrentPosition(): { midi: number, isTied: boolean }[] {
-        if (!this.cursor) return [];
-        const notes = this.cursor.NotesUnderCursor();
+        const cursor = this.getCursor();
+        if (!cursor) return [];
+        const notes = cursor.NotesUnderCursor();
         const result: { midi: number, isTied: boolean }[] = [];
         notes.forEach(note => {
             if (!note.isRest() && note.Pitch) {
@@ -150,9 +159,10 @@ export class PlaybackEngine {
     }
 
     public nextStep() {
-        if (!this.cursor) return;
-        this.cursor.next();
-        this.cursor.update(); // Update visuals immediately
+        const cursor = this.getCursor();
+        if (!cursor) return;
+        cursor.next();
+        cursor.update(); // Update visuals immediately
     }
 
     public get MeasureCount(): number {
@@ -161,26 +171,27 @@ export class PlaybackEngine {
     }
 
     public seek(targetRealValue: number) {
-        if (!this.cursor) return;
+        const cursor = this.getCursor();
+        if (!cursor) return;
 
         // Pause playback momentarily to prevent race conditions?
         const wasPlaying = this.isPlaying;
         if (wasPlaying) this.stop(); // Stop audio, clear timeouts
 
-        this.cursor.reset();
+        cursor.reset();
 
         // Fast forward to target
         // This is efficient enough for small scores, might need optimization for large ones.
-        while (!this.cursor.Iterator.EndReached &&
-            this.cursor.Iterator.currentTimeStamp.RealValue < targetRealValue) {
-            this.cursor.next();
+        while (!cursor.Iterator.EndReached &&
+            cursor.Iterator.currentTimeStamp.RealValue < targetRealValue) {
+            cursor.next();
         }
 
-        this.cursor.update(); // Update visuals
+        cursor.update(); // Update visuals
 
         // Update progress callback immediately
         if (this.onProgress) {
-            this.onProgress(this.cursor.Iterator.currentTimeStamp.RealValue, this.TotalDuration);
+            this.onProgress(cursor.Iterator.currentTimeStamp.RealValue, this.TotalDuration);
         }
 
         if (wasPlaying) {
@@ -197,7 +208,7 @@ export class PlaybackEngine {
             // Type definition says `cursor` property exists.
             (this.osmd.cursor as any)?.show();
         }
-        this.cursor = this.osmd.cursor;
+        this.cursor = this.osmd.cursor || null;
         this.isPlaying = true;
         if (this.playbackCallback) this.playbackCallback(true);
 
@@ -244,10 +255,11 @@ export class PlaybackEngine {
     }
 
     private step() {
-        if (!this.isPlaying || !this.cursor) return;
+        const cursor = this.getCursor();
+        if (!this.isPlaying || !cursor) return;
 
         // 1. Get Notes at current position
-        const notes: Note[] = this.cursor.NotesUnderCursor();
+        const notes: Note[] = cursor.NotesUnderCursor();
 
         // -------------------------------------------------------------
         // Visual Feedback: Note Highlighting
@@ -256,7 +268,7 @@ export class PlaybackEngine {
 
         if (this.highlightNotes) {
             // Get Graphical Notes
-            const gNotes = this.cursor.GNotesUnderCursor();
+            const gNotes = cursor.GNotesUnderCursor();
             gNotes.forEach(gn => {
                 // Determine highlight color? (e.g. blue for playback)
                 // Use type assertion if necessary, but GraphicalNote should be available.
@@ -278,7 +290,7 @@ export class PlaybackEngine {
         // Actually, the cursor iterates through "VoiceEntries". 
         // We need to look at the iterator's current timestamp difference to the next timestamp.
 
-        const iterator = this.cursor.Iterator;
+        const iterator = cursor.Iterator;
 
         // Loop Check
         if (this.loopEnd !== null && this.loopStart !== null) {
@@ -293,7 +305,8 @@ export class PlaybackEngine {
 
         if (iterator.EndReached) {
             this.stop();
-            this.cursor.reset();
+            const curs = this.getCursor();
+            if (curs) curs.reset();
             return;
         }
 
@@ -397,7 +410,8 @@ export class PlaybackEngine {
 
         this.intervalId = window.setTimeout(() => {
             // Advance
-            this.cursor?.next();
+            const curs = this.getCursor();
+            if (curs) curs.next();
             this.step();
 
             // Do NOT releaseAll() here. Individual notes handle their own release.

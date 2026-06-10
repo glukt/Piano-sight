@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useWindowSize } from './hooks/useWindowSize';
 import { useGameLogic } from './hooks/useGameLogic';
 
@@ -14,6 +14,7 @@ import { NotificationToast } from './components/NotificationToast';
 import { CourseSelection } from './components/game/CourseSelection';
 import { LessonIntro } from './components/game/LessonIntro';
 import { Lesson } from './utils/music/CourseData';
+import { LevelUpModal } from './components/game/LevelUpModal';
 
 function App() {
     const { width: windowWidth } = useWindowSize();
@@ -30,40 +31,23 @@ function App() {
     // This hook manages the game state, audio, and gamification
     const gameLogic = useGameLogic();
 
-    // Auto-Start Audio on First Interaction (Global Handler)
-    useEffect(() => {
-        const initAudioOnInteraction = async () => {
-            if (!gameLogic.audioStarted && !gameLogic.isAudioLoading) {
-                try {
-                    await gameLogic.startAudio();
-                } catch (e) {
-                    // Ignore
-                }
-            }
-        };
-
-        const handleInteraction = () => {
-            initAudioOnInteraction();
-            window.removeEventListener('click', handleInteraction);
-            window.removeEventListener('keydown', handleInteraction);
-        };
-
-        window.addEventListener('click', handleInteraction);
-        window.addEventListener('keydown', handleInteraction);
-
-        return () => {
-            window.removeEventListener('click', handleInteraction);
-            window.removeEventListener('keydown', handleInteraction);
-        };
-    }, [gameLogic.audioStarted, gameLogic.isAudioLoading, gameLogic.startAudio]);
+    // We removed the global auto-start audio hook here. Audio is now explicitly started 
+    // when a user clicks 'Start Lesson' or explicitly loads a custom song.
 
 
     // Handlers for MusicXML View
-    const handleScoreSelect = (file: File) => {
-        setFileName(file.name);
-        setUploadedFile(file);
-        setXmlData(null);
-        setSongUrl(null);
+    const handleScoreSelect = (file: File | null, url?: string, title?: string) => {
+        if (url) {
+            setSongUrl(url);
+            setFileName(title || 'Loaded Score');
+            setUploadedFile(null);
+            setXmlData(null);
+        } else if (file) {
+            setFileName(file.name);
+            setUploadedFile(file);
+            setXmlData(null);
+            setSongUrl(null);
+        }
     };
 
     const handleClearScore = () => {
@@ -186,12 +170,16 @@ function App() {
                             audioStarted={gameLogic.audioStarted}
                             isAudioLoading={gameLogic.isAudioLoading}
                             onStartAudio={gameLogic.startAudio}
+                            micVolume={gameLogic.micVolume}
+                            micSensitivity={gameLogic.micSensitivity}
+                            onMicSensitivityChange={gameLogic.setMicSensitivity}
+                            midiInputs={gameLogic.midiInputs}
                             onResetProgress={() => {
-                                localStorage.removeItem('piano-sight-xp');
-                                localStorage.removeItem('piano-sight-level');
-                                localStorage.removeItem('piano-sight-achievements');
-                                localStorage.removeItem('piano-sight-challenges');
-                                localStorage.removeItem('piano-sight-stats');
+                                localStorage.removeItem('piano_gamification');
+                                localStorage.removeItem('pianopilot_stats');
+                                localStorage.removeItem('pianopilot_achievements');
+                                localStorage.removeItem('pianopilot_daily_challenges');
+                                localStorage.removeItem('pianopilot_last_login');
                                 window.location.reload();
                             }}
                         />
@@ -199,15 +187,11 @@ function App() {
                 )}
             </main>
 
-            {/* Level Up Modal */}
-            {gameLogic.gameState.level > 1 && gameLogic.gameState.xp === 0 && ( /* Quick check for 'just leveled up' logic, but hook uses levelUp state */ "")}
-
             {/* Level Up Modal (using hook state) */}
-            {/* Note: useGamification returns 'levelUp' which is the *new level number* if leveling up, else null */}
-            {/* Accessing it via gameLogic... wait, useGamification output in useGameLogic doesn't export 'levelUp' state! */}
-            {/* CHECK useGameLogic.ts exports! */}
-
-            {/*  Ah, I missed exporting 'levelUp' and 'clearLevelUp' in useGameLogic! */}
+            <LevelUpModal
+                level={gameLogic.levelUp}
+                onClose={gameLogic.clearLevelUp}
+            />
 
             {/* Footer */}
             <div className="mt-8 opacity-50 text-xs">

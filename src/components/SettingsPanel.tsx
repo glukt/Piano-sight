@@ -9,6 +9,10 @@ interface SettingsPanelProps {
     isAudioLoading: boolean;
     onStartAudio: () => void;
     onResetProgress: () => void;
+    micVolume?: number;
+    micSensitivity?: number;
+    onMicSensitivityChange?: (val: number) => void;
+    midiInputs?: any[];
 }
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({
@@ -19,8 +23,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     audioStarted,
     isAudioLoading,
     onStartAudio,
-    onResetProgress
+    onResetProgress,
+    micVolume = 0,
+    micSensitivity = 0.01,
+    onMicSensitivityChange,
+    midiInputs = []
 }) => {
+    // Normalize volume for progress bar (RMS ranges roughly 0 to 0.1 for typical input)
+    const volumePercentage = Math.min(100, Math.round((micVolume / 0.1) * 100));
+
     return (
         <div className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-100 flex items-center gap-2">
@@ -48,6 +59,70 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                             {isAudioLoading ? 'Initializing...' : 'Start Audio Engine'}
                         </button>
                     )}
+                </div>
+
+                {/* MIDI Connection Status */}
+                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-2">MIDI Keyboard Devices</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                        Connect a digital keyboard via USB-MIDI to enable low-latency practice.
+                    </p>
+                    {midiInputs.length > 0 ? (
+                        <div className="space-y-2">
+                            {midiInputs.map((input, idx) => (
+                                <div key={idx} className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 px-3 py-2 rounded-lg font-medium text-sm">
+                                    🎹 {input.name || `MIDI Device ${idx + 1}`} ({input.manufacturer || 'Generic'})
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-900/40 px-3 py-2 rounded-lg font-medium">
+                            ⚠️ No MIDI Keyboard detected. (Free play and Acoustic Mic modes remain available)
+                        </div>
+                    )}
+                </div>
+
+                {/* Acoustic Piano Mic Calibration */}
+                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-2">Acoustic Piano Calibration</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        Calibrate your microphone sensitivity to filter out room noise and detect key strikes correctly.
+                    </p>
+
+                    {/* Live Input Meter */}
+                    <div className="mb-4">
+                        <div className="flex justify-between text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                            <span>Microphone Level</span>
+                            <span>{volumePercentage}%</span>
+                        </div>
+                        <div className="w-full h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div
+                                className="h-full bg-gradient-to-r from-emerald-400 to-green-500 transition-all duration-75"
+                                style={{ width: `${volumePercentage}%` }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Sensitivity Slider */}
+                    <div>
+                        <div className="flex justify-between text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                            <span>Noise Gate Sensitivity</span>
+                            <span className="font-mono">{micSensitivity.toFixed(3)}</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0.001"
+                            max="0.05"
+                            step="0.001"
+                            value={micSensitivity}
+                            onChange={(e) => onMicSensitivityChange?.(Number(e.target.value))}
+                            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                        />
+                        <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+                            <span>High Sensitivity (Quiet room)</span>
+                            <span>Low Sensitivity (Noisy room)</span>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Appearance */}

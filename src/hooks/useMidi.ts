@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { audio } from '../audio/Synth';
 
 export interface UseMidiProps {
     onNoteOn?: (note: number, velocity: number) => void;
@@ -22,6 +23,7 @@ export function useMidi({ onNoteOn, onNoteOff }: UseMidiProps = {}) {
     });
 
     const handleMidiMessage = useCallback((message: WebMidi.MIDIMessageEvent) => {
+        if (!message || !message.data || message.data.length < 3) return;
         const [command, note, velocity] = message.data;
 
         // Note On (usually 144-159)
@@ -53,9 +55,21 @@ export function useMidi({ onNoteOn, onNoteOff }: UseMidiProps = {}) {
             });
             onNoteOffRef.current?.(note);
         }
+
+        // Control Change (usually 176-191)
+        if (command >= 176 && command <= 191) {
+            const controllerNumber = note;
+            const value = velocity;
+            if (controllerNumber === 64) {
+                // CC#64: Sustain Pedal
+                audio.setSustain(value >= 64);
+            }
+        }
     }, []);
 
     useEffect(() => {
+        const boundInputs = new Set<WebMidi.MIDIInput>();
+
         const onMIDISuccess = (access: WebMidi.MIDIAccess) => {
             setIsEnabled(true);
             const updateDevices = () => {
@@ -68,29 +82,33 @@ export function useMidi({ onNoteOn, onNoteOff }: UseMidiProps = {}) {
                 setInputs(inputList);
                 setOutputs(outputList);
 
-                // Re-bind listeners to all inputs
+                // Unbind from any inputs that are no longer present
+                boundInputs.forEach(input => {
+                    if (!inputList.includes(input)) {
+                        input.removeEventListener('midimessage', handleMidiMessage);
+                        boundInputs.delete(input);
+                    }
+                });
+
+                // Bind to any new inputs
                 inputList.forEach(input => {
-                    // Remove old listener if any (though handleMidiMessage changes ref, we need stable cleanup?)
-                    // For simplicity in this effect, we just add. Cleanup is hard without tracking.
-                    // Actually, the effect re-runs on handleMidiMessage change.
-                    input.addEventListener('midimessage', handleMidiMessage);
+                    if (!boundInputs.has(input)) {
+                        input.addEventListener('midimessage', handleMidiMessage);
+                        boundInputs.add(input);
+                    }
                 });
             };
 
             access.onstatechange = updateDevices;
             updateDevices();
 
-            // Cleanup function for the effect
+            // Cleanup function for the device success callback
             return () => {
-                // We need to access the LATEST inputs to remove listeners?
-                // accesses inputs from closure scope of 'updateDevices' call? No.
-                // We can't easily cleanup here because 'inputs' state might not be up to date or we need access.
-                // BUT, since we set local vars inputList, we can define cleanup logic inside updateDevices or return a cleanup from the effect.
-                if (access) {
-                    access.inputs.forEach(input => {
-                        input.removeEventListener('midimessage', handleMidiMessage);
-                    });
-                }
+                boundInputs.forEach(input => {
+                    input.removeEventListener('midimessage', handleMidiMessage);
+                });
+                boundInputs.clear();
+                access.onstatechange = null;
             };
         };
 
@@ -99,24 +117,19 @@ export function useMidi({ onNoteOn, onNoteOff }: UseMidiProps = {}) {
             setError("MIDI Access Failed.");
         };
 
-        let accessObj: WebMidi.MIDIAccess | null = null;
+        let cleanupDevices: (() => void) | null = null;
 
         if ((navigator as any).requestMIDIAccess) {
             (navigator as any).requestMIDIAccess({ sysex: false }).then((access: WebMidi.MIDIAccess) => {
-                accessObj = access;
-                onMIDISuccess(access);
-                // We need to store cleanup?
-                // The Effect return should call cleanup.
+                cleanupDevices = onMIDISuccess(access);
             }, onMIDIFailure);
         } else {
             setError("Web MIDI API not supported. Try Chrome or Edge.");
         }
 
         return () => {
-            if (accessObj) {
-                accessObj.inputs.forEach(input => {
-                    input.removeEventListener('midimessage', handleMidiMessage);
-                });
+            if (cleanupDevices) {
+                cleanupDevices();
             }
         };
     }, [handleMidiMessage]);

@@ -166,11 +166,126 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         // -----------------------------------------------------------------------
         // Extract Layout (for external synchronization)
         // -----------------------------------------------------------------------
-        if (onLayout) {
-            // Get X positions of treble notes
-            const tickables = trebleVoice.getTickables();
-            const positions = tickables.map(t => (t as any).getAbsoluteX());
+        // -----------------------------------------------------------------------
+        // Extract Layout & Draw Custom Watermarks
+        // -----------------------------------------------------------------------
+        const tickables = trebleVoice.getTickables();
+        const positions = tickables.map(t => (t as any).getAbsoluteX());
 
+        const svgElement = containerRef.current?.querySelector('svg');
+        if (svgElement) {
+            const oldCustom = svgElement.querySelectorAll('.custom-watermark');
+            oldCustom.forEach(el => el.remove());
+
+            const keyText = document.createElementNS("http://www.w3.org/2000/svg", "text");
+            keyText.textContent = "C Major";
+            keyText.setAttribute("class", "custom-watermark");
+            keyText.setAttribute("x", (width / 2).toString());
+            keyText.setAttribute("y", (height / 2).toString());
+            keyText.setAttribute("fill", isDarkMode ? "rgba(255, 255, 255, 0.04)" : "rgba(59, 130, 246, 0.04)");
+            keyText.setAttribute("font-size", "64");
+            keyText.setAttribute("font-weight", "900");
+            keyText.setAttribute("text-anchor", "middle");
+            keyText.setAttribute("transform", `rotate(-12, ${width / 2}, ${height / 2})`);
+            keyText.setAttribute("pointer-events", "none");
+            svgElement.insertBefore(keyText, svgElement.firstChild);
+
+            const noteColors: Record<string, string> = {
+                'C': 'rgba(239, 68, 68, 0.06)',
+                'D': 'rgba(249, 115, 22, 0.06)',
+                'E': 'rgba(234, 179, 8, 0.06)',
+                'F': 'rgba(16, 185, 129, 0.06)',
+                'G': 'rgba(59, 130, 246, 0.06)',
+                'A': 'rgba(99, 102, 241, 0.06)',
+                'B': 'rgba(168, 85, 247, 0.06)'
+            };
+
+            const getTrebleY = (key: string) => {
+                const [note, octaveStr] = key.split('/');
+                const octave = parseInt(octaveStr);
+                const noteMap: Record<string, number> = { c: 0, d: 1, e: 2, f: 3, g: 4, a: 5, b: 6 };
+                const noteVal = noteMap[note.toLowerCase()[0]] ?? 0;
+                const diatonic = noteVal + octave * 7;
+                const stepDiff = diatonic - 34;
+                return 65 - stepDiff * 5;
+            };
+
+            const getBassY = (key: string) => {
+                const [note, octaveStr] = key.split('/');
+                const octave = parseInt(octaveStr);
+                const noteMap: Record<string, number> = { c: 0, d: 1, e: 2, f: 3, g: 4, a: 5, b: 6 };
+                const noteVal = noteMap[note.toLowerCase()[0]] ?? 0;
+                const diatonic = noteVal + octave * 7;
+                const stepDiff = diatonic - 22;
+                return 165 - stepDiff * 5;
+            };
+
+            positions.forEach((x, i) => {
+                const tNote = trebleNotes[i];
+                const bNote = bassNotes[i];
+
+                const firstTrebleKey = tNote?.keys[0];
+                if (firstTrebleKey && !firstTrebleKey.includes('r') && firstTrebleKey !== 'b/4') {
+                    const noteLetter = firstTrebleKey.split('/')[0][0].toUpperCase();
+                    const laneColor = noteColors[noteLetter];
+
+                    const lane = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                    lane.setAttribute("class", "custom-watermark");
+                    lane.setAttribute("x", (x - 10).toString());
+                    lane.setAttribute("y", "20");
+                    lane.setAttribute("width", "20");
+                    lane.setAttribute("height", "180");
+                    lane.setAttribute("rx", "4");
+                    lane.setAttribute("fill", laneColor || "rgba(0,0,0,0.02)");
+                    lane.setAttribute("pointer-events", "none");
+                    svgElement.insertBefore(lane, svgElement.firstChild);
+                }
+
+                if (showLabels) {
+                    if (tNote && tNote.keys && tNote.keys[0] !== 'b/4') {
+                        tNote.keys.forEach(k => {
+                            const noteName = k.split('/')[0].toUpperCase();
+                            const y = getTrebleY(k);
+
+                            const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                            label.setAttribute("class", "custom-watermark");
+                            label.textContent = noteName.replace(/#/g, '♯').replace(/b/g, '♭');
+                            label.setAttribute("x", x.toString());
+                            label.setAttribute("y", (y + 8).toString());
+                            label.setAttribute("fill", isDarkMode ? "rgba(255, 255, 255, 0.15)" : "rgba(59, 130, 246, 0.2)");
+                            label.setAttribute("font-family", "Outfit, sans-serif");
+                            label.setAttribute("font-weight", "900");
+                            label.setAttribute("font-size", "24");
+                            label.setAttribute("text-anchor", "middle");
+                            label.setAttribute("pointer-events", "none");
+                            svgElement.insertBefore(label, svgElement.firstChild);
+                        });
+                    }
+
+                    if (bNote && bNote.keys && bNote.keys[0] !== 'd/3') {
+                        bNote.keys.forEach(k => {
+                            const noteName = k.split('/')[0].toUpperCase();
+                            const y = getBassY(k);
+
+                            const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                            label.setAttribute("class", "custom-watermark");
+                            label.textContent = noteName.replace(/#/g, '♯').replace(/b/g, '♭');
+                            label.setAttribute("x", x.toString());
+                            label.setAttribute("y", (y + 8).toString());
+                            label.setAttribute("fill", isDarkMode ? "rgba(255, 255, 255, 0.15)" : "rgba(59, 130, 246, 0.2)");
+                            label.setAttribute("font-family", "Outfit, sans-serif");
+                            label.setAttribute("font-weight", "900");
+                            label.setAttribute("font-size", "24");
+                            label.setAttribute("text-anchor", "middle");
+                            label.setAttribute("pointer-events", "none");
+                            svgElement.insertBefore(label, svgElement.firstChild);
+                        });
+                    }
+                }
+            });
+        }
+
+        if (onLayout) {
             // Check if positions changed to avoid infinite loop
             // We use a simple element-wise check with prevPositionsRef.
             const isDifferent = !prevPositionsRef.current ||

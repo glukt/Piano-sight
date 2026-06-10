@@ -154,6 +154,31 @@ export function usePracticeMode({
     const stuckTimerRef = useRef(0);
     const prevExpectedNotesRef = useRef<string>("");
 
+    // Refs to avoid constant cleanup/restart of the 50ms check interval
+    const userActiveNotesRef = useRef(userActiveNotes);
+    const lastSuccessfulNotesRef = useRef(lastSuccessfulNotes);
+    const notesCorrectRef = useRef(notesCorrect);
+    const notesMissedRef = useRef(notesMissed);
+    const showHintRef = useRef(showHint);
+    const currentSectionRef = useRef(currentSection);
+    const onSectionCompleteRef = useRef(onSectionComplete);
+    const nextSectionRef = useRef(nextSection);
+    const retrySectionRef = useRef(retrySection);
+    const onNoteCorrectRef = useRef(onNoteCorrect);
+
+    useEffect(() => {
+        userActiveNotesRef.current = userActiveNotes;
+        lastSuccessfulNotesRef.current = lastSuccessfulNotes;
+        notesCorrectRef.current = notesCorrect;
+        notesMissedRef.current = notesMissed;
+        showHintRef.current = showHint;
+        currentSectionRef.current = currentSection;
+        onSectionCompleteRef.current = onSectionComplete;
+        nextSectionRef.current = nextSection;
+        retrySectionRef.current = retrySection;
+        onNoteCorrectRef.current = onNoteCorrect;
+    });
+
     // Active Logic for Wait Mode
     useEffect(() => {
         if (!isActive || mode !== 'wait' || !playbackEngine) return;
@@ -167,7 +192,7 @@ export function usePracticeMode({
             if (currentExpectedObjs.length > 0) {
                 if (currentExpectedStr === prevExpectedNotesRef.current) {
                     stuckTimerRef.current += 50; // Add 50ms
-                    if (stuckTimerRef.current > 3000 && !showHint) {
+                    if (stuckTimerRef.current > 3000 && !showHintRef.current) {
                         setShowHint(true);
                     }
                 } else {
@@ -184,22 +209,22 @@ export function usePracticeMode({
 
             // 1. Check for End of Section
             const currentTimestamp = playbackEngine.CurrentTimestamp;
-            const endTimestamp = playbackEngine.getMeasureTimestamp(currentSection.endMeasure);
+            const endTimestamp = playbackEngine.getMeasureTimestamp(currentSectionRef.current.endMeasure);
 
             if (endTimestamp !== null && currentTimestamp >= endTimestamp) {
                 // End of Section Reached! Check Accuracy.
-                const total = notesCorrect + notesMissed;
+                const total = notesCorrectRef.current + notesMissedRef.current;
                 // If total is 0 (empty section?), treat as 100%
-                const acc = total > 0 ? (notesCorrect / total) * 100 : 100;
+                const acc = total > 0 ? (notesCorrectRef.current / total) * 100 : 100;
                 setAccuracy(Math.round(acc));
 
                 if (acc >= 90) {
                     setFeedback(`Great! Accuracy: ${Math.round(acc)}%. Moving on!`);
-                    if (onSectionComplete) onSectionComplete(); // Major XP event
-                    setTimeout(() => nextSection(), 1500);
+                    if (onSectionCompleteRef.current) onSectionCompleteRef.current(); // Major XP event
+                    setTimeout(() => nextSectionRef.current(), 1500);
                 } else {
                     setFeedback(`Accuracy: ${Math.round(acc)}%. Let's try again.`);
-                    setTimeout(() => retrySection(), 1500);
+                    setTimeout(() => retrySectionRef.current(), 1500);
                 }
                 playbackEngine.stop(); // Stop checking
                 setShowHint(false);
@@ -227,7 +252,7 @@ export function usePracticeMode({
                 if (n.isTied) return false;
 
                 // Otherwise, check if it was last successful AND is still held
-                return lastSuccessfulNotes.has(n.midi) && userActiveNotes.has(n.midi);
+                return lastSuccessfulNotesRef.current.has(n.midi) && userActiveNotesRef.current.has(n.midi);
             });
 
             if (stillHeldFromPrevious.length > 0) {
@@ -237,10 +262,10 @@ export function usePracticeMode({
 
                 // Cleanup: If user HAS released a note, remove it from lastSuccessfulNotes 
                 // so we know it's "clearguard" for next press.
-                const newLast = new Set(lastSuccessfulNotes);
+                const newLast = new Set(lastSuccessfulNotesRef.current);
                 let changed = false;
-                lastSuccessfulNotes.forEach(n => {
-                    if (!userActiveNotes.has(n)) {
+                lastSuccessfulNotesRef.current.forEach(n => {
+                    if (!userActiveNotesRef.current.has(n)) {
                         newLast.delete(n);
                         changed = true;
                     }
@@ -257,14 +282,14 @@ export function usePracticeMode({
                 // If tied, and we are holding it (from previous success or just holding), it counts?
                 // Wait, if it IS tied, we still require it to be ACTIVE.
                 // But we filtered out the "blocker" above.
-                return userActiveNotes.has(noteObj.midi);
+                return userActiveNotesRef.current.has(noteObj.midi);
             });
 
             if (allNotesPressed) {
                 setFeedback("Good!");
                 playbackEngine.nextStep();
                 setNotesCorrect(prev => prev + 1);
-                if (onNoteCorrect) onNoteCorrect(); // Minor XP event
+                if (onNoteCorrectRef.current) onNoteCorrectRef.current(); // Minor XP event
 
                 // Mark these notes as successful so we require re-trigger next time if needed
                 setLastSuccessfulNotes(new Set(currentExpectedMidis));
@@ -275,12 +300,12 @@ export function usePracticeMode({
                 // 6. Mistake Tracking
                 // Count any active note that is NOT in expected notes
                 // LEGATO FIX: Ignore notes that are in existing "lastSuccessfulNotes" (trailing notes from previous step)
-                const activeWrongNotes = [...userActiveNotes].filter(n => {
+                const activeWrongNotes = [...userActiveNotesRef.current].filter(n => {
                     // If it's in the current expected set, it's correct (or at least valid).
                     if (currentExpectedMidis.includes(n)) return false;
 
                     // If it was correct in the PREVIOUS step (and held over), ignore it (Legato tolerance).
-                    if (lastSuccessfulNotes.has(n)) return false;
+                    if (lastSuccessfulNotesRef.current.has(n)) return false;
 
                     // Otherwise, it's a wrong note.
                     return true;
@@ -299,7 +324,7 @@ export function usePracticeMode({
                 // Remove released key from heldWrongNotes
                 // (Convert to array to avoid modification during iteration issues if any)
                 [...heldWrongNotesRef.current].forEach(n => {
-                    if (!userActiveNotes.has(n)) {
+                    if (!userActiveNotesRef.current.has(n)) {
                         heldWrongNotesRef.current.delete(n);
                     }
                 });
@@ -314,7 +339,7 @@ export function usePracticeMode({
         const interval = setInterval(checkInput, 50); // Poll 20Hz
         return () => clearInterval(interval);
 
-    }, [isActive, mode, playbackEngine, userActiveNotes, currentSection, notesCorrect, notesMissed, lastSuccessfulNotes, nextSection, retrySection, onNoteCorrect, onSectionComplete, showHint]);
+    }, [isActive, mode, playbackEngine]);
 
 
     return {

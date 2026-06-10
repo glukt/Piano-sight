@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useMusicLibrary } from '../hooks/useMusicLibrary';
 
 interface MusicLibraryProps {
-    onSelectScore: (file: File) => void;
+    onSelectScore: (file: File | null, url?: string, title?: string) => void;
 }
 
 export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => {
@@ -80,7 +80,13 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
                 {filteredScores.map(score => (
                     <div
                         key={score.id}
-                        onClick={() => onSelectScore(new File([score.fileData], score.fileName))}
+                        onClick={() => {
+                            if (score.songUrl) {
+                                onSelectScore(null, score.songUrl, score.title);
+                            } else if (score.fileData) {
+                                onSelectScore(new File([score.fileData], score.fileName));
+                            }
+                        }}
                         className="group relative bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition cursor-pointer flex flex-col gap-2"
                     >
                         <div className="flex justify-between items-start">
@@ -89,15 +95,17 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                                 </svg>
                             </div>
-                            <button
-                                onClick={(e) => handleDelete(e, score.id)}
-                                className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition p-1"
-                                title="Delete Score"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
-                            </button>
+                            {!score.id.startsWith('preset-') && (
+                                <button
+                                    onClick={(e) => handleDelete(e, score.id)}
+                                    className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition p-1"
+                                    title="Delete Score"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    </svg>
+                                </button>
+                            )}
                         </div>
 
                         <div>

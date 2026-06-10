@@ -29,7 +29,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         showStaff, setShowStaff,
         showMicPopup, setShowMicPopup,
         score, difficulty, levelData,
-        playheadX,
 
         // Actions
         testAudio,
@@ -119,8 +118,9 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                     {/* Rhythm Playhead */}
                     {isRhythmMode && (
                         <div
-                            className="absolute top-0 bottom-0 w-0.5 bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)] z-10 transition-all duration-75 ease-linear pointer-events-none"
-                            style={{ left: `${playheadX}px` }}
+                            id="rhythm-playhead"
+                            className="absolute top-0 bottom-0 w-0.5 bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)] z-10 pointer-events-none"
+                            style={{ left: '20px' }}
                         />
                     )}
                 </div>

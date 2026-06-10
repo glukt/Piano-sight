@@ -18,6 +18,33 @@ const parseKeyToMidi = (key: string): number => {
     return noteMap[note.toLowerCase()] + (parseInt(octave) + 1) * 12;
 };
 
+// Pure helper to calculate playhead position at any given timestamp without React state
+const getPlayheadPixelXAt = (elapsed: number, positions: number[]): number => {
+    if (positions.length === 0) return 20;
+    const RHYTHM_LEAD_IN = 2;
+    if (elapsed < 0) {
+        const firstNoteX = positions[0];
+        const startX = 20;
+        const progress = (elapsed + RHYTHM_LEAD_IN) / RHYTHM_LEAD_IN;
+        return startX + (firstNoteX - startX) * progress;
+    }
+    const BPM = 60;
+    const noteDuration = 60 / BPM;
+    const currentIndex = Math.floor(elapsed / noteDuration);
+    const segmentProgress = (elapsed % noteDuration) / noteDuration;
+    const currentX = positions[currentIndex];
+    const nextX = positions[currentIndex + 1];
+
+    if (currentX !== undefined && nextX !== undefined) {
+        return currentX + (nextX - currentX) * segmentProgress;
+    } else if (currentX !== undefined) {
+        const prevX = positions[currentIndex - 1] || 20;
+        const width = currentX - prevX;
+        return currentX + width * segmentProgress;
+    }
+    return 20;
+};
+
 export const useGameLogic = () => {
     // -------------------------------------------------------------------------
     // 1. Audio & Input Initialization
@@ -65,7 +92,15 @@ export const useGameLogic = () => {
         onNoteOn: (n, v) => onNoteOn.current(n, v),
         onNoteOff: (n) => onNoteOff.current(n)
     });
-    const { detectedNote: micNote, isListening: isMicListening, startListening: startMic, stopListening: stopMic } = useAudioInput();
+    const {
+        detectedNote: micNote,
+        isListening: isMicListening,
+        startListening: startMic,
+        stopListening: stopMic,
+        volume: micVolume,
+        sensitivity: micSensitivity,
+        setSensitivity: setMicSensitivity
+    } = useAudioInput();
 
     // Merge Inputs
     const effectiveActiveNotes = useMemo(() => {
@@ -170,10 +205,57 @@ export const useGameLogic = () => {
         LevelGenerator.generate(Difficulty.NOVICE, errorStats)
     );
 
-    // Rhythm Engine
+    // Rhythm Engine with refs for low-latency visual-only DOM playhead updates
     const BPM = 60;
     const RHYTHM_LEAD_IN = 2;
-    const { isPlaying: isRhythmPlaying, elapsedTime, start: startRhythm, stop: stopRhythm } = useRhythmEngine(BPM, Math.ceil(levelData.treble.length / 4));
+
+    const levelDataRef = useRef(levelData);
+    useEffect(() => { levelDataRef.current = levelData; }, [levelData]);
+
+    const notePositionsRef = useRef(notePositions);
+    useEffect(() => { notePositionsRef.current = notePositions; }, [notePositions]);
+
+    const cursorIndexRef = useRef(cursorIndex);
+    useEffect(() => { cursorIndexRef.current = cursorIndex; }, [cursorIndex]);
+
+    const isRhythmPlayingRef = useRef(false);
+
+    const onAnimateRhythm = useCallback((elapsed: number) => {
+        // 1. Direct visual DOM playhead update
+        const playhead = document.getElementById('rhythm-playhead');
+        if (playhead) {
+            const x = getPlayheadPixelXAt(elapsed, notePositionsRef.current);
+            playhead.style.left = `${x}px`;
+        }
+
+        // 2. Perform Timing Miss Checks at 60Hz (does not render unless a miss actually occurs)
+        if (isRhythmMode && isRhythmPlayingRef.current) {
+            const currentIdx = cursorIndexRef.current;
+            const levelLength = levelDataRef.current.treble.length;
+            if (currentIdx >= levelLength) return;
+
+            const noteDuration = 60 / BPM;
+            const targetTime = currentIdx * noteDuration;
+            const timeWindow = 0.35;
+
+            if (elapsed > targetTime + timeWindow) {
+                setCursorIndex(prev => prev + 1);
+                setInputStatus('incorrect');
+                setStreak(0);
+                setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
+            }
+        }
+    }, [isRhythmMode]);
+
+    const { isPlaying: isRhythmPlaying, elapsedTimeRef, start: startRhythm, stop: stopRhythm } = useRhythmEngine(
+        BPM,
+        Math.ceil(levelData.treble.length / 4),
+        onAnimateRhythm
+    );
+
+    useEffect(() => {
+        isRhythmPlayingRef.current = isRhythmPlaying;
+    }, [isRhythmPlaying]);
 
 
     // -------------------------------------------------------------------------
@@ -252,30 +334,7 @@ export const useGameLogic = () => {
     // 4. Effects (Validation & Loop)
     // -------------------------------------------------------------------------
 
-    // Playhead Calculation
-    const getPlayheadPixelX = useCallback((): number => {
-        if (notePositions.length === 0) return 20;
-        if (elapsedTime < 0) {
-            const firstNoteX = notePositions[0];
-            const startX = 20;
-            const progress = (elapsedTime + RHYTHM_LEAD_IN) / RHYTHM_LEAD_IN;
-            return startX + (firstNoteX - startX) * progress;
-        }
-        const noteDuration = 60 / BPM;
-        const currentIndex = Math.floor(elapsedTime / noteDuration);
-        const segmentProgress = (elapsedTime % noteDuration) / noteDuration;
-        const currentX = notePositions[currentIndex];
-        const nextX = notePositions[currentIndex + 1];
 
-        if (currentX !== undefined && nextX !== undefined) {
-            return currentX + (nextX - currentX) * segmentProgress;
-        } else if (currentX !== undefined) {
-            const prevX = notePositions[currentIndex - 1] || 20;
-            const width = currentX - prevX;
-            return currentX + width * segmentProgress;
-        }
-        return 20;
-    }, [elapsedTime, notePositions, BPM, RHYTHM_LEAD_IN]);
 
 
     // Pre-Held Logic
@@ -290,7 +349,7 @@ export const useGameLogic = () => {
     }, [cursorIndex, levelData, gameMode, effectiveActiveNotes]);
 
 
-    // Main Validation Loop
+    // Main Validation Loop (strictly event-driven, decoupled from rhythm 60Hz tick)
     useEffect(() => {
         if (!audioStarted || levelUp) return;
 
@@ -307,20 +366,6 @@ export const useGameLogic = () => {
         const noteDuration = 60 / BPM;
         const targetTime = cursorIndex * noteDuration;
         const timeWindow = 0.35;
-
-        // Rhythm Mode Miss
-        if (isRhythmMode && isRhythmPlaying) {
-            if (elapsedTime > targetTime + timeWindow) {
-                setCursorIndex(prev => prev + 1);
-                setInputStatus('waiting');
-                setStreak(0);
-                if (inputStatus !== 'incorrect') {
-                    setInputStatus('incorrect');
-                    setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
-                }
-                return;
-            }
-        }
 
         const targetTreble = levelData.treble[cursorIndex];
         const targetBass = levelData.bass[cursorIndex];
@@ -371,8 +416,9 @@ export const useGameLogic = () => {
         // Success: Only if they have pressed ALL required notes for their current Hand mode 
         if (allFound) {
 
-            if (isRhythmMode && isRhythmPlaying) {
-                const diff = Math.abs(elapsedTime - targetTime);
+            if (isRhythmMode && isRhythmPlayingRef.current) {
+                const elapsed = elapsedTimeRef.current;
+                const diff = Math.abs(elapsed - targetTime);
                 if (diff > timeWindow) return;
 
                 if (diff <= 0.1) {
@@ -418,7 +464,7 @@ export const useGameLogic = () => {
             if (inputStatus !== 'incorrect' && inputStatus !== 'waiting') setInputStatus('waiting');
         }
 
-    }, [effectiveActiveNotes, cursorIndex, levelData, audioStarted, difficulty, gameMode, isRhythmMode, isRhythmPlaying, elapsedTime, inputStatus, preHeld, streak, maxStreak, addXp, handleAddXp, levelUp, generateNewLevel]);
+    }, [effectiveActiveNotes, cursorIndex, levelData, audioStarted, difficulty, gameMode, isRhythmMode, inputStatus, preHeld, streak, maxStreak, addXp, handleAddXp, levelUp, generateNewLevel]);
 
 
     return {
@@ -437,8 +483,12 @@ export const useGameLogic = () => {
         showStaff, setShowStaff,
         showMicPopup, setShowMicPopup,
         isMicListening, startMic, stopMic,
+        micVolume,
+        micSensitivity,
+        setMicSensitivity,
+        midiInputs, // Exposed to SettingsPanel for device name display
         score, difficulty, levelData,
-        playheadX: getPlayheadPixelX(),
+        playheadX: 20, // Playhead position is updated directly in visual DOM playhead
 
         // Actions
         startAudio, testAudio,

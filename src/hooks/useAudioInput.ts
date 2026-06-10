@@ -5,6 +5,11 @@ export function useAudioInput() {
     const [isListening, setIsListening] = useState(false);
     const [detectedNote, setDetectedNote] = useState<number | null>(null);
     const [volume, setVolume] = useState(0);
+    const [sensitivity, setSensitivity] = useState(() => {
+        const saved = localStorage.getItem('pianopilot_mic_sensitivity');
+        return saved ? Number(saved) : 0.01;
+    });
+
     const detectorRef = useRef<PitchDetector | null>(null);
     const requestRef = useRef<number>();
     const lastVolumeUpdate = useRef<number>(0);
@@ -12,9 +17,18 @@ export function useAudioInput() {
     // Audio Context is usually suspended until user interaction
     const audioContextRef = useRef<AudioContext | null>(null);
 
-    // Smoothing State
-    const historyRef = useRef<number[]>([]);
-    const HISTORY_SIZE = 5; // Require consistent note for X frames
+    // Responsive smoothing references
+    const consecutiveFramesRef = useRef<number>(0);
+    const consecutiveSilenceRef = useRef<number>(0);
+    const lastMidiNoteRef = useRef<number | null>(null);
+
+    // Sync sensitivity to the pitch detector
+    useEffect(() => {
+        if (detectorRef.current) {
+            detectorRef.current.noiseGateThreshold = sensitivity;
+        }
+        localStorage.setItem('pianopilot_mic_sensitivity', sensitivity.toString());
+    }, [sensitivity]);
 
     const updatePitch = useCallback(() => {
         if (!detectorRef.current) return;
@@ -28,27 +42,30 @@ export function useAudioInput() {
             }
         }
 
-        // Add to history
-        const history = historyRef.current;
-        history.push(currentNote !== null ? currentNote : -1);
-        if (history.length > HISTORY_SIZE) history.shift();
-
-        // Check for consistency
-        // If history is full and all values are equal (and not -1), setNote
-        if (history.length === HISTORY_SIZE) {
-            const candidate = history[0];
-            if (candidate !== -1 && history.every(n => n === candidate)) {
-                setDetectedNote(candidate);
-            } else if (history.every(n => n === -1)) {
-                // only clear if we have consistent silence? or clearer faster?
-                // Fast release is better.
+        // Responsive smoothing logic
+        if (currentNote !== null) {
+            consecutiveSilenceRef.current = 0;
+            if (currentNote === lastMidiNoteRef.current) {
+                consecutiveFramesRef.current++;
+                if (consecutiveFramesRef.current >= 2) {
+                    setDetectedNote(currentNote);
+                }
+            } else {
+                lastMidiNoteRef.current = currentNote;
+                consecutiveFramesRef.current = 1;
+            }
+        } else {
+            consecutiveFramesRef.current = 0;
+            consecutiveSilenceRef.current++;
+            if (consecutiveSilenceRef.current >= 2) {
                 setDetectedNote(null);
+                lastMidiNoteRef.current = null;
             }
         }
 
         // Get volume from detector for UI feedback
         const now = performance.now();
-        if (now - lastVolumeUpdate.current > 100) {
+        if (now - lastVolumeUpdate.current > 50) { // Faster updates (20Hz) for volume meter
             const vol = detectorRef.current.lastVolume;
             setVolume(vol);
             lastVolumeUpdate.current = now;
@@ -70,6 +87,7 @@ export function useAudioInput() {
             if (!detectorRef.current) {
                 detectorRef.current = new PitchDetector(audioContextRef.current);
             }
+            detectorRef.current.noiseGateThreshold = sensitivity;
 
             await detectorRef.current.init();
             setIsListening(true);
@@ -84,15 +102,14 @@ export function useAudioInput() {
         if (requestRef.current) cancelAnimationFrame(requestRef.current);
         setIsListening(false);
         setDetectedNote(null);
-        // We don't necessarily need to close the context/stream if we want to resume quickly,
-        // but for battery/privacy, we probably should if the user explicitly stops.
-        // For now, keep it simple.
+        consecutiveFramesRef.current = 0;
+        consecutiveSilenceRef.current = 0;
+        lastMidiNoteRef.current = null;
     };
 
     useEffect(() => {
         return () => {
             if (requestRef.current) cancelAnimationFrame(requestRef.current);
-            // detectorRef.current?.stop(); // Optional cleanup
         };
     }, []);
 
@@ -100,6 +117,8 @@ export function useAudioInput() {
         isListening,
         detectedNote,
         volume,
+        sensitivity,
+        setSensitivity,
         startListening,
         stopListening
     };

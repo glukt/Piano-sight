@@ -212,18 +212,16 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
 
                                             label.textContent = text;
                                             label.setAttribute("class", "osmd-note-label");
-                                            label.setAttribute("fill", "#555");
-                                            label.setAttribute("font-family", "Lato, sans-serif"); // Use our Sans font
-                                            label.setAttribute("font-size", "10");
+                                            // Make it a beautiful semi-transparent blue watermark behind the notehead
+                                            label.setAttribute("fill", "rgba(59, 130, 246, 0.25)");
+                                            label.setAttribute("font-family", "Outfit, sans-serif");
+                                            label.setAttribute("font-weight", "800");
+                                            label.setAttribute("font-size", "28");
                                             label.setAttribute("text-anchor", "middle");
+                                            label.setAttribute("y", "8"); // Align center with notehead
 
-                                            // Position: Above or Below?
-                                            // Generally above for visual clarity, or inside notehead?
-                                            // Inside is hard for black notes.
-                                            // Let's put it slightly above.
-                                            label.setAttribute("y", "-15"); // Relative to note group center
-
-                                            svgEl.appendChild(label);
+                                            // Prepend to render behind the notehead paths
+                                            svgEl.insertBefore(label, svgEl.firstChild);
                                         });
                                     });
                                 });

@@ -92,7 +92,7 @@ export const ScoreControls: React.FC<ScoreControlsProps> = ({
                         className={`px-3 py-1 text-xs font-bold rounded-full transition-all flex items-center gap-1.5 ${layoutMode === 'scrolling' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-355 hover:text-gray-800 dark:hover:text-white'}`}
                     >
                         <span>Scrolling View</span>
-                        <span className="text-[9px] bg-red-500 text-white font-extrabold px-1 py-0.5 rounded-full leading-none animate-pulse">Simply</span>
+                        <span className="text-[9px] bg-indigo-500 text-white font-extrabold px-1.5 py-0.5 rounded-full leading-none">Auto</span>
                     </button>
                 </div>
 

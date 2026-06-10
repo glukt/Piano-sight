@@ -274,7 +274,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
         }
     }, [highlightNotes, loading]); // loading dependency ensures it sets after init
 
-    // Simply Piano / Flowkey Style Horizontal Scroll Controller
+    // Horizontal Scroll Centering Controller
     useEffect(() => {
         if (layoutMode !== 'scrolling' || !osmdRef.current || loading) return;
 
@@ -422,7 +422,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
 
             {/* Sheet Music Rendering Container */}
             <div className="relative w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 mb-4">
-                {/* Simply Piano / Flowkey Playhead Line Overlay */}
+                {/* Continuous Playhead Line Overlay */}
                 {layoutMode === 'scrolling' && (
                     <div 
                         className="absolute top-0 bottom-0 w-0.5 bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.9)] z-20 pointer-events-none"

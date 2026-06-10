@@ -5,20 +5,46 @@ class AudioEngine {
     public isInitialized = false;
     private isSustainActive = false;
     private sustainedNotes = new Set<number>();
+    
+    private polySynth: Tone.PolySynth | null = null;
+    private reverb: Tone.Reverb | null = null;
+    private synthFilter: Tone.Filter | null = null;
 
     constructor() {
         // Singleton pattern or simple instance
     }
-
-    private polySynth: Tone.PolySynth | null = null;
 
     async init() {
         if (this.isInitialized) return;
 
         await Tone.start();
 
-        this.polySynth = new Tone.PolySynth().toDestination();
-        this.polySynth.volume.value = -10;
+        // Initialize global Reverb to add spatial ambiance
+        this.reverb = new Tone.Reverb({
+            decay: 1.8,
+            wet: 0.22
+        }).toDestination();
+
+        // Initialize lowpass filter for the fallback synthesizer to soften tone
+        this.synthFilter = new Tone.Filter({
+            type: "lowpass",
+            frequency: 1200,
+            Q: 1
+        }).connect(this.reverb);
+
+        // Initialize fallback PolySynth with warm piano-style envelopes
+        this.polySynth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: {
+                type: "triangle"
+            },
+            envelope: {
+                attack: 0.004,
+                decay: 1.2,
+                sustain: 0.15,
+                release: 1.4
+            }
+        }).connect(this.synthFilter);
+        this.polySynth.volume.value = -4;
 
         return new Promise<void>((resolve, _reject) => {
             const timeout = setTimeout(() => {
@@ -67,10 +93,15 @@ class AudioEngine {
                     console.log("Piano Samples Loaded");
                     resolve();
                 }
-            }).toDestination();
+            });
 
-            // Volume adjustment
-            this.sampler.volume.value = -5;
+            // Connect sampler to global reverb or fallback to destination
+            if (this.reverb) {
+                this.sampler.connect(this.reverb);
+            } else {
+                this.sampler.toDestination();
+            }
+            this.sampler.volume.value = -3;
         });
     }
 

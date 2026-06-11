@@ -7,12 +7,40 @@ export class PlaybackEngine {
     private osmd: OpenSheetMusicDisplay;
     private cursor: Cursor | null = null;
     private isPlaying: boolean = false;
+    private lastMeasureNumber: number = 0;
 
     private getCursor(): Cursor | null {
         if (!this.cursor) {
             this.cursor = this.osmd.cursor || null;
         }
         return this.cursor;
+    }
+
+    private shouldPlayWithPedal(): boolean {
+        if (!this.osmd.Sheet) return false;
+        const composer = (this.osmd.Sheet.ComposerString || "").toLowerCase();
+        const title = (this.osmd.Sheet.TitleString || "").toLowerCase();
+        
+        // Composers whose piano pieces standardly use sustain pedal
+        const pedalComposers = [
+            "zimmer", "einaudi", "faulkner", "chopin", "debussy", "satie", 
+            "yiruma", "vanzo", "schubert", "liszt", "pachelbel", "gaga", "beethoven"
+        ];
+        
+        if (pedalComposers.some(c => composer.includes(c))) {
+            return true;
+        }
+        
+        // Specific titles or files that use sustain pedal
+        const pedalTitles = [
+            "nuvole", "interstellar", "ballade", "clair de lune", "nocturne", 
+            "liebestraum", "rain", "sunlight", "canon", "always remember us"
+        ];
+        if (pedalTitles.some(t => title.includes(t))) {
+            return true;
+        }
+
+        return false;
     }
     private intervalId: number | null = null;
     private noteTimeouts: number[] = [];
@@ -219,6 +247,11 @@ export class PlaybackEngine {
         this.isPlaying = true;
         if (this.playbackCallback) this.playbackCallback(true);
 
+        this.lastMeasureNumber = 0;
+        if (this.shouldPlayWithPedal()) {
+            audio.setSustain(true);
+        }
+
         // Advance immediately to start/resume
         this.expectedNextStepTime = Date.now();
         this.step();
@@ -241,6 +274,7 @@ export class PlaybackEngine {
         // Reset Audio
         audio.releaseAll();
         audio.setSustain(false);
+        this.lastMeasureNumber = 0;
     }
 
     public pause() {
@@ -253,6 +287,8 @@ export class PlaybackEngine {
 
         if (this.playbackCallback) this.playbackCallback(false);
         audio.releaseAll();
+        audio.setSustain(false);
+        this.lastMeasureNumber = 0;
     }
 
     private clearNoteTimeouts() {
@@ -265,6 +301,14 @@ export class PlaybackEngine {
     private step() {
         const cursor = this.getCursor();
         if (!this.isPlaying || !cursor) return;
+
+        // Sustain Pedal measure boundary check
+        const currentMeasure = this.CurrentMeasureNumber;
+        if (this.shouldPlayWithPedal() && currentMeasure !== this.lastMeasureNumber) {
+            audio.setSustain(false);
+            audio.setSustain(true);
+            this.lastMeasureNumber = currentMeasure;
+        }
 
         // 1. Get Notes at current position
         const notes: Note[] = cursor.NotesUnderCursor();
@@ -373,8 +417,17 @@ export class PlaybackEngine {
                 this.onNoteOn(midi);
             }
 
-            // Play the note with its precise physical duration in the audio thread
-            audio.playNote(midi, 85, noteDuration);
+            // Play the note in the audio thread.
+            // If playing with pedal, bypass auto-release to allow sustain, and schedule a manual release note.
+            if (this.shouldPlayWithPedal()) {
+                audio.playNote(midi, 85);
+                const releaseTimeout = window.setTimeout(() => {
+                    audio.releaseNote(midi);
+                }, noteDuration * 1000);
+                this.noteTimeouts.push(releaseTimeout);
+            } else {
+                audio.playNote(midi, 85, noteDuration);
+            }
         });
 
         // Report Progress

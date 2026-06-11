@@ -19,7 +19,7 @@ export interface LibraryScore {
 const PRESET_SCORES: LibraryScore[] = [
     {
         id: 'preset-interstellar',
-        title: 'Interstellar Theme (No Time for Caution)',
+        title: 'Interstellar Theme (Cornfield Chase)',
         composer: 'Hans Zimmer',
         dateAdded: 1718000000000,
         tags: ['Film & TV', 'Epic', 'Advanced'],
@@ -378,11 +378,20 @@ const PRESET_SCORES: LibraryScore[] = [
         songUrl: '/scores/nuvole_bianche_easy.musicxml'
     },
     {
-        id: 'preset-einaudi-nuvole-intermediate',
-        title: 'Nuvole Bianche (Intermediate)',
+        id: 'preset-einaudi-nuvole-medium',
+        title: 'Nuvole Bianche (Medium)',
         composer: 'Ludovico Einaudi',
         dateAdded: 1718000000039,
         tags: ['Classical', 'New Age', 'Intermediate'],
+        fileName: 'nuvole_bianche_medium.musicxml',
+        songUrl: '/scores/nuvole_bianche_medium.musicxml'
+    },
+    {
+        id: 'preset-einaudi-nuvole-full',
+        title: 'Nuvole Bianche (Full Version)',
+        composer: 'Ludovico Einaudi',
+        dateAdded: 1718000000040,
+        tags: ['Classical', 'New Age', 'Advanced'],
         fileName: 'nuvole_bianche.musicxml',
         songUrl: '/scores/nuvole_bianche.musicxml'
     }

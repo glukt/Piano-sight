@@ -18,6 +18,15 @@ export interface LibraryScore {
 
 const PRESET_SCORES: LibraryScore[] = [
     {
+        id: 'preset-interstellar',
+        title: 'Interstellar Theme (No Time for Caution)',
+        composer: 'Hans Zimmer',
+        dateAdded: 1718000000000,
+        tags: ['Film & TV', 'Epic', 'Advanced'],
+        fileName: 'interstellar.musicxml',
+        songUrl: '/scores/interstellar.musicxml'
+    },
+    {
         id: 'preset-ladygaga',
         title: 'Always Remember Us This Way',
         composer: 'Lady Gaga',
@@ -349,6 +358,33 @@ const PRESET_SCORES: LibraryScore[] = [
         tags: ['Classical', 'Advanced'],
         fileName: 'Schubert_Serenade_-_Standchen_-_By_Lizst.mxl',
         songUrl: '/scores/Schubert_Serenade_-_Standchen_-_By_Lizst.mxl'
+    },
+    {
+        id: 'preset-faulkner-ballade',
+        title: 'Ballade',
+        composer: 'Luke Faulkner',
+        dateAdded: 1718000000037,
+        tags: ['Classical', 'New Age', 'Intermediate'],
+        fileName: 'ballade.musicxml',
+        songUrl: '/scores/ballade.musicxml'
+    },
+    {
+        id: 'preset-einaudi-nuvole-easy',
+        title: 'Nuvole Bianche (Beginner)',
+        composer: 'Ludovico Einaudi',
+        dateAdded: 1718000000038,
+        tags: ['Classical', 'New Age', 'Beginner'],
+        fileName: 'nuvole_bianche_easy.musicxml',
+        songUrl: '/scores/nuvole_bianche_easy.musicxml'
+    },
+    {
+        id: 'preset-einaudi-nuvole-intermediate',
+        title: 'Nuvole Bianche (Intermediate)',
+        composer: 'Ludovico Einaudi',
+        dateAdded: 1718000000039,
+        tags: ['Classical', 'New Age', 'Intermediate'],
+        fileName: 'nuvole_bianche.musicxml',
+        songUrl: '/scores/nuvole_bianche.musicxml'
     }
 ];
 

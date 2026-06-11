@@ -187,16 +187,6 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
             const oldCustom = svgElement.querySelectorAll('.custom-watermark');
             oldCustom.forEach(el => el.remove());
 
-            const noteColors: Record<string, string> = {
-                'C': 'rgba(239, 68, 68, 0.03)',
-                'D': 'rgba(249, 115, 22, 0.03)',
-                'E': 'rgba(234, 179, 8, 0.03)',
-                'F': 'rgba(16, 185, 129, 0.03)',
-                'G': 'rgba(59, 130, 246, 0.03)',
-                'A': 'rgba(99, 102, 241, 0.03)',
-                'B': 'rgba(168, 85, 247, 0.03)'
-            };
-
             const getTrebleY = (key: string) => {
                 const [note, octaveStr] = key.split('/');
                 const octave = parseInt(octaveStr);
@@ -220,23 +210,6 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
             positions.forEach((x, i) => {
                 const tNote = trebleNotes[i];
                 const bNote = bassNotes[i];
-
-                const firstTrebleKey = tNote?.keys[0];
-                if (firstTrebleKey && !firstTrebleKey.includes('r') && firstTrebleKey !== 'b/4') {
-                    const noteLetter = firstTrebleKey.split('/')[0][0].toUpperCase();
-                    const laneColor = noteColors[noteLetter];
-
-                    const lane = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                    lane.setAttribute("class", "custom-watermark");
-                    lane.setAttribute("x", (x - 2).toString());
-                    lane.setAttribute("y", "20");
-                    lane.setAttribute("width", "4");
-                    lane.setAttribute("height", "180");
-                    lane.setAttribute("rx", "2");
-                    lane.setAttribute("fill", laneColor || "rgba(0,0,0,0.01)");
-                    lane.setAttribute("pointer-events", "none");
-                    svgElement.insertBefore(lane, svgElement.firstChild);
-                }
 
                 if (showLabels) {
                     if (tNote && tNote.keys && tNote.keys[0] !== 'b/4') {

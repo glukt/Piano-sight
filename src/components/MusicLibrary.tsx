@@ -47,10 +47,10 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
     return (
         <div className="w-full max-w-6xl flex flex-col gap-6 p-4">
             {/* Header / Actions */}
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                <div className="flex flex-col">
-                    <h2 className="text-2xl font-serif font-bold text-gray-800">Music Library</h2>
-                    <p className="text-sm text-gray-500">{scores.length} scores stored</p>
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white dark:bg-gray-800/80 p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700/60 backdrop-blur transition-all duration-300">
+                <div className="flex flex-col text-left">
+                    <h2 className="text-2xl font-sans font-black text-gray-800 dark:text-white tracking-tight">Music Library</h2>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold">{scores.length} scores stored</p>
                 </div>
 
                 <div className="flex gap-4 w-full md:w-auto">
@@ -59,10 +59,10 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
                         placeholder="Search scores..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none w-full md:w-64"
+                        className="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none w-full md:w-64 font-medium transition"
                     />
 
-                    <label className={`flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition cursor-pointer ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <label className={`flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-650 text-white rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition shadow-lg shadow-blue-500/15 active:scale-98 cursor-pointer ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
                         <span>{isUploading ? 'Uploading...' : 'Upload New'}</span>
                         <input
                             type="file"
@@ -76,7 +76,7 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
             </div>
 
             {/* Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {filteredScores.map(score => (
                     <div
                         key={score.id}
@@ -87,10 +87,10 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
                                 onSelectScore(new File([score.fileData], score.fileName));
                             }
                         }}
-                        className="group relative bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-200 transition cursor-pointer flex flex-col gap-2"
+                        className="group relative bg-white dark:bg-gray-800/50 p-6 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700/60 hover:shadow-xl hover:border-blue-300 dark:hover:border-blue-500/50 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer flex flex-col gap-3 backdrop-blur"
                     >
                         <div className="flex justify-between items-start">
-                            <div className="bg-blue-50 text-blue-600 p-2 rounded-lg">
+                            <div className="bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 p-2.5 rounded-xl">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                                 </svg>
@@ -98,7 +98,7 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
                             {!score.id.startsWith('preset-') && (
                                 <button
                                     onClick={(e) => handleDelete(e, score.id)}
-                                    className="text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition p-1"
+                                    className="text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-750"
                                     title="Delete Score"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -108,24 +108,24 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
                             )}
                         </div>
 
-                        <div>
-                            <h3 className="font-bold text-lg text-gray-800 line-clamp-1 group-hover:text-blue-600 transition">{score.title}</h3>
-                            <p className="text-sm text-gray-500">{score.composer}</p>
+                        <div className="text-left">
+                            <h3 className="font-bold text-lg text-gray-800 dark:text-white line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">{score.title}</h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">{score.composer}</p>
                         </div>
 
-                        <div className="mt-2 flex gap-1 flex-wrap">
+                        <div className="mt-1 flex gap-1.5 flex-wrap">
                             {score.tags?.map(tag => (
-                                <span key={tag} className="text-[10px] uppercase font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded-full">
+                                <span key={tag} className="text-[9px] uppercase font-extrabold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-450 px-2.5 py-1 rounded-full tracking-wider">
                                     {tag}
                                 </span>
                             ))}
                             {/* Auto-tag file type */}
-                            <span className="text-[10px] uppercase font-bold bg-gray-100 text-gray-500 px-2 py-1 rounded-full">
+                            <span className="text-[9px] uppercase font-extrabold bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-450 px-2.5 py-1 rounded-full tracking-wider">
                                 {score.fileName.split('.').pop()}
                             </span>
                         </div>
 
-                        <div className="mt-auto pt-4 text-xs text-gray-400">
+                        <div className="mt-auto pt-4 text-[10px] text-gray-400 dark:text-gray-500 font-semibold text-left select-none">
                             Added: {new Date(score.dateAdded).toLocaleDateString()}
                         </div>
                     </div>
@@ -133,7 +133,7 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
 
                 {/* Empty State */}
                 {filteredScores.length === 0 && (
-                    <div className="col-span-full py-12 text-center text-gray-400 bg-gray-50 rounded-xl border-dashed border-2 border-gray-200">
+                    <div className="col-span-full py-16 text-center text-gray-400 dark:text-gray-500 bg-gray-50/50 dark:bg-gray-800/30 rounded-2xl border-dashed border-2 border-gray-200 dark:border-gray-750 font-bold">
                         {searchTerm ? 'No scores found matching your search.' : 'Your library is empty. Upload a MusicXML file to get started!'}
                     </div>
                 )}

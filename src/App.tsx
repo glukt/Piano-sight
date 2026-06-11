@@ -15,6 +15,7 @@ import { CourseSelection } from './components/game/CourseSelection';
 import { LessonIntro } from './components/game/LessonIntro';
 import { Lesson } from './utils/music/CourseData';
 import { LevelUpModal } from './components/game/LevelUpModal';
+import { DailyWorkout } from './components/DailyWorkout';
 
 function App() {
     const { width: windowWidth } = useWindowSize();
@@ -29,13 +30,14 @@ function App() {
         }
     }, [isDarkMode]);
 
-    const [currentView, setCurrentView] = useState<'game' | 'musicxml' | 'reference' | 'settings' | 'courseSelection' | 'intro'>('courseSelection');
+    const [currentView, setCurrentView] = useState<'game' | 'musicxml' | 'reference' | 'settings' | 'courseSelection' | 'intro' | 'dailyWorkout'>('courseSelection');
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
     const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
     const [fileName, setFileName] = useState<string | null>(null);
     const [xmlData, setXmlData] = useState<string | null>(null);
     const [songUrl, setSongUrl] = useState<string | null>(null);
+    const [workoutReview, setWorkoutReview] = useState<{ songUrl: string; measure: number } | null>(null);
 
     // Initialize Game Logic Hook
     // This hook manages the game state, audio, and gamification
@@ -139,7 +141,10 @@ function App() {
                                 <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between mb-4">
                                     <span className="font-bold text-gray-700 dark:text-gray-200">Current Score: {fileName || 'Loaded Score'}</span>
                                     <button
-                                        onClick={handleClearScore}
+                                        onClick={() => {
+                                            setWorkoutReview(null);
+                                            handleClearScore();
+                                        }}
                                         className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-bold text-sm transition"
                                     >
                                         ← Back to Library
@@ -152,6 +157,30 @@ function App() {
                                     isDarkMode={isDarkMode}
                                     onAddXp={() => gameLogic.awardXp(10)} // Flat XP for custom practice
                                     userActiveNotes={gameLogic.effectiveActiveNotes}
+                                    initialMeasure={workoutReview ? workoutReview.measure : undefined}
+                                    onCloseScore={() => {
+                                        // Remove this measure from weak measures upon completion!
+                                        if (workoutReview) {
+                                            try {
+                                                const raw = localStorage.getItem('pianopilot_weak_measures');
+                                                if (raw) {
+                                                    const data = JSON.parse(raw);
+                                                    if (data[workoutReview.songUrl]) {
+                                                        delete data[workoutReview.songUrl][workoutReview.measure];
+                                                        if (Object.keys(data[workoutReview.songUrl]).length === 0) {
+                                                            delete data[workoutReview.songUrl];
+                                                        }
+                                                        localStorage.setItem('pianopilot_weak_measures', JSON.stringify(data));
+                                                    }
+                                                }
+                                            } catch (e) {
+                                                console.error(e);
+                                            }
+                                        }
+                                        setWorkoutReview(null);
+                                        handleClearScore();
+                                        setCurrentView('dailyWorkout');
+                                    }}
                                 />
                             </>
                         ) : (
@@ -159,6 +188,28 @@ function App() {
                                 <MusicLibrary onSelectScore={handleScoreSelect} />
                             </div>
                         )}
+                    </div>
+                )}
+
+                {/* DAILY WORKOUT VIEW */}
+                {currentView === 'dailyWorkout' && (
+                    <div className="w-full flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <DailyWorkout
+                            userXp={gameLogic.gameState.xp}
+                            userActiveNotes={gameLogic.effectiveActiveNotes}
+                            isDarkMode={isDarkMode}
+                            onAddXp={gameLogic.awardXp}
+                            onStartReview={(song, measure) => {
+                                setWorkoutReview({ songUrl: song, measure });
+                                setSongUrl(song);
+                                setFileName(song.split('/').pop()?.replace('.musicxml', '').replace('.mxl', '').replace(/[-_]/g, ' ') || 'Loaded Score');
+                                setCurrentView('musicxml');
+                            }}
+                            onSelectLesson={(lesson) => {
+                                setSelectedLesson(lesson);
+                                setCurrentView('intro');
+                            }}
+                        />
                     </div>
                 )}
 

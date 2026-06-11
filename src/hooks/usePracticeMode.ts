@@ -35,21 +35,27 @@ export function usePracticeMode({
     const [notesCorrect, setNotesCorrect] = useState(0);
     const [notesMissed, setNotesMissed] = useState(0);
     const [lastSuccessfulNotes, setLastSuccessfulNotes] = useState<Set<number>>(new Set());
+    const [errorMeasures, setErrorMeasures] = useState<Record<number, number>>({});
+    const [isSongComplete, setIsSongComplete] = useState(false);
 
     // Track held wrong notes to avoid counting the same press multiple times
     const heldWrongNotesRef = useRef<Set<number>>(new Set());
 
-    const startPractice = useCallback(() => {
+    const startPractice = useCallback((startMeasure?: number) => {
         setIsActive(true);
-        setCurrentSection({ startMeasure: 0, endMeasure: 2 }); // Start with first 2 measures
-        setMode('preview');
+        const start = startMeasure !== undefined ? startMeasure : 0;
+        const end = Math.min(start + 2, totalMeasures);
+        setCurrentSection({ startMeasure: start, endMeasure: end });
+        setMode(startMeasure !== undefined ? 'wait' : 'preview');
         setPreviewLoopCount(0);
         setNotesCorrect(0);
         setNotesMissed(0);
         setLastSuccessfulNotes(new Set());
         heldWrongNotesRef.current.clear();
-        setFeedback("Listen to this section...");
-    }, []);
+        setFeedback(startMeasure !== undefined ? "Review Session! Play these notes." : "Listen to this section...");
+        setErrorMeasures({});
+        setIsSongComplete(false);
+    }, [totalMeasures]);
 
     const stopPractice = useCallback(() => {
         setIsActive(false);
@@ -64,6 +70,7 @@ export function usePracticeMode({
         if (nextStart >= totalMeasures) {
             setFeedback("Practice Complete! Great job!");
             setIsActive(false);
+            setIsSongComplete(true);
             playbackEngine?.stop();
             return;
         }
@@ -331,7 +338,25 @@ export function usePracticeMode({
 
                 if (newMistakes > 0) {
                     setNotesMissed(prev => prev + newMistakes);
-                    setFeedback("Careful!");
+
+                    // Track errors per measure for performance report card heatmap
+                    const measureNum = playbackEngine.CurrentMeasureNumber;
+                    setErrorMeasures(prev => ({
+                        ...prev,
+                        [measureNum]: (prev[measureNum] || 0) + newMistakes
+                    }));
+                    
+                    // Convert MIDI values to note names for explicit user correction feedback
+                    const MIDI_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+                    const getNoteName = (midi: number) => {
+                        const name = MIDI_NAMES[midi % 12];
+                        const octave = Math.floor(midi / 12) - 1;
+                        return `${name}${octave}`;
+                    };
+
+                    const wrongNoteName = getNoteName(activeWrongNotes[0]);
+                    const expectedNoteName = currentExpectedMidis.map(getNoteName).join(' + ');
+                    setFeedback(`❌ Played ${wrongNoteName}, expected ${expectedNoteName}`);
                 }
             }
         };
@@ -354,6 +379,11 @@ export function usePracticeMode({
         nextSection,
         retrySection,
         expectedNotes,
-        showHint
+        showHint,
+        errorMeasures,
+        isSongComplete,
+        setIsSongComplete,
+        notesCorrect,
+        notesMissed
     };
 }

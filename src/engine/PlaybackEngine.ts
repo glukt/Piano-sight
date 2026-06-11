@@ -30,6 +30,7 @@ export class PlaybackEngine {
 
     private highlightNotes: boolean = false;
     private currentStyledNotes: GraphicalNote[] = [];
+    private activeVisualNotes: Map<number, number> = new Map();
 
     constructor(osmd: OpenSheetMusicDisplay) {
         this.osmd = osmd;
@@ -114,6 +115,12 @@ export class PlaybackEngine {
         const cursor = this.getCursor();
         if (!cursor) return 0;
         return cursor.Iterator.currentTimeStamp.RealValue;
+    }
+
+    public get CurrentMeasureNumber(): number {
+        const cursor = this.getCursor();
+        if (!cursor || !cursor.Iterator || !cursor.Iterator.CurrentMeasure) return 1;
+        return cursor.Iterator.CurrentMeasure.MeasureNumber;
     }
 
     public getMeasureTimestamp(measureIndex: number): number | null {
@@ -251,6 +258,7 @@ export class PlaybackEngine {
     private clearNoteTimeouts() {
         this.noteTimeouts.forEach(id => window.clearTimeout(id));
         this.noteTimeouts = [];
+        this.activeVisualNotes.clear();
         this.clearHighlights();
     }
 
@@ -338,26 +346,35 @@ export class PlaybackEngine {
             midiNotes.push(midi);
 
             // Synth.ts expects MIDI velocity (0-127) because it divides by 127.
-            // Passing 0.7 resulted in 0.005 (silent).
             // Sending 85 (~0.67) for mezzo-forte.
             // Calculate duration in seconds
             // Duration (Whole Notes) * (240 / BPM) = Seconds
             // e.g. Quarter (0.25) * 240 / 60 (4s) = 1s.
             const noteDuration = note.Length.RealValue * (240 / this.bpm);
 
-            // Schedule Release
-            // Subtract a tiny amount to ensure release happens before next attack of same note?
-            // "Gate" time: 95% of duration
+            // Schedule visual key release on keyboard overlay
             const releaseTime = noteDuration * 1000 * 0.95;
 
             const timeoutId = window.setTimeout(() => {
-                audio.releaseNote(midi);
-                if (this.onNoteOff) this.onNoteOff(midi);
+                const currentCount = this.activeVisualNotes.get(midi) || 0;
+                if (currentCount <= 1) {
+                    this.activeVisualNotes.delete(midi);
+                    if (this.onNoteOff) this.onNoteOff(midi);
+                } else {
+                    this.activeVisualNotes.set(midi, currentCount - 1);
+                }
             }, releaseTime);
             this.noteTimeouts.push(timeoutId);
 
-            audio.playNote(midi, 85);
-            if (this.onNoteOn) this.onNoteOn(midi);
+            // Increment visual press count and trigger key highlight in UI
+            const currentCount = this.activeVisualNotes.get(midi) || 0;
+            this.activeVisualNotes.set(midi, currentCount + 1);
+            if (currentCount === 0 && this.onNoteOn) {
+                this.onNoteOn(midi);
+            }
+
+            // Play the note with its precise physical duration in the audio thread
+            audio.playNote(midi, 85, noteDuration);
         });
 
         // Report Progress

@@ -10,6 +10,7 @@ import LoopingControls from './LoopingControls';
 import { VexFlowGraphicalNote } from 'opensheetmusicdisplay/build/dist/src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote';
 import { ScoreControls } from './ScoreControls';
 import { PracticeOverlay } from './PracticeOverlay';
+import { PerformanceReportCard } from './PerformanceReportCard';
 
 interface ScoreDisplayProps {
     xmlUrl?: string; // Optional: Load from URL
@@ -18,9 +19,11 @@ interface ScoreDisplayProps {
     isDarkMode?: boolean;
     onAddXp?: (amount: number) => void;
     userActiveNotes?: Set<number>; // NEW: Pass microphone/midi input from parent
+    initialMeasure?: number; // NEW: starting measure for workout review (0-indexed)
+    onCloseScore?: () => void; // NEW: handler to return to Library/Workout
 }
 
-export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, file, isDarkMode = false, onAddXp, userActiveNotes = new Set() }) => {
+export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, file, isDarkMode = false, onAddXp, userActiveNotes = new Set(), initialMeasure, onCloseScore }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const osmdRef = useRef<OSMD | null>(null);
     const playbackRef = useRef<PlaybackEngine | null>(null);
@@ -40,7 +43,12 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
         stopPractice,
         nextSection,
         expectedNotes,
-        showHint // NEW
+        showHint,
+        isSongComplete,
+        setIsSongComplete,
+        errorMeasures,
+        notesCorrect,
+        notesMissed
     } = usePracticeMode({
         playbackEngine: playbackRef.current,
         totalMeasures: playbackRef.current?.MeasureCount || 0,
@@ -305,6 +313,47 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
         };
     }, []);
 
+    // Auto-start workout review loops if initialMeasure is passed
+    useEffect(() => {
+        if (!loading && initialMeasure !== undefined && playbackRef.current) {
+            const timer = setTimeout(() => {
+                startPractice(initialMeasure);
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [loading, initialMeasure, startPractice]);
+
+    // Save weak measures on song completion
+    useEffect(() => {
+        if (isSongComplete) {
+            const songId = xmlUrl || (file ? file.name : '') || 'Custom Score';
+            if (songId) {
+                try {
+                    const raw = localStorage.getItem('pianopilot_weak_measures');
+                    const weakData: Record<string, Record<number, number>> = raw ? JSON.parse(raw) : {};
+                    
+                    const songErrors: Record<number, number> = {};
+                    for (const [mStr, count] of Object.entries(errorMeasures)) {
+                        const m = parseInt(mStr);
+                        if (count > 0) {
+                            songErrors[m] = count;
+                        }
+                    }
+
+                    if (Object.keys(songErrors).length > 0) {
+                        weakData[songId] = {
+                            ...(weakData[songId] || {}),
+                            ...songErrors
+                        };
+                        localStorage.setItem('pianopilot_weak_measures', JSON.stringify(weakData));
+                    }
+                } catch (e) {
+                    console.error("Error saving weak measures:", e);
+                }
+            }
+        }
+    }, [isSongComplete, xmlUrl, file, errorMeasures]);
+
     const togglePlayback = async () => {
         if (!playbackRef.current) return;
 
@@ -440,6 +489,27 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
                     style={{ minHeight: '400px' }} 
                 />
             </div>
+
+            {/* Performance Report Card Modal */}
+            <PerformanceReportCard
+                isOpen={isSongComplete}
+                onClose={() => {
+                    setIsSongComplete(false);
+                    if (onCloseScore) {
+                        onCloseScore();
+                    }
+                }}
+                onRetry={() => {
+                    setIsSongComplete(false);
+                    startPractice(initialMeasure);
+                }}
+                songTitle={xmlUrl ? xmlUrl.split('/').pop()?.replace('.musicxml', '').replace('.mxl', '').replace(/[-_]/g, ' ') || 'Loaded Score' : (file ? file.name : 'Practice Piece')}
+                notesCorrect={notesCorrect}
+                notesMissed={notesMissed}
+                errorMeasures={errorMeasures}
+                totalMeasures={playbackRef.current?.MeasureCount || 8}
+                isDarkMode={isDarkMode}
+            />
         </div>
     );
 };

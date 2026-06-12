@@ -95,8 +95,8 @@ const PRESET_SCORES: LibraryScore[] = [
         composer: 'Christian Petzold / J.S. Bach',
         dateAdded: 1718000000000,
         tags: ['Fundamentals', 'Beginner', 'Classical'],
-        fileName: 'Minuet_in_G.musicxml',
-        songUrl: '/scores/Minuet_in_G.musicxml'
+        fileName: 'bach_minuet_g_major.musicxml',
+        songUrl: '/scores/bach_minuet_g_major.musicxml'
     },
     {
         id: 'preset-ladygaga',
@@ -466,6 +466,42 @@ const PRESET_SCORES: LibraryScore[] = [
         tags: ['Classical', 'New Age', 'Advanced'],
         fileName: 'nuvole_bianche.musicxml',
         songUrl: '/scores/nuvole_bianche.musicxml'
+    },
+    {
+        id: 'preset-bach-minuet-g-minor',
+        title: 'Minuet in G Minor',
+        composer: 'Christian Petzold / J.S. Bach',
+        dateAdded: 1718000000041,
+        tags: ['Classical', 'Beginner'],
+        fileName: 'bach_minuet_g_minor.musicxml',
+        songUrl: '/scores/bach_minuet_g_minor.musicxml'
+    },
+    {
+        id: 'preset-tiersen-comptine',
+        title: "Comptine d'un autre été : L'après-midi",
+        composer: 'Yann Tiersen',
+        dateAdded: 1718000000042,
+        tags: ['Film & TV', 'New Age', 'Intermediate'],
+        fileName: 'comptine_tiersen.musicxml',
+        songUrl: '/scores/comptine_tiersen.musicxml'
+    },
+    {
+        id: 'preset-burgmuller-arabesque',
+        title: 'Arabesque (Op. 100 No. 2)',
+        composer: 'Johann Friedrich Burgmüller',
+        dateAdded: 1718000000043,
+        tags: ['Classical', 'Intermediate'],
+        fileName: 'arabesque_burgmuller.musicxml',
+        songUrl: '/scores/arabesque_burgmuller.musicxml'
+    },
+    {
+        id: 'preset-falling-apart',
+        title: 'Falling Apart',
+        composer: 'Unknown',
+        dateAdded: 1718000000044,
+        tags: ['New Age', 'Intermediate'],
+        fileName: 'falling_apart.musicxml',
+        songUrl: '/scores/falling_apart.musicxml'
     }
 ];
 

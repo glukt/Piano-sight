@@ -9,7 +9,8 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
     const { scores, loading, error, addScore, deleteScore } = useMusicLibrary();
     const [searchTerm, setSearchTerm] = useState('');
     const [isUploading, setIsUploading] = useState(false);
-    const [activeTab, setActiveTab] = useState<'all' | 'fundamentals' | 'beginner' | 'intermediate' | 'advanced' | 'custom'>('all');
+    const [activeTab, setActiveTab] = useState<'all' | 'fundamentals' | 'classical' | 'modern' | 'custom'>('all');
+    const [difficultyFilter, setDifficultyFilter] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('all');
 
     const filteredScores = useMemo(() => {
         return scores.filter(score => {
@@ -20,19 +21,32 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
             if (!matchesSearch) return false;
 
             // Tab filter
-            if (activeTab === 'all') return true;
-            if (activeTab === 'custom') return !score.id.startsWith('preset-');
-            
-            // Check tags
-            const tags = score.tags || [];
-            if (activeTab === 'fundamentals') return tags.includes('Fundamentals');
-            if (activeTab === 'beginner') return tags.includes('Beginner');
-            if (activeTab === 'intermediate') return tags.includes('Intermediate');
-            if (activeTab === 'advanced') return tags.includes('Advanced');
+            if (activeTab !== 'all') {
+                if (activeTab === 'custom') {
+                    if (score.id.startsWith('preset-')) return false;
+                } else {
+                    const tags = score.tags || [];
+                    if (activeTab === 'fundamentals') {
+                        if (!tags.includes('Fundamentals')) return false;
+                    } else if (activeTab === 'classical') {
+                        if (!tags.includes('Classical') && !tags.includes('Ragtime')) return false;
+                    } else if (activeTab === 'modern') {
+                        const modernGenres = ['Pop', 'Film & TV', 'Game', 'K-Pop', 'New Age', 'Holiday'];
+                        if (!tags.some(t => modernGenres.includes(t))) return false;
+                    }
+                }
+            }
+
+            // Difficulty filter
+            if (difficultyFilter !== 'all') {
+                const tags = score.tags || [];
+                const diffTag = difficultyFilter.charAt(0).toUpperCase() + difficultyFilter.slice(1);
+                if (!tags.includes(diffTag)) return false;
+            }
 
             return true;
         });
-    }, [scores, searchTerm, activeTab]);
+    }, [scores, searchTerm, activeTab, difficultyFilter]);
 
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -92,44 +106,79 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
                 </div>
             </div>
 
-            {/* Category Tabs */}
-            <div className="flex flex-wrap gap-2 p-1.5 bg-gray-100/80 dark:bg-gray-800/40 rounded-2xl border border-gray-200/50 dark:border-gray-700/40 backdrop-blur self-start">
-                {[
-                    { id: 'all', label: 'All Pieces' },
-                    { id: 'fundamentals', label: 'Piano Basics' },
-                    { id: 'beginner', label: 'Beginner' },
-                    { id: 'intermediate', label: 'Intermediate' },
-                    { id: 'advanced', label: 'Advanced' },
-                    { id: 'custom', label: 'My Uploads' }
-                ].map(tab => {
-                    const isActive = activeTab === tab.id;
-                    const count = scores.filter(score => {
-                        if (tab.id === 'all') return true;
-                        if (tab.id === 'custom') return !score.id.startsWith('preset-');
-                        return score.tags?.includes(tab.id === 'fundamentals' ? 'Fundamentals' : tab.id.charAt(0).toUpperCase() + tab.id.slice(1));
-                    }).length;
+            {/* Category Tabs & Difficulty Filters */}
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 w-full">
+                {/* Category Tabs */}
+                <div className="flex flex-wrap gap-2 p-1.5 bg-gray-100/80 dark:bg-gray-800/40 rounded-2xl border border-gray-200/50 dark:border-gray-700/40 backdrop-blur">
+                    {[
+                        { id: 'all', label: 'All Pieces' },
+                        { id: 'fundamentals', label: 'Piano Basics' },
+                        { id: 'classical', label: 'Classical & Ragtime' },
+                        { id: 'modern', label: 'Pop & Screen' },
+                        { id: 'custom', label: 'My Uploads' }
+                    ].map(tab => {
+                        const isActive = activeTab === tab.id;
+                        const count = scores.filter(score => {
+                            if (tab.id === 'all') return true;
+                            if (tab.id === 'custom') return !score.id.startsWith('preset-');
+                            const tags = score.tags || [];
+                            if (tab.id === 'fundamentals') return tags.includes('Fundamentals');
+                            if (tab.id === 'classical') return tags.includes('Classical') || tags.includes('Ragtime');
+                            if (tab.id === 'modern') {
+                                const modernGenres = ['Pop', 'Film & TV', 'Game', 'K-Pop', 'New Age', 'Holiday'];
+                                return tags.some(t => modernGenres.includes(t));
+                            }
+                            return true;
+                        }).length;
 
-                    return (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id as any)}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold tracking-tight transition-all duration-200 select-none ${
-                                isActive
-                                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-md shadow-gray-200/50 dark:shadow-none'
-                                    : 'text-gray-500 dark:text-gray-400 hover:bg-white/40 dark:hover:bg-gray-750 hover:text-gray-700 dark:hover:text-gray-200'
-                            }`}
-                        >
-                            <span>{tab.label}</span>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
-                                isActive
-                                    ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400'
-                                    : 'bg-gray-200/70 dark:bg-gray-750 text-gray-500 dark:text-gray-450'
-                            }`}>
-                                {count}
-                            </span>
-                        </button>
-                    );
-                })}
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as any)}
+                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold tracking-tight transition-all duration-200 select-none ${
+                                    isActive
+                                        ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-md shadow-gray-200/50 dark:shadow-none'
+                                        : 'text-gray-500 dark:text-gray-400 hover:bg-white/40 dark:hover:bg-gray-750 hover:text-gray-700 dark:hover:text-gray-200'
+                                }`}
+                            >
+                                <span>{tab.label}</span>
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+                                    isActive
+                                        ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400'
+                                        : 'bg-gray-200/70 dark:bg-gray-750 text-gray-500 dark:text-gray-450'
+                                }`}>
+                                    {count}
+                                </span>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* Difficulty Filters */}
+                <div className="flex flex-wrap items-center gap-2 p-1.5 bg-gray-100/40 dark:bg-gray-800/20 rounded-2xl border border-gray-200/30 dark:border-gray-700/20 backdrop-blur">
+                    <span className="text-xs text-gray-400 dark:text-gray-500 font-bold px-2 uppercase tracking-wider">Difficulty:</span>
+                    {[
+                        { id: 'all', label: 'All' },
+                        { id: 'beginner', label: 'Beginner', color: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30 border-green-100 dark:border-green-900/30' },
+                        { id: 'intermediate', label: 'Intermediate', color: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border-amber-100 dark:border-amber-900/30' },
+                        { id: 'advanced', label: 'Advanced', color: 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 border-rose-100 dark:border-rose-900/30' }
+                    ].map(diff => {
+                        const isActive = difficultyFilter === diff.id;
+                        return (
+                            <button
+                                key={diff.id}
+                                onClick={() => setDifficultyFilter(diff.id as any)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 ${
+                                    isActive
+                                        ? `${diff.id === 'all' ? 'bg-blue-600 text-white shadow-sm' : `${diff.color} border shadow-sm`}`
+                                        : 'text-gray-500 dark:text-gray-400 hover:bg-gray-150 dark:hover:bg-gray-750'
+                                }`}
+                            >
+                                {diff.label}
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
             {/* Grid */}

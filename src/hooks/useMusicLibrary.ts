@@ -27,6 +27,78 @@ const PRESET_SCORES: LibraryScore[] = [
         songUrl: '/scores/interstellar.musicxml'
     },
     {
+        id: 'preset-au-clair-de-la-lune',
+        title: 'Au Clair de la Lune',
+        composer: 'Traditional',
+        dateAdded: 1718000000000,
+        tags: ['Fundamentals', 'Beginner', 'Folk'],
+        fileName: 'Au_Clair_De_La_Lune.musicxml',
+        songUrl: '/scores/Au_Clair_De_La_Lune.musicxml'
+    },
+    {
+        id: 'preset-jingle-bells',
+        title: 'Jingle Bells',
+        composer: 'James Lord Pierpont',
+        dateAdded: 1718000000000,
+        tags: ['Fundamentals', 'Beginner', 'Holiday'],
+        fileName: 'Jingle_Bells.musicxml',
+        songUrl: '/scores/Jingle_Bells.musicxml'
+    },
+    {
+        id: 'preset-mary-lamb',
+        title: 'Mary Had a Little Lamb',
+        composer: 'Traditional',
+        dateAdded: 1718000000000,
+        tags: ['Fundamentals', 'Beginner', 'Folk'],
+        fileName: 'Mary_Lamb.musicxml',
+        songUrl: '/scores/Mary_Lamb.musicxml'
+    },
+    {
+        id: 'preset-ode-to-joy',
+        title: 'Ode to Joy',
+        composer: 'Ludwig van Beethoven',
+        dateAdded: 1718000000000,
+        tags: ['Fundamentals', 'Beginner', 'Classical'],
+        fileName: 'Ode_to_Joy.musicxml',
+        songUrl: '/scores/Ode_to_Joy.musicxml'
+    },
+    {
+        id: 'preset-twinkle-twinkle',
+        title: 'Twinkle Twinkle Little Star',
+        composer: 'Traditional',
+        dateAdded: 1718000000000,
+        tags: ['Fundamentals', 'Beginner', 'Folk'],
+        fileName: 'Twinkle_Twinkle.musicxml',
+        songUrl: '/scores/Twinkle_Twinkle.musicxml'
+    },
+    {
+        id: 'preset-good-king-wenceslas',
+        title: 'Good King Wenceslas',
+        composer: 'Traditional',
+        dateAdded: 1718000000000,
+        tags: ['Fundamentals', 'Beginner', 'Holiday'],
+        fileName: 'Good_King_Wenceslas.musicxml',
+        songUrl: '/scores/Good_King_Wenceslas.musicxml'
+    },
+    {
+        id: 'preset-fur-elise-easy',
+        title: 'Für Elise (Simplified)',
+        composer: 'Ludwig van Beethoven',
+        dateAdded: 1718000000000,
+        tags: ['Fundamentals', 'Beginner', 'Classical'],
+        fileName: 'Fur_Elise_Simplified.musicxml',
+        songUrl: '/scores/Fur_Elise_Simplified.musicxml'
+    },
+    {
+        id: 'preset-minuet-g',
+        title: 'Minuet in G Major',
+        composer: 'Christian Petzold / J.S. Bach',
+        dateAdded: 1718000000000,
+        tags: ['Fundamentals', 'Beginner', 'Classical'],
+        fileName: 'Minuet_in_G.musicxml',
+        songUrl: '/scores/Minuet_in_G.musicxml'
+    },
+    {
         id: 'preset-ladygaga',
         title: 'Always Remember Us This Way',
         composer: 'Lady Gaga',

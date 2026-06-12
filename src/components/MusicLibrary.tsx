@@ -9,13 +9,30 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
     const { scores, loading, error, addScore, deleteScore } = useMusicLibrary();
     const [searchTerm, setSearchTerm] = useState('');
     const [isUploading, setIsUploading] = useState(false);
+    const [activeTab, setActiveTab] = useState<'all' | 'fundamentals' | 'beginner' | 'intermediate' | 'advanced' | 'custom'>('all');
 
     const filteredScores = useMemo(() => {
-        return scores.filter(score =>
-            score.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            score.composer?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [scores, searchTerm]);
+        return scores.filter(score => {
+            // Search filter
+            const matchesSearch = 
+                score.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                score.composer?.toLowerCase().includes(searchTerm.toLowerCase());
+            if (!matchesSearch) return false;
+
+            // Tab filter
+            if (activeTab === 'all') return true;
+            if (activeTab === 'custom') return !score.id.startsWith('preset-');
+            
+            // Check tags
+            const tags = score.tags || [];
+            if (activeTab === 'fundamentals') return tags.includes('Fundamentals');
+            if (activeTab === 'beginner') return tags.includes('Beginner');
+            if (activeTab === 'intermediate') return tags.includes('Intermediate');
+            if (activeTab === 'advanced') return tags.includes('Advanced');
+
+            return true;
+        });
+    }, [scores, searchTerm, activeTab]);
 
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -73,6 +90,46 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
                         />
                     </label>
                 </div>
+            </div>
+
+            {/* Category Tabs */}
+            <div className="flex flex-wrap gap-2 p-1.5 bg-gray-100/80 dark:bg-gray-800/40 rounded-2xl border border-gray-200/50 dark:border-gray-700/40 backdrop-blur self-start">
+                {[
+                    { id: 'all', label: 'All Pieces' },
+                    { id: 'fundamentals', label: 'Piano Basics' },
+                    { id: 'beginner', label: 'Beginner' },
+                    { id: 'intermediate', label: 'Intermediate' },
+                    { id: 'advanced', label: 'Advanced' },
+                    { id: 'custom', label: 'My Uploads' }
+                ].map(tab => {
+                    const isActive = activeTab === tab.id;
+                    const count = scores.filter(score => {
+                        if (tab.id === 'all') return true;
+                        if (tab.id === 'custom') return !score.id.startsWith('preset-');
+                        return score.tags?.includes(tab.id === 'fundamentals' ? 'Fundamentals' : tab.id.charAt(0).toUpperCase() + tab.id.slice(1));
+                    }).length;
+
+                    return (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id as any)}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold tracking-tight transition-all duration-200 select-none ${
+                                isActive
+                                    ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-md shadow-gray-200/50 dark:shadow-none'
+                                    : 'text-gray-500 dark:text-gray-400 hover:bg-white/40 dark:hover:bg-gray-750 hover:text-gray-700 dark:hover:text-gray-200'
+                            }`}
+                        >
+                            <span>{tab.label}</span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+                                isActive
+                                    ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400'
+                                    : 'bg-gray-200/70 dark:bg-gray-750 text-gray-500 dark:text-gray-450'
+                            }`}>
+                                {count}
+                            </span>
+                        </button>
+                    );
+                })}
             </div>
 
             {/* Grid */}

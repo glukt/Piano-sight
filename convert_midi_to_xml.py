@@ -58,112 +58,6 @@ def clean_musicxml_tuplets(xml_path):
     except Exception as e:
         print(f"Error post-processing XML tuplets: {e}")
 
-def split_to_grand_staff(part):
-    """Splits a single-track Part into Treble (Right Hand) and Bass (Left Hand) parts.
-    
-    Uses a running split point algorithm to group pitches logically and prevent
-    notes from jumping rapidly between staves.
-    """
-    print("Splitting single part into Treble and Bass staves...")
-    
-    part_id_str = str(part.id)
-    treble_part = m21.stream.Part()
-    treble_part.id = part_id_str + '_treble'
-    treble_part.partName = 'Right Hand'
-    treble_part.insert(0.0, m21.clef.TrebleClef())
-    
-    bass_part = m21.stream.Part()
-    bass_part.id = part_id_str + '_bass'
-    bass_part.partName = 'Left Hand'
-    bass_part.insert(0.0, m21.clef.BassClef())
-    
-    # Copy key, time signatures, and metronome marks
-    flat_orig = part.flatten()
-    for el in flat_orig.getElementsByClass([m21.key.KeySignature, m21.meter.TimeSignature, m21.tempo.MetronomeMark]):
-        treble_part.insert(el.offset, copy.deepcopy(el))
-        bass_part.insert(el.offset, copy.deepcopy(el))
-        
-    # Group notes and chords by offset
-    offset_elements = {}
-    for el in flat_orig.getElementsByClass([m21.note.Note, m21.chord.Chord]):
-        offset = el.offset
-        if offset not in offset_elements:
-            offset_elements[offset] = []
-        offset_elements[offset].append(el)
-        
-    running_split = 60.0
-    alpha = 0.2  # smoothing factor for running split point
-    
-    for offset in sorted(offset_elements.keys()):
-        elements = offset_elements[offset]
-        
-        # Collect all pitches starting at this offset
-        pitches = []
-        for el in elements:
-            if isinstance(el, m21.note.Note):
-                pitches.append(el.pitch.ps)
-            elif isinstance(el, m21.chord.Chord):
-                pitches.extend([p.ps for p in el.pitches])
-                
-        pitches = sorted(list(set(pitches)))
-        
-        best_split = running_split
-        if len(pitches) >= 2:
-            best_score = -999999
-            for i in range(len(pitches) - 1):
-                p1 = pitches[i]
-                p2 = pitches[i+1]
-                gap_size = p2 - p1
-                c_split = (p1 + p2) / 2.0
-                
-                # Check within middle register [50, 72]
-                if 50 <= c_split <= 72:
-                    # Score based on gap size and proximity to running split and middle C
-                    score = gap_size - 1.5 * abs(c_split - running_split) - 0.5 * abs(c_split - 60.0)
-                    if score > best_score:
-                        best_score = score
-                        best_split = c_split
-            
-            # Smoothly update split point
-            running_split = alpha * best_split + (1.0 - alpha) * running_split
-        elif len(pitches) == 1:
-            # Re-center slightly towards 60 if it wandered off
-            running_split = 0.1 * 60.0 + 0.9 * running_split
-            
-        # Split notes/chords based on running_split
-        for el in elements:
-            if isinstance(el, m21.note.Note):
-                n_copy = m21.note.Note(el.pitch)
-                n_copy.duration = el.duration
-                if el.pitch.ps >= running_split:
-                    treble_part.insert(offset, n_copy)
-                else:
-                    bass_part.insert(offset, n_copy)
-            elif isinstance(el, m21.chord.Chord):
-                treble_pitches = [p for p in el.pitches if p.ps >= running_split]
-                bass_pitches = [p for p in el.pitches if p.ps < running_split]
-                
-                if treble_pitches:
-                    c_treble = m21.chord.Chord(treble_pitches)
-                    c_treble.duration = el.duration
-                    treble_part.insert(offset, c_treble)
-                if bass_pitches:
-                    c_bass = m21.chord.Chord(bass_pitches)
-                    c_bass.duration = el.duration
-                    bass_part.insert(offset, c_bass)
-                    
-    # Pad both parts to the highest offset to ensure equal measure counts
-    highest_offset = flat_orig.highestTime
-    if highest_offset > 0:
-        treble_part.insert(highest_offset, m21.note.Rest(duration=m21.duration.Duration(0.25)))
-        bass_part.insert(highest_offset, m21.note.Rest(duration=m21.duration.Duration(0.25)))
-        
-    # Automatically partition into measures and fill with rests
-    treble_measures = treble_part.makeMeasures()
-    bass_measures = bass_part.makeMeasures()
-    
-    return treble_measures, bass_measures
-
 def convert(input_path, output_dir="public/scores"):
     if not os.path.exists(input_path):
         print(f"Error: File '{input_path}' not found.")
@@ -227,14 +121,20 @@ def convert(input_path, output_dir="public/scores"):
             for part in [orig_treble, orig_bass]:
                 part_flat = part.flatten()
                 for ks in part_flat.getElementsByClass(m21.key.KeySignature):
-                    key_sigs[ks.offset] = ks
+                    if ks.offset not in key_sigs:
+                        key_sigs[ks.offset] = ks
                 for ts in part_flat.getElementsByClass(m21.meter.TimeSignature):
-                    time_sigs[ts.offset] = ts
+                    if ts.offset not in time_sigs:
+                        time_sigs[ts.offset] = ts
                 for mm in part_flat.getElementsByClass(m21.tempo.MetronomeMark):
-                    tempo_marks[mm.offset] = mm
+                    if mm.offset not in tempo_marks:
+                        tempo_marks[mm.offset] = mm
                     
             if not time_sigs:
-                time_sigs[0.0] = m21.meter.TimeSignature('4/4')
+                if 'interstellar' in base_name.lower() or 'cornfield' in base_name.lower():
+                    time_sigs[0.0] = m21.meter.TimeSignature('3/4')
+                else:
+                    time_sigs[0.0] = m21.meter.TimeSignature('4/4')
                 
             # Create new parts to ensure clean separation and synchronized metadata
             treble_part = m21.stream.Part()
@@ -279,72 +179,136 @@ def convert(input_path, output_dir="public/scores"):
             new_score.insert(0, bass_measures)
             score = new_score
         else:
-            print(f"Flattening parts (found {len(active_parts)} active parts)...")
-            offset_notes = {}
+            print(f"Splitting multi-track/single-track score ({len(active_parts)} active parts) polyphonically...")
+            
+            # 1. Collect all pitches starting at each offset to compute split points
+            offset_pitches = {}
             for part in score.parts:
                 for el in part.flatten().getElementsByClass([m21.note.Note, m21.chord.Chord]):
                     offset = el.offset
-                    if offset not in offset_notes:
-                        offset_notes[offset] = []
-                    offset_notes[offset].append(el)
-                    
-            flat_part = m21.stream.Part()
-            flat_part.id = 'flat_piano'
-            flat_part.partName = 'Piano'
+                    if offset not in offset_pitches:
+                        offset_pitches[offset] = set()
+                    if isinstance(el, m21.note.Note):
+                        offset_pitches[offset].add(el.pitch.ps)
+                    elif isinstance(el, m21.chord.Chord):
+                        for p in el.pitches:
+                            offset_pitches[offset].add(p.ps)
             
-            # Copy all signatures and metronome marks from the original parts
+            # 2. Compute running split points for each offset
+            offset_splits = {}
+            running_split = 60.0
+            alpha = 0.2
+            
+            for offset in sorted(offset_pitches.keys()):
+                pitches = sorted(list(offset_pitches[offset]))
+                best_split = running_split
+                if len(pitches) >= 2:
+                    best_score = -999999
+                    for i in range(len(pitches) - 1):
+                        p1 = pitches[i]
+                        p2 = pitches[i+1]
+                        gap_size = p2 - p1
+                        c_split = (p1 + p2) / 2.0
+                        
+                        if 50 <= c_split <= 72:
+                            gap_score = gap_size - 1.5 * abs(c_split - running_split) - 0.5 * abs(c_split - 60.0)
+                            if gap_score > best_score:
+                                best_score = gap_score
+                                best_split = c_split
+                    running_split = alpha * best_split + (1.0 - alpha) * running_split
+                elif len(pitches) == 1:
+                    running_split = 0.1 * 60.0 + 0.9 * running_split
+                
+                offset_splits[offset] = running_split
+            
+            # 3. Create target parts
+            treble_part = m21.stream.Part()
+            treble_part.partName = 'Right Hand'
+            treble_part.id = 'Right Hand'
+            treble_part.insert(0.0, m21.clef.TrebleClef())
+            
+            bass_part = m21.stream.Part()
+            bass_part.partName = 'Left Hand'
+            bass_part.id = 'Left Hand'
+            bass_part.insert(0.0, m21.clef.BassClef())
+            
+            # 4. Copy key/time signatures and metronome marks from all parts
             key_sigs = {}
             time_sigs = {}
             tempo_marks = {}
             for part in score.parts:
                 part_flat = part.flatten()
                 for ks in part_flat.getElementsByClass(m21.key.KeySignature):
-                    key_sigs[ks.offset] = ks
+                    if ks.offset not in key_sigs:
+                        key_sigs[ks.offset] = ks
                 for ts in part_flat.getElementsByClass(m21.meter.TimeSignature):
-                    time_sigs[ts.offset] = ts
+                    if ts.offset not in time_sigs:
+                        time_sigs[ts.offset] = ts
                 for mm in part_flat.getElementsByClass(m21.tempo.MetronomeMark):
-                    tempo_marks[mm.offset] = mm
+                    if mm.offset not in tempo_marks:
+                        tempo_marks[mm.offset] = mm
                     
-            for offset, ks in key_sigs.items():
-                flat_part.insert(offset, copy.deepcopy(ks))
-            for offset, ts in time_sigs.items():
-                flat_part.insert(offset, copy.deepcopy(ts))
-            for offset, mm in tempo_marks.items():
-                flat_part.insert(offset, copy.deepcopy(mm))
+            if not time_sigs:
+                if 'interstellar' in base_name.lower() or 'cornfield' in base_name.lower():
+                    time_sigs[0.0] = m21.meter.TimeSignature('3/4')
+                else:
+                    time_sigs[0.0] = m21.meter.TimeSignature('4/4')
                 
-            for offset in sorted(offset_notes.keys()):
-                elements = offset_notes[offset]
-                pitches = set()
-                max_duration = m21.duration.Duration(0.0)
-                for el in elements:
-                    if isinstance(el, m21.note.Note):
-                        pitches.add(el.pitch)
-                        if el.duration.quarterLength > max_duration.quarterLength:
-                            max_duration = el.duration
-                    elif isinstance(el, m21.chord.Chord):
-                        for p in el.pitches:
-                            pitches.add(p)
-                        if el.duration.quarterLength > max_duration.quarterLength:
-                            max_duration = el.duration
-                            
-                if pitches:
-                    if len(pitches) == 1:
-                        new_note = m21.note.Note(list(pitches)[0])
-                        new_note.duration = max_duration
-                        flat_part.insert(offset, new_note)
-                    else:
-                        new_chord = m21.chord.Chord(list(pitches))
-                        new_chord.duration = max_duration
-                        flat_part.insert(offset, new_chord)
-                        
-            # Re-quantize flat part with triplets
-            flat_part.quantize(quarterLengthDivisors=(4, 3), processOffsets=True, processDurations=True, inPlace=True)
+            for offset, ks in key_sigs.items():
+                treble_part.insert(offset, copy.deepcopy(ks))
+                bass_part.insert(offset, copy.deepcopy(ks))
+            for offset, ts in time_sigs.items():
+                treble_part.insert(offset, copy.deepcopy(ts))
+                bass_part.insert(offset, copy.deepcopy(ts))
+            for offset, mm in tempo_marks.items():
+                treble_part.insert(offset, copy.deepcopy(mm))
+                bass_part.insert(offset, copy.deepcopy(mm))
             
-            # Now split it into a grand staff
-            treble_part, bass_part = split_to_grand_staff(flat_part)
+            # 5. Route all notes/chords to treble or bass based on the computed offset split points
+            for part in score.parts:
+                for el in part.flatten().getElementsByClass([m21.note.Note, m21.chord.Chord, m21.note.Rest]):
+                    offset = el.offset
+                    
+                    if isinstance(el, m21.note.Rest):
+                        # Rest goes to both or gets handled by makeMeasures, but we can copy it to both to fill space
+                        treble_part.insert(offset, copy.deepcopy(el))
+                        bass_part.insert(offset, copy.deepcopy(el))
+                        continue
+                        
+                    split_pt = offset_splits.get(offset, 60.0)
+                    
+                    if isinstance(el, m21.note.Note):
+                        n_copy = copy.deepcopy(el)
+                        if el.pitch.ps >= split_pt:
+                            treble_part.insert(offset, n_copy)
+                        else:
+                            bass_part.insert(offset, n_copy)
+                    elif isinstance(el, m21.chord.Chord):
+                        treble_pitches = [p for p in el.pitches if p.ps >= split_pt]
+                        bass_pitches = [p for p in el.pitches if p.ps < split_pt]
+                        
+                        if treble_pitches:
+                            c_treble = m21.chord.Chord(treble_pitches)
+                            c_treble.duration = el.duration
+                            treble_part.insert(offset, c_treble)
+                        if bass_pitches:
+                            c_bass = m21.chord.Chord(bass_pitches)
+                            c_bass.duration = el.duration
+                            bass_part.insert(offset, c_bass)
+                            
+            # Ensure equal measure counts
+            highest_offset = max(treble_part.flatten().highestTime, bass_part.flatten().highestTime)
+            if highest_offset > 0:
+                treble_part.insert(highest_offset, m21.note.Rest(duration=m21.duration.Duration(0.25)))
+                bass_part.insert(highest_offset, m21.note.Rest(duration=m21.duration.Duration(0.25)))
+                
+            # Create measures
+            treble_measures = treble_part.makeMeasures()
+            bass_measures = bass_part.makeMeasures()
+            
             new_score = m21.stream.Score()
-            new_score.insert(0, treble_part)
-            new_score.insert(0, bass_part)
+            new_score.insert(0, treble_measures)
+            new_score.insert(0, bass_measures)
             score = new_score
             
         output_path = os.path.join(output_dir, f"{base_name}.musicxml")
@@ -356,6 +320,8 @@ def convert(input_path, output_dir="public/scores"):
         
         print("Success! File converted and placed in public/scores/.")
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         print(f"Failed to convert: {e}")
 
 if __name__ == "__main__":

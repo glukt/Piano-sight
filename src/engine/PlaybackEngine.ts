@@ -435,13 +435,13 @@ export class PlaybackEngine {
             this.onProgress(iterator.currentTimeStamp.RealValue, this.TotalDuration);
         }
 
-        // Detect Tempo from Iteartor
-        // OSMD Iterator has "CurrentBpm" property!
-        // It might return 0 if not set, so default to 100.
-        // @ts-ignore
-        const iteratorBpm = iterator.CurrentBpm || 100;
-        this.bpm = iteratorBpm; // Update current BPM for reference
-
+        // Detect Tempo from CurrentMeasure's TempoInBPM
+        if (iterator && iterator.CurrentMeasure) {
+            const mBpm = iterator.CurrentMeasure.TempoInBPM;
+            if (mBpm && mBpm > 0) {
+                this.bpm = mBpm;
+            }
+        }
         const currentBpm = this.bpm;
 
         // 4. Calculate Delay to next step using the exact difference to the next voice entry.

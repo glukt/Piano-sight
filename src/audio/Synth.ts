@@ -112,7 +112,11 @@ class AudioEngine {
         }
     }
 
-    playNote(midiNote: number, velocity: number = 0.7, duration?: number) {
+    now() {
+        return Tone.now();
+    }
+
+    playNote(midiNote: number, velocity: number = 0.7, duration?: number, startTime?: number) {
         if (!this.isInitialized) {
             console.warn("Audio not initialized yet");
             return;
@@ -120,19 +124,20 @@ class AudioEngine {
 
         const freq = Tone.Frequency(midiNote, "midi").toNote();
         const vel = Math.min(Math.max(velocity / 127, 0), 1);
+        const time = startTime !== undefined ? startTime : Tone.now();
 
         // Try Sampler, fallback to PolySynth
         if (this.sampler && this.sampler.loaded) {
             if (duration !== undefined) {
-                this.sampler.triggerAttackRelease(freq, duration, Tone.now(), vel);
+                this.sampler.triggerAttackRelease(freq, duration, time, vel);
             } else {
-                this.sampler.triggerAttack(freq, Tone.now(), vel);
+                this.sampler.triggerAttack(freq, time, vel);
             }
         } else if (this.polySynth) {
             if (duration !== undefined) {
-                this.polySynth.triggerAttackRelease(freq, duration, Tone.now(), vel);
+                this.polySynth.triggerAttackRelease(freq, duration, time, vel);
             } else {
-                this.polySynth.triggerAttack(freq, Tone.now(), vel);
+                this.polySynth.triggerAttack(freq, time, vel);
             }
         }
     }

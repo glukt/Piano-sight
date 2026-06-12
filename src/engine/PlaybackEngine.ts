@@ -302,6 +302,62 @@ export class PlaybackEngine {
         const cursor = this.getCursor();
         if (!this.isPlaying || !cursor) return;
 
+        // 1. Get Notes and Play them immediately with a lookahead to decouple from UI thread blockages
+        const notes: Note[] = cursor.NotesUnderCursor();
+        const lookahead = 0.035; // 35ms audio scheduling lookahead
+        const startTime = audio.now() + lookahead;
+
+        notes.forEach(note => {
+            if (note.isRest()) return;
+
+            let midi = 0;
+            if (note.halfTone !== undefined) {
+                midi = note.halfTone + 12;
+            } else if (note.Pitch) {
+                midi = note.Pitch.getHalfTone() + 12;
+            } else {
+                return;
+            }
+
+            const noteDuration = note.Length.RealValue * (240 / this.bpm);
+
+            // Schedule visual key press and release on keyboard overlay aligned to lookahead start
+            const pressTime = lookahead * 1000;
+            const releaseTime = (noteDuration * 1000 * 0.95) + pressTime;
+
+            const pressTimeoutId = window.setTimeout(() => {
+                const currentCount = this.activeVisualNotes.get(midi) || 0;
+                this.activeVisualNotes.set(midi, currentCount + 1);
+                if (currentCount === 0 && this.onNoteOn) {
+                    this.onNoteOn(midi);
+                }
+            }, pressTime);
+            this.noteTimeouts.push(pressTimeoutId);
+
+            const releaseTimeoutId = window.setTimeout(() => {
+                const currentCount = this.activeVisualNotes.get(midi) || 0;
+                if (currentCount <= 1) {
+                    this.activeVisualNotes.delete(midi);
+                    if (this.onNoteOff) this.onNoteOff(midi);
+                } else {
+                    this.activeVisualNotes.set(midi, currentCount - 1);
+                }
+            }, releaseTime);
+            this.noteTimeouts.push(releaseTimeoutId);
+
+            // Play the note in Tone.js with the scheduled startTime
+            if (this.shouldPlayWithPedal()) {
+                audio.playNote(midi, 85, undefined, startTime);
+                const releaseTimeout = window.setTimeout(() => {
+                    audio.releaseNote(midi);
+                }, (noteDuration + lookahead) * 1000);
+                this.noteTimeouts.push(releaseTimeout);
+            } else {
+                audio.playNote(midi, 85, noteDuration, startTime);
+            }
+        });
+
+        // 2. Visual Feedback & UI Updates
         // Sustain Pedal measure boundary check
         const currentMeasure = this.CurrentMeasureNumber;
         if (this.shouldPlayWithPedal() && currentMeasure !== this.lastMeasureNumber) {
@@ -310,21 +366,14 @@ export class PlaybackEngine {
             this.lastMeasureNumber = currentMeasure;
         }
 
-        // 1. Get Notes at current position
-        const notes: Note[] = cursor.NotesUnderCursor();
+        // Highlight notes under cursor, but skip heavy notehead recoloring at high tempos (BPM > 150)
+        // to prevent rendering lag from ruining the audio timing loop.
+        this.clearHighlights();
+        const shouldVisualHighlight = this.highlightNotes && this.bpm <= 150;
 
-        // -------------------------------------------------------------
-        // Visual Feedback: Note Highlighting
-        // -------------------------------------------------------------
-        this.clearHighlights(); // Clear previous step
-
-        if (this.highlightNotes) {
-            // Get Graphical Notes
+        if (shouldVisualHighlight) {
             const gNotes = cursor.GNotesUnderCursor();
             gNotes.forEach(gn => {
-                // Determine highlight color? (e.g. blue for playback)
-                // Use type assertion if necessary, but GraphicalNote should be available.
-                // We need to validte if setColor exists (it should per d.ts)
                 // @ts-ignore
                 if (gn.setColor) {
                     // @ts-ignore
@@ -333,16 +382,21 @@ export class PlaybackEngine {
                 }
             });
         }
-        // -------------------------------------------------------------
 
-        // 2. Determine Duration of this step
-
-        // 2. Determine Duration of this step
-        // We look at the shortest note duration to determine when to call next() ??
-        // Actually, the cursor iterates through "VoiceEntries". 
-        // We need to look at the iterator's current timestamp difference to the next timestamp.
-
+        // Report Progress
         const iterator = cursor.Iterator;
+        if (this.onProgress) {
+            this.onProgress(iterator.currentTimeStamp.RealValue, this.TotalDuration);
+        }
+
+        // Detect Tempo from CurrentMeasure's TempoInBPM
+        if (iterator && iterator.CurrentMeasure) {
+            const mBpm = iterator.CurrentMeasure.TempoInBPM;
+            if (mBpm && mBpm > 0) {
+                this.bpm = mBpm;
+            }
+        }
+        const currentBpm = this.bpm;
 
         // Loop Check
         if (this.loopEnd !== null && this.loopStart !== null) {
@@ -362,91 +416,7 @@ export class PlaybackEngine {
             return;
         }
 
-        // 3. Play Notes
-        // We need to group them by "Voice" or just play all?
-        // Play all 
-        const midiNotes: number[] = [];
-        notes.forEach(note => {
-            // Check if it's a rest
-            if (note.isRest()) return;
-
-            // Calculate MIDI note
-            // Debug note object to find correct pitch property
-            // console.log("Note:", note);
-
-            // Access pitch safely
-            // Note: note.halfTone should be correct for OSMD.
-            // But let's verify if 'Pitch' object exists.
-            let midi = 0;
-            if (note.halfTone !== undefined) {
-                midi = note.halfTone + 12;
-            } else if (note.Pitch) {
-                midi = note.Pitch.getHalfTone() + 12;
-            } else {
-                // console.warn("Note has no pitch/halfTone:", note);
-                return;
-            }
-
-            midiNotes.push(midi);
-
-            // Synth.ts expects MIDI velocity (0-127) because it divides by 127.
-            // Sending 85 (~0.67) for mezzo-forte.
-            // Calculate duration in seconds
-            // Duration (Whole Notes) * (240 / BPM) = Seconds
-            // e.g. Quarter (0.25) * 240 / 60 (4s) = 1s.
-            const noteDuration = note.Length.RealValue * (240 / this.bpm);
-
-            // Schedule visual key release on keyboard overlay
-            const releaseTime = noteDuration * 1000 * 0.95;
-
-            const timeoutId = window.setTimeout(() => {
-                const currentCount = this.activeVisualNotes.get(midi) || 0;
-                if (currentCount <= 1) {
-                    this.activeVisualNotes.delete(midi);
-                    if (this.onNoteOff) this.onNoteOff(midi);
-                } else {
-                    this.activeVisualNotes.set(midi, currentCount - 1);
-                }
-            }, releaseTime);
-            this.noteTimeouts.push(timeoutId);
-
-            // Increment visual press count and trigger key highlight in UI
-            const currentCount = this.activeVisualNotes.get(midi) || 0;
-            this.activeVisualNotes.set(midi, currentCount + 1);
-            if (currentCount === 0 && this.onNoteOn) {
-                this.onNoteOn(midi);
-            }
-
-            // Play the note in the audio thread.
-            // If playing with pedal, bypass auto-release to allow sustain, and schedule a manual release note.
-            if (this.shouldPlayWithPedal()) {
-                audio.playNote(midi, 85);
-                const releaseTimeout = window.setTimeout(() => {
-                    audio.releaseNote(midi);
-                }, noteDuration * 1000);
-                this.noteTimeouts.push(releaseTimeout);
-            } else {
-                audio.playNote(midi, 85, noteDuration);
-            }
-        });
-
-        // Report Progress
-        if (this.onProgress) {
-            this.onProgress(iterator.currentTimeStamp.RealValue, this.TotalDuration);
-        }
-
-        // Detect Tempo from CurrentMeasure's TempoInBPM
-        if (iterator && iterator.CurrentMeasure) {
-            const mBpm = iterator.CurrentMeasure.TempoInBPM;
-            if (mBpm && mBpm > 0) {
-                this.bpm = mBpm;
-            }
-        }
-        const currentBpm = this.bpm;
-
-        // 4. Calculate Delay to next step using the exact difference to the next voice entry.
-        // This solves the rushing/skipping bug in multi-voice scores where a note in one voice
-        // overlaps with a rest or note of a different duration in another voice.
+        // 3. Calculate Delay to next step
         let stepDuration = 0.05; // Fallback
 
         if (iterator) {
@@ -490,9 +460,6 @@ export class PlaybackEngine {
         }
 
         // Convert Whole Note duration to seconds for NEXT STEP
-        // Duration * (240 / BPM)
-
-        // Use the currentBpm we parse
         const secondsPerWhole = 240 / currentBpm;
         const stepDelaySeconds = stepDuration * secondsPerWhole;
 
@@ -513,9 +480,6 @@ export class PlaybackEngine {
             const curs = this.getCursor();
             if (curs) curs.next();
             this.step();
-
-            // Do NOT releaseAll() here. Individual notes handle their own release.
-
         }, Math.max(0, delayMs));
     }
 }

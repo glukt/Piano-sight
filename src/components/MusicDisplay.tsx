@@ -97,7 +97,9 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                     staveNote.setKeyStyle(keyIndex, { fillStyle: foregroundColor, strokeStyle: foregroundColor });
                 });
 
-                if (cursorIndex !== undefined) {
+                const isRest = n.duration.endsWith('r');
+
+                if (cursorIndex !== undefined && !isRest) {
                     if (i === cursorIndex) {
                         // Color current note based on input status
                         let color = "#3b82f6"; // Default Blue (Waiting)
@@ -118,7 +120,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                     }
                 }
 
-                if (showLabels) {
+                if (showLabels && !isRest) {
                     n.keys.forEach((key, index) => {
                         const noteName = key.split('/')[0].toUpperCase();
                         staveNote.addModifier(
@@ -212,7 +214,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                 const bNote = bassNotes[i];
 
                 if (showLabels) {
-                    if (tNote && tNote.keys && tNote.keys[0] !== 'b/4') {
+                    if (tNote && tNote.keys && tNote.keys[0] !== 'b/4' && !tNote.duration.endsWith('r')) {
                         tNote.keys.forEach(k => {
                             const noteName = k.split('/')[0].toUpperCase();
                             const y = getTrebleY(k);
@@ -232,7 +234,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                         });
                     }
 
-                    if (bNote && bNote.keys && bNote.keys[0] !== 'd/3') {
+                    if (bNote && bNote.keys && bNote.keys[0] !== 'd/3' && !bNote.duration.endsWith('r')) {
                         bNote.keys.forEach(k => {
                             const noteName = k.split('/')[0].toUpperCase();
                             const y = getBassY(k);

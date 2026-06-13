@@ -6,10 +6,10 @@ interface MusicLibraryProps {
 }
 
 export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => {
-    const { scores, loading, error, addScore, deleteScore } = useMusicLibrary();
+    const { scores, loading, error, addScore, deleteScore, bookmarkedIds, toggleBookmark } = useMusicLibrary();
     const [searchTerm, setSearchTerm] = useState('');
     const [isUploading, setIsUploading] = useState(false);
-    const [activeTab, setActiveTab] = useState<'all' | 'fundamentals' | 'classical' | 'modern' | 'custom'>('all');
+    const [activeTab, setActiveTab] = useState<'all' | 'bookmarks' | 'fundamentals' | 'classical' | 'modern' | 'custom'>('all');
     const [difficultyFilter, setDifficultyFilter] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('all');
 
     const filteredScores = useMemo(() => {
@@ -22,7 +22,9 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
 
             // Tab filter
             if (activeTab !== 'all') {
-                if (activeTab === 'custom') {
+                if (activeTab === 'bookmarks') {
+                    if (!bookmarkedIds.has(score.id)) return false;
+                } else if (activeTab === 'custom') {
                     if (score.id.startsWith('preset-')) return false;
                 } else {
                     const tags = score.tags || [];
@@ -46,7 +48,7 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
 
             return true;
         });
-    }, [scores, searchTerm, activeTab, difficultyFilter]);
+    }, [scores, searchTerm, activeTab, difficultyFilter, bookmarkedIds]);
 
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -84,16 +86,16 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
                     <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold">{scores.length} scores stored</p>
                 </div>
 
-                <div className="flex gap-4 w-full md:w-auto">
+                <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                     <input
                         type="text"
                         placeholder="Search scores..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none w-full md:w-64 font-medium transition"
+                        className="px-4 py-2 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none flex-1 min-w-[140px] md:w-64 md:flex-initial font-medium transition"
                     />
 
-                    <label className={`flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-650 text-white rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition shadow-lg shadow-blue-500/15 active:scale-98 cursor-pointer ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
+                    <label className={`flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-650 text-white rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 transition shadow-lg shadow-blue-500/15 active:scale-98 cursor-pointer flex-shrink-0 whitespace-nowrap ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
                         <span>{isUploading ? 'Uploading...' : 'Upload New'}</span>
                         <input
                             type="file"
@@ -112,6 +114,7 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
                 <div className="flex flex-wrap gap-2 p-1.5 bg-gray-100/80 dark:bg-gray-800/40 rounded-2xl border border-gray-200/50 dark:border-gray-700/40 backdrop-blur">
                     {[
                         { id: 'all', label: 'All Pieces' },
+                        { id: 'bookmarks', label: 'Favorites' },
                         { id: 'fundamentals', label: 'Piano Basics' },
                         { id: 'classical', label: 'Classical & Ragtime' },
                         { id: 'modern', label: 'Pop & Screen' },
@@ -120,6 +123,7 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
                         const isActive = activeTab === tab.id;
                         const count = scores.filter(score => {
                             if (tab.id === 'all') return true;
+                            if (tab.id === 'bookmarks') return bookmarkedIds.has(score.id);
                             if (tab.id === 'custom') return !score.id.startsWith('preset-');
                             const tags = score.tags || [];
                             if (tab.id === 'fundamentals') return tags.includes('Fundamentals');
@@ -141,6 +145,11 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
                                         : 'text-gray-500 dark:text-gray-400 hover:bg-white/40 dark:hover:bg-gray-750 hover:text-gray-700 dark:hover:text-gray-200'
                                 }`}
                             >
+                                {tab.id === 'bookmarks' && (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-amber-500 fill-current" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
+                                )}
                                 <span>{tab.label}</span>
                                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
                                     isActive
@@ -201,17 +210,35 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
                                 </svg>
                             </div>
-                            {!score.id.startsWith('preset-') && (
+                            <div className="flex items-center gap-1">
                                 <button
-                                    onClick={(e) => handleDelete(e, score.id)}
-                                    className="text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-750"
-                                    title="Delete Score"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleBookmark(score.id);
+                                    }}
+                                    className={`p-1.5 rounded-lg transition hover:bg-gray-100 dark:hover:bg-gray-750 ${
+                                        bookmarkedIds.has(score.id)
+                                            ? 'text-amber-500 opacity-100'
+                                            : 'text-gray-300 dark:text-gray-600 hover:text-amber-500 opacity-0 group-hover:opacity-100'
+                                    }`}
+                                    title={bookmarkedIds.has(score.id) ? "Remove from Favorites" : "Add to Favorites"}
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                                     </svg>
                                 </button>
-                            )}
+                                {!score.id.startsWith('preset-') && (
+                                    <button
+                                        onClick={(e) => handleDelete(e, score.id)}
+                                        className="text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-750"
+                                        title="Delete Score"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                                        </svg>
+                                    </button>
+                                )}
+                            </div>
                         </div>
 
                         <div className="text-left">

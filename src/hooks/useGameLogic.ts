@@ -76,8 +76,22 @@ export const useGameLogic = () => {
         statRefs.current = { incrementStat, updateChallengeProgress };
     }, [incrementStat, updateChallengeProgress]);
 
+    // Level Up dismissal refs
+    const levelUpRef = useRef<number | null>(null);
+    const clearLevelUpRef = useRef<() => void>(() => {});
+    useEffect(() => {
+        levelUpRef.current = levelUp;
+    }, [levelUp]);
+    useEffect(() => {
+        clearLevelUpRef.current = clearLevelUp;
+    }, [clearLevelUp]);
+
     // Audio Callbacks
     const onNoteOn = useRef((note: number, velocity: number) => {
+        if (levelUpRef.current !== null) {
+            clearLevelUpRef.current();
+            return;
+        }
         if (audio.isInitialized) audio.playNote(note, velocity);
         statRefs.current.incrementStat('totalNotes', 1);
         statRefs.current.updateChallengeProgress('notes', 1);
@@ -113,6 +127,11 @@ export const useGameLogic = () => {
     const prevMicNote = useRef<number | null>(null);
     useEffect(() => {
         if (micNote !== null && micNote !== prevMicNote.current) {
+            if (levelUpRef.current !== null) {
+                clearLevelUpRef.current();
+                prevMicNote.current = micNote;
+                return;
+            }
             if (audio.isInitialized) audio.playNote(micNote, 100);
             statRefs.current.incrementStat('totalNotes', 1);
             statRefs.current.updateChallengeProgress('notes', 1);
@@ -218,6 +237,9 @@ export const useGameLogic = () => {
     const cursorIndexRef = useRef(cursorIndex);
     useEffect(() => { cursorIndexRef.current = cursorIndex; }, [cursorIndex]);
 
+    const gameModeRef = useRef(gameMode);
+    useEffect(() => { gameModeRef.current = gameMode; }, [gameMode]);
+
     const isRhythmPlayingRef = useRef(false);
 
     const onAnimateRhythm = useCallback((elapsed: number) => {
@@ -239,10 +261,26 @@ export const useGameLogic = () => {
             const timeWindow = 0.35;
 
             if (elapsed > targetTime + timeWindow) {
-                setCursorIndex(prev => prev + 1);
-                setInputStatus('incorrect');
-                setStreak(0);
-                setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
+                const targetTreble = levelDataRef.current.treble[currentIdx];
+                const targetBass = levelDataRef.current.bass[currentIdx];
+                const requiredNotes = new Set<number>();
+                const currentGameMode = gameModeRef.current;
+                
+                if (currentGameMode !== 'bass' && targetTreble && !targetTreble.duration.endsWith('r')) {
+                    targetTreble.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+                }
+                if (currentGameMode !== 'treble' && targetBass && !targetBass.duration.endsWith('r')) {
+                    targetBass.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+                }
+
+                if (requiredNotes.size === 0) {
+                    setCursorIndex(prev => prev + 1);
+                } else {
+                    setCursorIndex(prev => prev + 1);
+                    setInputStatus('incorrect');
+                    setStreak(0);
+                    setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
+                }
             }
         }
     }, [isRhythmMode]);
@@ -342,8 +380,12 @@ export const useGameLogic = () => {
         const targetTreble = levelData.treble[cursorIndex];
         const targetBass = levelData.bass[cursorIndex];
         const requiredNotes = new Set<number>();
-        if (gameMode !== 'bass') targetTreble?.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
-        if (gameMode !== 'treble') targetBass?.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+        if (gameMode !== 'bass' && targetTreble && !targetTreble.duration.endsWith('r')) {
+            targetTreble.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+        }
+        if (gameMode !== 'treble' && targetBass && !targetBass.duration.endsWith('r')) {
+            targetBass.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+        }
         const isHolding = Array.from(requiredNotes).some(n => effectiveActiveNotes.has(n));
         setPreHeld(isHolding);
     }, [cursorIndex, levelData, gameMode, effectiveActiveNotes]);
@@ -370,8 +412,12 @@ export const useGameLogic = () => {
         const targetTreble = levelData.treble[cursorIndex];
         const targetBass = levelData.bass[cursorIndex];
         const requiredNotes = new Set<number>();
-        if (gameMode !== 'bass') targetTreble?.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
-        if (gameMode !== 'treble') targetBass?.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+        if (gameMode !== 'bass' && targetTreble && !targetTreble.duration.endsWith('r')) {
+            targetTreble.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+        }
+        if (gameMode !== 'treble' && targetBass && !targetBass.duration.endsWith('r')) {
+            targetBass.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+        }
 
         const relevantActiveNotes = new Set<number>();
         effectiveActiveNotes.forEach(n => {
@@ -381,7 +427,9 @@ export const useGameLogic = () => {
         });
 
         if (requiredNotes.size === 0) {
-            setCursorIndex(prev => prev + 1);
+            if (!isRhythmMode) {
+                setCursorIndex(prev => prev + 1);
+            }
             return;
         }
 

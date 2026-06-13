@@ -649,12 +649,40 @@ export function useMusicLibrary() {
         }
     }, []);
 
+    const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
+
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem('pianopilot_bookmarks');
+            if (raw) {
+                setBookmarkedIds(new Set(JSON.parse(raw)));
+            }
+        } catch (e) {
+            console.error("Failed to load bookmarks:", e);
+        }
+    }, []);
+
+    const toggleBookmark = useCallback((id: string) => {
+        setBookmarkedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            localStorage.setItem('pianopilot_bookmarks', JSON.stringify(Array.from(next)));
+            return next;
+        });
+    }, []);
+
     return {
         scores,
         loading,
         error,
         addScore,
         deleteScore,
-        updateScoreMetadata
+        updateScoreMetadata,
+        bookmarkedIds,
+        toggleBookmark
     };
 }

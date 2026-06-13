@@ -59,6 +59,19 @@ export const LevelUpModal: React.FC<LevelUpModalProps> = ({ level, onClose }) =>
         }
     }, [level]);
 
+    useEffect(() => {
+        if (level === null) return;
+
+        const handleKeyDown = () => {
+            onClose();
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [level, onClose]);
+
     if (level === null) return null;
 
     const quotes = [

@@ -5,6 +5,7 @@ interface PerformanceReportCardProps {
     isOpen: boolean;
     onClose: () => void;
     onRetry: () => void;
+    onNext?: () => void;
     songTitle: string;
     notesCorrect: number;
     notesMissed: number;
@@ -17,6 +18,7 @@ export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
     isOpen,
     onClose,
     onRetry,
+    onNext,
     songTitle,
     notesCorrect,
     notesMissed,
@@ -142,18 +144,26 @@ export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-3 z-10 relative">
+                    <div className="flex flex-col sm:flex-row gap-3 z-10 relative">
                         <button
                             onClick={onRetry}
-                            className="flex-1 py-3 px-4 rounded-xl font-bold text-sm bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-250 hover:bg-gray-300 dark:hover:bg-gray-650 transition active:scale-98"
+                            className="flex-grow flex-shrink py-3 px-4 rounded-xl font-bold text-sm bg-gray-200 dark:bg-gray-750 text-gray-800 dark:text-gray-250 hover:bg-gray-300 dark:hover:bg-gray-650 transition active:scale-98 animate-none"
                         >
                             🔄 Practice Again
                         </button>
+                        {onNext && accuracy >= 80 && (
+                            <button
+                                onClick={onNext}
+                                className="flex-grow flex-shrink py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-600 hover:to-teal-700 transition active:scale-98"
+                            >
+                                🎓 Next Lesson →
+                            </button>
+                        )}
                         <button
                             onClick={onClose}
-                            className="flex-1 py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-blue-500 to-indigo-650 text-white shadow-lg shadow-blue-500/25 hover:from-blue-600 hover:to-indigo-700 transition active:scale-98"
+                            className="flex-grow flex-shrink py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-blue-500 to-indigo-650 text-white shadow-lg shadow-blue-500/25 hover:from-blue-600 hover:to-indigo-700 transition active:scale-98"
                         >
-                            Return to Library
+                            {onNext ? 'Course Menu' : 'Return to Library'}
                         </button>
                     </div>
                 </motion.div>

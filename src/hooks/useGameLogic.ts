@@ -9,7 +9,7 @@ import { audio } from '../audio/Synth';
 import { LevelGenerator, Difficulty } from '../engine/LevelGenerator';
 import { StaveNoteData } from '../components/MusicDisplay';
 import { midiToNoteName } from '../utils/midiUtils';
-import { Lesson } from '../utils/music/CourseData';
+import { Lesson, courses } from '../utils/music/CourseData';
 
 // Helper
 const parseKeyToMidi = (key: string): number => {
@@ -52,6 +52,16 @@ export const useGameLogic = () => {
     const [audioStarted, setAudioStarted] = useState(false);
     const [isAudioLoading, setIsAudioLoading] = useState(false);
 
+    // Muting & Completion
+    const [isMutedKeys, setIsMutedKeys] = useState(false);
+    const isMutedKeysRef = useRef(isMutedKeys);
+    useEffect(() => {
+        isMutedKeysRef.current = isMutedKeys;
+    }, [isMutedKeys]);
+
+    const [notesCorrect, setNotesCorrect] = useState(0);
+    const [notesMissed, setNotesMissed] = useState(0);
+
     // Stats & Achievements Hooks
     const { state: gameState, addXp, levelUp, clearLevelUp } = useGamification();
     const {
@@ -92,7 +102,7 @@ export const useGameLogic = () => {
             clearLevelUpRef.current();
             return;
         }
-        if (audio.isInitialized) audio.playNote(note, velocity);
+        if (audio.isInitialized && !isMutedKeysRef.current) audio.playNote(note, velocity);
         statRefs.current.incrementStat('totalNotes', 1);
         statRefs.current.updateChallengeProgress('notes', 1);
     });
@@ -132,12 +142,12 @@ export const useGameLogic = () => {
                 prevMicNote.current = micNote;
                 return;
             }
-            if (audio.isInitialized) audio.playNote(micNote, 100);
+            if (audio.isInitialized && !isMutedKeys) audio.playNote(micNote, 100);
             statRefs.current.incrementStat('totalNotes', 1);
             statRefs.current.updateChallengeProgress('notes', 1);
         }
         prevMicNote.current = micNote;
-    }, [micNote]);
+    }, [micNote, isMutedKeys]);
 
     // MIDI / Mic Auto-Switching Logic
     useEffect(() => {
@@ -217,6 +227,25 @@ export const useGameLogic = () => {
     const [score, setScore] = useState({ correct: 0, incorrect: 0 });
     const [errorStats, setErrorStats] = useState<Record<string, number>>({});
 
+    // Muting & Completion
+
+    const [isLessonComplete, setIsLessonComplete] = useState(false);
+
+    // Active Note Overlapping Protection
+    const notesActiveAtStepStart = useRef<Set<number>>(new Set());
+
+    // Update notes active at step start when cursor index changes
+    useEffect(() => {
+        notesActiveAtStepStart.current = new Set(effectiveActiveNotes);
+    }, [cursorIndex]);
+
+    // Keep notesActiveAtStepStart in sync with releases
+    useEffect(() => {
+        notesActiveAtStepStart.current = new Set(
+            Array.from(notesActiveAtStepStart.current).filter(n => effectiveActiveNotes.has(n))
+        );
+    }, [effectiveActiveNotes]);
+
     // Level
     const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.NOVICE);
     const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
@@ -280,6 +309,7 @@ export const useGameLogic = () => {
                     setInputStatus('incorrect');
                     setStreak(0);
                     setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
+                    setNotesMissed(prev => prev + 1);
                 }
             }
         }
@@ -311,6 +341,9 @@ export const useGameLogic = () => {
 
         setCursorIndex(0);
         setStreak(0);
+        setScore({ correct: 0, incorrect: 0 }); // Reset score for the new level/lesson!
+        setNotesCorrect(0);
+        setNotesMissed(0);
         setInputStatus('waiting');
         if (keepRhythm) {
             startRhythm(RHYTHM_LEAD_IN);
@@ -400,7 +433,12 @@ export const useGameLogic = () => {
         if (cursorIndex >= levelLength) {
             if (cursorIndex === levelLength) {
                 handleAddXp(50);
-                setTimeout(() => generateNewLevel(difficulty, isRhythmMode), 500);
+                if (currentLesson) {
+                    setIsLessonComplete(true);
+                    stopRhythm();
+                } else {
+                    setTimeout(() => generateNewLevel(difficulty, isRhythmMode), 500);
+                }
             }
             return;
         }
@@ -433,8 +471,11 @@ export const useGameLogic = () => {
             return;
         }
 
-        const relevantArray = Array.from(relevantActiveNotes);
-        const hasIncorrect = relevantArray.some(n => !requiredNotes.has(n));
+        // Filter out notes held continuously from the step start (legato overlap protection)
+        const newlyPressedActiveNotes = Array.from(relevantActiveNotes).filter(
+            n => !notesActiveAtStepStart.current.has(n)
+        );
+        const hasIncorrect = newlyPressedActiveNotes.some(n => !requiredNotes.has(n));
         const allFound = requiredNotes.size > 0 && Array.from(requiredNotes).every(n => relevantActiveNotes.has(n));
 
         if (preHeld) {
@@ -452,8 +493,9 @@ export const useGameLogic = () => {
             if (inputStatus !== 'incorrect') {
                 setInputStatus('incorrect');
                 setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
+                setNotesMissed(prev => prev + 1);
                 setStreak(0);
-                relevantArray.filter(n => !requiredNotes.has(n)).forEach(n => {
+                newlyPressedActiveNotes.filter(n => !requiredNotes.has(n)).forEach(n => {
                     const name = midiToNoteName(n);
                     setErrorStats(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
                 });
@@ -472,18 +514,21 @@ export const useGameLogic = () => {
                 if (diff <= 0.1) {
                     setLastHitType('perfect');
                     setScore(s => ({ ...s, correct: s.correct + 5 }));
+                    setNotesCorrect(prev => prev + 1);
                     setInputStatus('perfect');
                     setStreak(p => p + 1);
                     handleAddXp(10);
                 } else if (diff <= 0.25) {
                     setLastHitType('good');
                     setScore(s => ({ ...s, correct: s.correct + 2 }));
+                    setNotesCorrect(prev => prev + 1);
                     setInputStatus('correct');
                     setStreak(p => p + 1);
                     handleAddXp(5);
                 } else {
                     setLastHitType('okay');
                     setScore(s => ({ ...s, correct: s.correct + 1 }));
+                    setNotesCorrect(prev => prev + 1);
                     setInputStatus('correct');
                     setStreak(p => p + 1);
                     handleAddXp(2);
@@ -495,6 +540,7 @@ export const useGameLogic = () => {
 
             // Normal Mode
             setScore(s => ({ ...s, correct: s.correct + 1 }));
+            setNotesCorrect(prev => prev + 1);
             if (streak + 1 > maxStreak) setMaxStreak(streak + 1);
             setStreak(p => p + 1);
             handleAddXp(5);
@@ -514,6 +560,54 @@ export const useGameLogic = () => {
 
     }, [effectiveActiveNotes, cursorIndex, levelData, audioStarted, difficulty, gameMode, isRhythmMode, inputStatus, preHeld, streak, maxStreak, addXp, handleAddXp, levelUp, generateNewLevel]);
 
+
+    const goToNextLesson = useCallback(() => {
+        if (!currentLesson) return null;
+        
+        // Find current course and lesson
+        const course = courses.find(c => c.id === currentLesson.courseId);
+        if (!course) return null;
+        
+        const idx = course.lessons.findIndex(l => l.id === currentLesson.id);
+        let nextLesson: Lesson | null = null;
+        
+        if (idx !== -1 && idx < course.lessons.length - 1) {
+            nextLesson = course.lessons[idx + 1];
+        } else {
+            // Check next course
+            const courseIdx = courses.findIndex(c => c.id === course.id);
+            if (courseIdx !== -1 && courseIdx < courses.length - 1) {
+                const nextCourse = courses[courseIdx + 1];
+                if (nextCourse.lessons.length > 0) {
+                    nextLesson = nextCourse.lessons[0];
+                }
+            }
+        }
+        
+        if (nextLesson) {
+            setIsLessonComplete(false);
+            setCurrentLesson(nextLesson);
+            // Switch hand mode based on topic
+            if (nextLesson.topic === 'treble') setGameMode('treble');
+            else if (nextLesson.topic === 'bass') setGameMode('bass');
+            else setGameMode('both');
+            
+            // Generate new level
+            setLevelData(nextLesson.constraints 
+                ? LevelGenerator.generateFromConstraints(nextLesson.constraints)
+                : LevelGenerator.generate(difficulty, errorStats)
+            );
+            setCursorIndex(0);
+            setStreak(0);
+            setScore({ correct: 0, incorrect: 0 }); // Reset score for the new lesson!
+            setNotesCorrect(0);
+            setNotesMissed(0);
+            setInputStatus('waiting');
+            stopRhythm();
+            return nextLesson;
+        }
+        return null;
+    }, [currentLesson, difficulty, errorStats, stopRhythm]);
 
     return {
         // State
@@ -537,17 +631,27 @@ export const useGameLogic = () => {
         midiInputs, // Exposed to SettingsPanel for device name display
         score, difficulty, levelData,
         playheadX: 20, // Playhead position is updated directly in visual DOM playhead
+        isMutedKeys,
+        isLessonComplete,
+        notesCorrect,
+        notesMissed,
 
         // Actions
         startAudio, testAudio,
         generateNewLevel,
         handleStartRhythm,
         parseKeyToMidi,
+        setIsMutedKeys,
+        setIsLessonComplete,
+        goToNextLesson,
 
         // Course specific
         currentLesson,
         loadLesson,
-        exitLesson: () => setCurrentLesson(null),
+        exitLesson: () => {
+            setCurrentLesson(null);
+            setIsLessonComplete(false);
+        },
 
         // Progression
         awardXp: handleAddXp

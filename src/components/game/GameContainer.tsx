@@ -2,6 +2,7 @@ import React from 'react';
 import { MusicDisplay } from '../MusicDisplay';
 import VirtualKeyboard from '../VirtualKeyboard';
 import { ControlPanel } from './ControlPanel';
+import { PerformanceReportCard } from '../PerformanceReportCard';
 
 // Import Types
 import { useGameLogic } from '../../hooks/useGameLogic';
@@ -10,12 +11,16 @@ interface GameContainerProps {
     gameLogic: ReturnType<typeof useGameLogic>;
     windowWidth: number;
     isDarkMode: boolean;
+    onNextLesson?: () => void;
+    onExitLesson?: () => void;
 }
 
 export const GameContainer: React.FC<GameContainerProps> = ({
     gameLogic,
     windowWidth,
-    isDarkMode
+    isDarkMode,
+    onNextLesson,
+    onExitLesson
 }) => {
     const {
         // State
@@ -178,6 +183,28 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 setShowNoteLabels={setShowNoteLabels}
                 showStaff={showStaff}
                 setShowStaff={setShowStaff}
+            />
+
+            {/* Performance Report Card Modal */}
+            <PerformanceReportCard
+                isOpen={gameLogic.isLessonComplete}
+                onClose={() => {
+                    gameLogic.setIsLessonComplete(false);
+                    if (onExitLesson) {
+                        onExitLesson();
+                    }
+                }}
+                onRetry={() => {
+                    gameLogic.setIsLessonComplete(false);
+                    gameLogic.generateNewLevel(difficulty, false, gameLogic.currentLesson);
+                }}
+                onNext={onNextLesson}
+                songTitle={gameLogic.currentLesson?.name || 'Exercise'}
+                notesCorrect={gameLogic.notesCorrect}
+                notesMissed={gameLogic.notesMissed}
+                errorMeasures={{}}
+                totalMeasures={0}
+                isDarkMode={isDarkMode}
             />
         </div>
     );

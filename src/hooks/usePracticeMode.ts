@@ -157,9 +157,23 @@ export function usePracticeMode({
         }
     }, [previewLoopCount, mode, playbackEngine, currentSection.startMeasure]);
 
+    // Safety Effect to update endMeasure when totalMeasures finishes loading asynchronously
+    useEffect(() => {
+        if (isActive && currentSection.endMeasure === 0 && totalMeasures > 0) {
+            setCurrentSection(prev => ({
+                ...prev,
+                endMeasure: Math.min(prev.startMeasure + 2, totalMeasures)
+            }));
+        }
+    }, [totalMeasures, isActive, currentSection.endMeasure]);
+
     const [showHint, setShowHint] = useState(false);
     const stuckTimerRef = useRef(0);
     const prevExpectedNotesRef = useRef<string>("");
+
+    // Active Note Overlapping / Legato Protection for Wait Mode
+    const notesActiveAtStepStartRef = useRef<Set<number>>(new Set());
+    const lastExpectedStrRef = useRef<string>("");
 
     // Refs to avoid constant cleanup/restart of the 50ms check interval
     const userActiveNotesRef = useRef(userActiveNotes);
@@ -194,6 +208,20 @@ export function usePracticeMode({
             const currentExpectedObjs = playbackEngine.getNotesAtCurrentPosition();
             const currentExpectedMidis = currentExpectedObjs.map(n => n.midi);
             const currentExpectedStr = currentExpectedMidis.slice().sort().join(',');
+
+            // Detect step change to capture currently held keys as "legato safety"
+            if (currentExpectedStr !== lastExpectedStrRef.current) {
+                notesActiveAtStepStartRef.current = new Set(userActiveNotesRef.current);
+                lastExpectedStrRef.current = currentExpectedStr;
+            } else {
+                // Keep notesActiveAtStepStartRef in sync with releases
+                const currentActive = userActiveNotesRef.current;
+                notesActiveAtStepStartRef.current.forEach(n => {
+                    if (!currentActive.has(n)) {
+                        notesActiveAtStepStartRef.current.delete(n);
+                    }
+                });
+            }
 
             // Check Stuck Timer
             if (currentExpectedObjs.length > 0) {
@@ -307,12 +335,16 @@ export function usePracticeMode({
                 // 6. Mistake Tracking
                 // Count any active note that is NOT in expected notes
                 // LEGATO FIX: Ignore notes that are in existing "lastSuccessfulNotes" (trailing notes from previous step)
+                // Also ignore any notes that were already active when the step started.
                 const activeWrongNotes = [...userActiveNotesRef.current].filter(n => {
                     // If it's in the current expected set, it's correct (or at least valid).
                     if (currentExpectedMidis.includes(n)) return false;
 
                     // If it was correct in the PREVIOUS step (and held over), ignore it (Legato tolerance).
                     if (lastSuccessfulNotesRef.current.has(n)) return false;
+
+                    // If it was already active when this step started, ignore it.
+                    if (notesActiveAtStepStartRef.current.has(n)) return false;
 
                     // Otherwise, it's a wrong note.
                     return true;

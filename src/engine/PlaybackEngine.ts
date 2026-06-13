@@ -59,9 +59,14 @@ export class PlaybackEngine {
     private highlightNotes: boolean = false;
     private currentStyledNotes: GraphicalNote[] = [];
     private activeVisualNotes: Map<number, number> = new Map();
+    private isMuted: boolean = false;
 
     constructor(osmd: OpenSheetMusicDisplay) {
         this.osmd = osmd;
+    }
+
+    public setMuted(muted: boolean) {
+        this.isMuted = muted;
     }
 
     public get IsPlaying() {
@@ -152,7 +157,7 @@ export class PlaybackEngine {
     }
 
     public getMeasureTimestamp(measureIndex: number): number | null {
-        if (!this.osmd.Sheet) return null;
+        if (!this.osmd.Sheet || !this.osmd.Sheet.SourceMeasures) return null;
         const measures = this.osmd.Sheet.SourceMeasures;
 
         // Handle end of score (exclusive index == count)
@@ -160,7 +165,7 @@ export class PlaybackEngine {
             return this.TotalDuration;
         }
 
-        if (measureIndex < 0 || measureIndex >= measures.length) return null;
+        if (measureIndex < 0 || measureIndex >= measures.length || !measures[measureIndex]) return null;
         return measures[measureIndex].AbsoluteTimestamp.RealValue;
     }
 
@@ -345,15 +350,17 @@ export class PlaybackEngine {
             }, releaseTime);
             this.noteTimeouts.push(releaseTimeoutId);
 
-            // Play the note in Tone.js with the scheduled startTime
-            if (this.shouldPlayWithPedal()) {
-                audio.playNote(midi, 85, undefined, startTime);
-                const releaseTimeout = window.setTimeout(() => {
-                    audio.releaseNote(midi);
-                }, (noteDuration + lookahead) * 1000);
-                this.noteTimeouts.push(releaseTimeout);
-            } else {
-                audio.playNote(midi, 85, noteDuration, startTime);
+            // Play the note in Tone.js with the scheduled startTime if not muted
+            if (!this.isMuted) {
+                if (this.shouldPlayWithPedal()) {
+                    audio.playNote(midi, 85, undefined, startTime);
+                    const releaseTimeout = window.setTimeout(() => {
+                        audio.releaseNote(midi);
+                    }, (noteDuration + lookahead) * 1000);
+                    this.noteTimeouts.push(releaseTimeout);
+                } else {
+                    audio.playNote(midi, 85, noteDuration, startTime);
+                }
             }
         });
 

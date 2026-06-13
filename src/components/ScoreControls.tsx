@@ -10,6 +10,8 @@ interface ScoreControlsProps {
     showNoteNames: boolean;
     isPracticeActive: boolean;
     layoutMode: 'standard' | 'scrolling';
+    isMutedPlayback: boolean;
+    isMutedKeys: boolean;
     onTogglePlayback: () => void;
     onReset: () => void;
     onToggleKeyboard: (val: boolean) => void;
@@ -18,6 +20,8 @@ interface ScoreControlsProps {
     onToggleNoteNames: (val: boolean) => void;
     onTogglePractice: () => void;
     onChangeLayoutMode: (mode: 'standard' | 'scrolling') => void;
+    onToggleMutedPlayback: (val: boolean) => void;
+    onToggleMutedKeys: (val: boolean) => void;
 }
 
 export const ScoreControls: React.FC<ScoreControlsProps> = ({
@@ -30,6 +34,8 @@ export const ScoreControls: React.FC<ScoreControlsProps> = ({
     showNoteNames,
     isPracticeActive,
     layoutMode,
+    isMutedPlayback,
+    isMutedKeys,
     onTogglePlayback,
     onReset,
     onToggleKeyboard,
@@ -37,7 +43,9 @@ export const ScoreControls: React.FC<ScoreControlsProps> = ({
     onToggleHighlight,
     onToggleNoteNames,
     onTogglePractice,
-    onChangeLayoutMode
+    onChangeLayoutMode,
+    onToggleMutedPlayback,
+    onToggleMutedKeys
 }) => {
     return (
         <div className={`w-full max-w-4xl p-4 rounded-xl shadow-lg border flex flex-col gap-4 mb-6 transition-colors duration-500
@@ -140,13 +148,39 @@ export const ScoreControls: React.FC<ScoreControlsProps> = ({
                     <span>Score Labels</span>
                 </label>
 
+                <div className={`h-4 w-px mx-2 ${isDarkMode ? 'bg-gray-500' : 'bg-gray-300'}`}></div>
+
+                <div className={`font-serif font-bold mr-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Audio:</div>
+
+                <label className={`flex items-center gap-2 cursor-pointer select-none transition ${isDarkMode ? 'hover:text-blue-400' : 'hover:text-blue-600'}`}>
+                    <input
+                        type="checkbox"
+                        checked={isMutedPlayback}
+                        onChange={(e) => onToggleMutedPlayback(e.target.checked)}
+                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                    />
+                    <span>Mute Playback</span>
+                </label>
+
+                <label className={`flex items-center gap-2 cursor-pointer select-none transition ${isDarkMode ? 'hover:text-blue-400' : 'hover:text-blue-600'}`}>
+                    <input
+                        type="checkbox"
+                        checked={isMutedKeys}
+                        onChange={(e) => onToggleMutedKeys(e.target.checked)}
+                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                    />
+                    <span>Mute Keys</span>
+                </label>
+
                 {/* Practice Mode Toggle */}
                 <button
                     onClick={onTogglePractice}
+                    disabled={loading}
                     className={`ml-4 px-4 py-1 rounded-full text-xs font-bold border transition animate-pulse
                         ${isPracticeActive
                             ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white border-rose-600 shadow-lg'
                             : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600 shadow-md hover:scale-105'}
+                        ${loading ? 'opacity-50 cursor-not-allowed' : ''}
                     `}
                 >
                     {isPracticeActive ? 'Exit Practice' : '🎓 Learn to Play!'}

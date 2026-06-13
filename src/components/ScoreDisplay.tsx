@@ -21,9 +21,24 @@ interface ScoreDisplayProps {
     userActiveNotes?: Set<number>; // NEW: Pass microphone/midi input from parent
     initialMeasure?: number; // NEW: starting measure for workout review (0-indexed)
     onCloseScore?: () => void; // NEW: handler to return to Library/Workout
+    isMutedKeys?: boolean; // NEW: mute state for keys
+    onToggleMutedKeys?: (val: boolean) => void; // NEW: callback to toggle mute keys
+    onNextLesson?: () => void; // NEW: callback to transition to next lesson
 }
 
-export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, file, isDarkMode = false, onAddXp, userActiveNotes = new Set(), initialMeasure, onCloseScore }) => {
+export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
+    xmlUrl,
+    xmlContent,
+    file,
+    isDarkMode = false,
+    onAddXp,
+    userActiveNotes = new Set(),
+    initialMeasure,
+    onCloseScore,
+    isMutedKeys = false,
+    onToggleMutedKeys,
+    onNextLesson
+}) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const osmdRef = useRef<OSMD | null>(null);
     const playbackRef = useRef<PlaybackEngine | null>(null);
@@ -32,6 +47,14 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
     const [activeNotes, setActiveNotes] = useState<Set<number>>(new Set());
     const [error, setError] = useState<string | null>(null);
     const [layoutMode, setLayoutMode] = useState<'standard' | 'scrolling'>('standard');
+
+    const [isMutedPlayback, setIsMutedPlayback] = useState(false);
+
+    useEffect(() => {
+        if (playbackRef.current) {
+            playbackRef.current.setMuted(isMutedPlayback);
+        }
+    }, [isMutedPlayback, loading]);
 
     // Practice Mode
     const {
@@ -418,6 +441,8 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
                 showNoteNames={showNoteNames}
                 isPracticeActive={isPracticeActive}
                 layoutMode={layoutMode}
+                isMutedPlayback={isMutedPlayback}
+                isMutedKeys={isMutedKeys}
                 onTogglePlayback={togglePlayback}
                 onReset={stopPlayback}
                 onToggleKeyboard={setShowKeyboard}
@@ -426,6 +451,8 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
                 onToggleNoteNames={setShowNoteNames}
                 onTogglePractice={isPracticeActive ? stopPractice : startPractice}
                 onChangeLayoutMode={setLayoutMode}
+                onToggleMutedPlayback={setIsMutedPlayback}
+                onToggleMutedKeys={onToggleMutedKeys || (() => {})}
             />
 
             {/* Practice Mode Overlay - Compact Bottom Bar */}
@@ -503,6 +530,10 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({ xmlUrl, xmlContent, 
                     setIsSongComplete(false);
                     startPractice(initialMeasure);
                 }}
+                onNext={onNextLesson ? () => {
+                    setIsSongComplete(false);
+                    onNextLesson();
+                } : undefined}
                 songTitle={xmlUrl ? xmlUrl.split('/').pop()?.replace('.musicxml', '').replace('.mxl', '').replace(/[-_]/g, ' ') || 'Loaded Score' : (file ? file.name : 'Practice Piece')}
                 notesCorrect={notesCorrect}
                 notesMissed={notesMissed}

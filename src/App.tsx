@@ -70,6 +70,24 @@ function App() {
         gameLogic.exitLesson();
     };
 
+    const handleNextLesson = () => {
+        const nextLesson = gameLogic.goToNextLesson();
+        if (nextLesson) {
+            setSelectedLesson(nextLesson);
+            if (nextLesson.type === 'song' && nextLesson.songUrl) {
+                setSongUrl(nextLesson.songUrl);
+                setFileName(nextLesson.name);
+                setUploadedFile(null);
+                setXmlData(null);
+                setCurrentView('musicxml');
+            } else {
+                setCurrentView('game');
+            }
+        } else {
+            setCurrentView('courseSelection');
+        }
+    };
+
     return (
         <div className={`min-h-screen flex flex-col items-center p-4 md:p-8 transition-colors duration-500 ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
 
@@ -130,6 +148,11 @@ function App() {
                         gameLogic={gameLogic}
                         windowWidth={windowWidth}
                         isDarkMode={isDarkMode}
+                        onNextLesson={handleNextLesson}
+                        onExitLesson={() => {
+                            gameLogic.exitLesson();
+                            setCurrentView('courseSelection');
+                        }}
                     />
                 )}
 
@@ -158,6 +181,9 @@ function App() {
                                     onAddXp={() => gameLogic.awardXp(10)} // Flat XP for custom practice
                                     userActiveNotes={gameLogic.effectiveActiveNotes}
                                     initialMeasure={workoutReview ? workoutReview.measure : undefined}
+                                    isMutedKeys={gameLogic.isMutedKeys}
+                                    onToggleMutedKeys={gameLogic.setIsMutedKeys}
+                                    onNextLesson={gameLogic.currentLesson ? handleNextLesson : undefined}
                                     onCloseScore={() => {
                                         // Remove this measure from weak measures upon completion!
                                         if (workoutReview) {

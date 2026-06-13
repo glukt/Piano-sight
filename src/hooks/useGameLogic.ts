@@ -187,6 +187,14 @@ export const useGameLogic = () => {
     // - If Effect 2 dependency changes, timeout is cleared.
     // - So if isMidiEnabled flips to true, the "Show Popup" timer is cancelled. Perfect.
 
+    // Audio Auto-Start when MIDI device is detected/plugged in
+    useEffect(() => {
+        if (midiInputs.length > 0 && !audioStarted && !isAudioLoading) {
+            console.log("MIDI device detected! Automatically initializing audio engine...");
+            startAudio();
+        }
+    }, [midiInputs, audioStarted, isAudioLoading]);
+
     // Audio Auto-Start
     const startAudio = async () => {
         setIsAudioLoading(true);

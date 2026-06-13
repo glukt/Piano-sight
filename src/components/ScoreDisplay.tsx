@@ -449,7 +449,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                 onTogglePianoLabels={setShowPianoLabels}
                 onToggleHighlight={setHighlightNotes}
                 onToggleNoteNames={setShowNoteNames}
-                onTogglePractice={isPracticeActive ? stopPractice : startPractice}
+                onTogglePractice={isPracticeActive ? stopPractice : () => startPractice()}
                 onChangeLayoutMode={setLayoutMode}
                 onToggleMutedPlayback={setIsMutedPlayback}
                 onToggleMutedKeys={onToggleMutedKeys || (() => {})}

@@ -227,7 +227,7 @@ export function usePracticeMode({
             if (currentExpectedObjs.length > 0) {
                 if (currentExpectedStr === prevExpectedNotesRef.current) {
                     stuckTimerRef.current += 50; // Add 50ms
-                    if (stuckTimerRef.current > 3000 && !showHintRef.current) {
+                    if (stuckTimerRef.current > 30000 && !showHintRef.current) {
                         setShowHint(true);
                     }
                 } else {

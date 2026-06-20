@@ -9,6 +9,7 @@ interface PracticeOverlayProps {
     onNext: () => void;
     onPrev?: () => void;
     onExit: () => void;
+    onModeChange?: (mode: PracticeModeType) => void;
 }
 
 export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
@@ -18,10 +19,11 @@ export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
     onReplay,
     onNext,
     onPrev,
-    onExit
+    onExit,
+    onModeChange
 }) => {
     return (
-        <div className="fixed bottom-32 right-6 w-80 bg-slate-900/90 dark:bg-slate-950/90 backdrop-blur-md text-white border border-slate-700/50 p-4 rounded-2xl shadow-2xl z-50 flex flex-col gap-3.5 animate-in fade-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-32 w-auto md:w-80 bg-slate-900/90 dark:bg-slate-950/90 backdrop-blur-md text-white border border-slate-700/50 p-4 rounded-2xl shadow-2xl z-50 flex flex-col gap-3.5 animate-in fade-in slide-in-from-bottom-5 duration-300">
             {/* Header / Info Section */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-2.5">
                 <div className="flex flex-col">
@@ -29,7 +31,7 @@ export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
                     <span className={`font-black text-sm uppercase tracking-wider ${
                         practiceMode === 'wait' ? 'text-yellow-400' : 'text-emerald-400'
                     }`}>
-                        {practiceMode} Mode
+                        {practiceMode === 'play' ? 'Play & Grade' : `${practiceMode} Mode`}
                     </span>
                 </div>
                 <div className="flex flex-col items-end">
@@ -38,6 +40,26 @@ export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
                         {practiceSection.startMeasure + 1} – {practiceSection.endMeasure}
                     </span>
                 </div>
+            </div>
+
+            {/* Mode Switch Selector */}
+            <div className="flex bg-slate-800/60 p-1 rounded-xl border border-slate-700/30 w-full justify-between items-center text-[10px]">
+                {(['preview', 'wait', 'play'] as const).map(m => {
+                    const isActive = practiceMode === m;
+                    return (
+                        <button
+                            key={m}
+                            onClick={() => onModeChange?.(m)}
+                            className={`flex-grow py-1.5 font-black rounded-lg uppercase tracking-wider transition-all select-none ${
+                                isActive
+                                    ? 'bg-sky-500 text-white shadow-md'
+                                    : 'text-slate-450 hover:text-slate-200'
+                            }`}
+                        >
+                            {m === 'play' ? 'Play' : m}
+                        </button>
+                    );
+                })}
             </div>
 
             {/* Live Feedback Message */}

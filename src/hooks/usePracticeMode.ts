@@ -6,7 +6,7 @@ interface PracticeSection {
     endMeasure: number;   // Exclusive
 }
 
-export type PracticeModeType = 'preview' | 'wait' | 'tempo';
+export type PracticeModeType = 'preview' | 'wait' | 'tempo' | 'play';
 
 interface UsePracticeModeProps {
     playbackEngine: PlaybackEngine | null;
@@ -14,6 +14,8 @@ interface UsePracticeModeProps {
     userActiveNotes: Set<number>;
     onNoteCorrect?: () => void;
     onSectionComplete?: () => void;
+    songId?: string | null;
+    saveHighScore?: (id: string, score: number, rank: string, notesHit: number, maxNotes: number) => Promise<void>;
 }
 
 export function usePracticeMode({
@@ -21,7 +23,9 @@ export function usePracticeMode({
     totalMeasures,
     userActiveNotes,
     onNoteCorrect,
-    onSectionComplete
+    onSectionComplete,
+    songId,
+    saveHighScore
 }: UsePracticeModeProps) {
     const [isActive, setIsActive] = useState(false);
     const [currentSection, setCurrentSection] = useState<PracticeSection>({ startMeasure: 0, endMeasure: 2 });
@@ -37,6 +41,20 @@ export function usePracticeMode({
     const [lastSuccessfulNotes, setLastSuccessfulNotes] = useState<Set<number>>(new Set());
     const [errorMeasures, setErrorMeasures] = useState<Record<number, number>>({});
     const [isSongComplete, setIsSongComplete] = useState(false);
+
+    // Play Mode Grading State
+    const [overallCorrect, setOverallCorrect] = useState(0);
+    const [overallMissed, setOverallMissed] = useState(0);
+
+    interface ExpectedNoteEvent {
+        midi: number;
+        expectedTime: number; // absolute ms timestamp
+        duration: number;     // ms
+        status: 'pending' | 'hit' | 'missed';
+    }
+
+    const expectedEventsRef = useRef<ExpectedNoteEvent[]>([]);
+    const startTimeRef = useRef<number>(0);
 
     // Track held wrong notes to avoid counting the same press multiple times
     const heldWrongNotesRef = useRef<Set<number>>(new Set());
@@ -58,6 +76,9 @@ export function usePracticeMode({
         setPreviewLoopCount(0);
         setNotesCorrect(0);
         setNotesMissed(0);
+        setOverallCorrect(0);
+        setOverallMissed(0);
+        expectedEventsRef.current = [];
         setLastSuccessfulNotes(new Set());
         heldWrongNotesRef.current.clear();
         setFeedback(startMeasure !== undefined ? "Review Session! Play these notes." : "Listen to this section...");
@@ -459,6 +480,164 @@ export function usePracticeMode({
     }, [isActive, mode, playbackEngine]);
 
 
+    const changeMode = useCallback((newMode: PracticeModeType) => {
+        if (newMode === 'play') {
+            setCurrentSection({ startMeasure: 0, endMeasure: totalMeasures });
+        } else if (mode === 'play') {
+            const currentMeasure = playbackEngine?.CurrentMeasureNumber || 0;
+            const start = Math.floor(currentMeasure / 2) * 2;
+            const end = Math.min(start + 2, totalMeasures);
+            setCurrentSection({ startMeasure: start, endMeasure: end });
+        }
+        setMode(newMode);
+        setNotesCorrect(0);
+        setNotesMissed(0);
+        setOverallCorrect(0);
+        setOverallMissed(0);
+        setErrorMeasures({});
+        expectedEventsRef.current = [];
+        heldWrongNotesRef.current.clear();
+        isTransitioningRef.current = false;
+        if (transitionTimeoutRef.current) {
+            clearTimeout(transitionTimeoutRef.current);
+            transitionTimeoutRef.current = null;
+        }
+    }, [totalMeasures, mode, playbackEngine]);
+
+    // Effect to build event timeline for Play Mode
+    useEffect(() => {
+        if (!isActive || mode !== 'play' || !playbackEngine) return;
+
+        const startTs = playbackEngine.getMeasureTimestamp(currentSection.startMeasure);
+        const endTs = playbackEngine.getMeasureTimestamp(currentSection.endMeasure);
+
+        if (startTs !== null && endTs !== null) {
+            const rawEvents = playbackEngine.getExpectedNotesList(startTs, endTs);
+            startTimeRef.current = Date.now();
+
+            expectedEventsRef.current = rawEvents.map(e => ({
+                midi: e.midi,
+                expectedTime: startTimeRef.current + e.timeOffset * 1000,
+                duration: e.duration * 1000,
+                status: 'pending'
+            }));
+
+            playbackEngine.setStepCallback((midis) => {
+                setExpectedNotes(midis);
+            });
+
+            playbackEngine.seek(startTs);
+            playbackEngine.play();
+        }
+
+        return () => {
+            if (playbackEngine) {
+                playbackEngine.setStepCallback(() => {});
+            }
+        };
+    }, [isActive, currentSection, mode, playbackEngine]);
+
+    const prevActiveNotesRef = useRef<Set<number>>(new Set());
+
+    // Effect to grade user inputs in real-time for Play Mode
+    useEffect(() => {
+        if (!isActive || mode !== 'play' || expectedEventsRef.current.length === 0) return;
+
+        const current = userActiveNotes;
+        const prev = prevActiveNotesRef.current;
+
+        // Detect new key presses
+        const newlyPressed = [...current].filter(n => !prev.has(n));
+
+        if (newlyPressed.length > 0) {
+            const now = Date.now();
+            newlyPressed.forEach(midi => {
+                const windowBefore = 200; // Early tolerance
+                const windowAfter = 250;  // Late tolerance
+
+                const match = expectedEventsRef.current.find(event => 
+                    event.midi === midi &&
+                    event.status === 'pending' &&
+                    now >= event.expectedTime - windowBefore &&
+                    now <= event.expectedTime + windowAfter
+                );
+
+                if (match) {
+                    match.status = 'hit';
+                    setOverallCorrect(prev => prev + 1);
+                    onNoteCorrect?.();
+                } else {
+                    setOverallMissed(prev => prev + 1);
+                    
+                    const measureNum = playbackEngine?.CurrentMeasureNumber || 1;
+                    setErrorMeasures(prev => ({
+                        ...prev,
+                        [measureNum]: (prev[measureNum] || 0) + 1
+                    }));
+                }
+            });
+        }
+
+        prevActiveNotesRef.current = new Set(current);
+    }, [userActiveNotes, isActive, mode, onNoteCorrect, playbackEngine]);
+
+    // Polling interval to tag missed expected notes and detect when playback ends
+    useEffect(() => {
+        if (!isActive || mode !== 'play' || !playbackEngine) return;
+
+        const checkMissedAndEnd = () => {
+            if (isTransitioningRef.current) return;
+            const now = Date.now();
+            const windowAfter = 250;
+
+            // 1. Tag Missed Notes
+            expectedEventsRef.current.forEach(event => {
+                if (event.status === 'pending' && now > event.expectedTime + windowAfter) {
+                    event.status = 'missed';
+                    setOverallMissed(prev => prev + 1);
+
+                    const elapsedSec = (event.expectedTime - startTimeRef.current) / 1000;
+                    const startMeasureTs = playbackEngine.getMeasureTimestamp(0) || 0;
+                    const eventTs = startMeasureTs + elapsedSec;
+                    const measureNum = playbackEngine.getMeasureAtTimestamp(eventTs);
+                    setErrorMeasures(prev => ({
+                        ...prev,
+                        [measureNum]: (prev[measureNum] || 0) + 1
+                    }));
+                }
+            });
+
+            // 2. End of Song Detection
+            const currentTimestamp = playbackEngine.CurrentTimestamp;
+            const endTimestamp = playbackEngine.getMeasureTimestamp(currentSectionRef.current.endMeasure);
+
+            if (endTimestamp !== null && currentTimestamp >= endTimestamp) {
+                isTransitioningRef.current = true;
+                playbackEngine.stop();
+
+                const total = expectedEventsRef.current.length;
+                const correct = expectedEventsRef.current.filter(e => e.status === 'hit').length;
+                const acc = total > 0 ? (correct / total) * 100 : 100;
+                const finalAccuracy = Math.round(acc);
+                setAccuracy(finalAccuracy);
+
+                let finalRank = 'Bronze';
+                if (finalAccuracy >= 95) finalRank = 'Gold';
+                else if (finalAccuracy >= 85) finalRank = 'Silver';
+
+                if (saveHighScore && songId) {
+                    saveHighScore(songId, finalAccuracy, finalRank, correct, total);
+                }
+
+                setFeedback(`Play Mode Complete! Accuracy: ${finalAccuracy}%.`);
+                setIsSongComplete(true);
+            }
+        };
+
+        const interval = setInterval(checkMissedAndEnd, 50);
+        return () => clearInterval(interval);
+    }, [isActive, mode, playbackEngine, saveHighScore, songId]);
+
     return {
         isActive,
         currentSection,
@@ -467,7 +646,7 @@ export function usePracticeMode({
         feedback,
         startPractice,
         stopPractice,
-        setMode,
+        setMode: changeMode,
         nextSection,
         prevSection,
         retrySection,
@@ -476,7 +655,9 @@ export function usePracticeMode({
         errorMeasures,
         isSongComplete,
         setIsSongComplete,
-        notesCorrect,
-        notesMissed
+        notesCorrect: mode === 'play' ? overallCorrect : notesCorrect,
+        notesMissed: mode === 'play' ? overallMissed : notesMissed,
+        overallCorrect,
+        overallMissed
     };
 }

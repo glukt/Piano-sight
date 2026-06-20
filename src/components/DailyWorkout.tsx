@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useWindowSize } from '../hooks/useWindowSize';
 import { MusicDisplay, StaveNoteData } from './MusicDisplay';
 import { courses, Lesson } from '../utils/music/CourseData';
 
@@ -40,6 +41,7 @@ export const DailyWorkout: React.FC<DailyWorkoutProps> = ({
     onStartReview,
     onSelectLesson
 }) => {
+    const { width: windowWidth } = useWindowSize();
     const [activeStep, setActiveStep] = useState<'select' | 'warmup'>('select');
     
     // Warmup State
@@ -163,7 +165,7 @@ export const DailyWorkout: React.FC<DailyWorkoutProps> = ({
 
             {activeStep === 'warmup' ? (
                 /* Interactive Warmup Interface */
-                <div className={`p-8 rounded-2xl border text-center shadow-lg transition-all duration-300 ${
+                <div className={`p-4 md:p-8 rounded-2xl border text-center shadow-lg transition-all duration-300 ${
                     isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-150'
                 }`}>
                     <h3 className="text-xl font-bold mb-1">🪵 Step 1: Sight-Reading Warmup</h3>
@@ -176,7 +178,7 @@ export const DailyWorkout: React.FC<DailyWorkoutProps> = ({
                             <MusicDisplay
                                 trebleNotes={WARMUP_NOTES}
                                 bassNotes={[]}
-                                width={600}
+                                width={Math.max(280, windowWidth < 640 ? windowWidth - 96 : 600)}
                                 height={180}
                                 cursorIndex={warmupCursor}
                                 inputStatus={warmupStatus}

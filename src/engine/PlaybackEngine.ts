@@ -52,6 +52,11 @@ export class PlaybackEngine {
     private onProgress: ((current: number, total: number) => void) | null = null;
     private onLoop: (() => void) | null = null;
     private expectedNextStepTime: number = 0;
+    private onStep: ((midiNotes: number[]) => void) | null = null;
+
+    public setStepCallback(cb: (midiNotes: number[]) => void) {
+        this.onStep = cb;
+    }
 
     private loopStart: number | null = null;
     private loopEnd: number | null = null;
@@ -333,6 +338,13 @@ export class PlaybackEngine {
 
         // 1. Get Notes and Play them immediately with a lookahead to decouple from UI thread blockages
         const notes: Note[] = cursor.NotesUnderCursor();
+        const stepMidis = notes
+            .map(n => n.halfTone !== undefined ? n.halfTone + 12 : n.Pitch ? n.Pitch.getHalfTone() + 12 : 0)
+            .filter(n => n > 0);
+
+        if (this.onStep) {
+            this.onStep(stepMidis);
+        }
         const lookahead = 0.035; // 35ms audio scheduling lookahead
         const startTime = audio.now() + lookahead;
 
@@ -512,5 +524,66 @@ export class PlaybackEngine {
             if (curs) curs.next();
             this.step();
         }, Math.max(0, delayMs));
+    }
+
+    public getExpectedNotesList(startTs: number, endTs: number): { midi: number; timeOffset: number; duration: number }[] {
+        const cursor = this.getCursor();
+        if (!cursor) return [];
+
+        const originalTs = cursor.Iterator.currentTimeStamp.RealValue;
+        
+        // Reset to start of section
+        cursor.reset();
+        while (!cursor.Iterator.EndReached && cursor.Iterator.currentTimeStamp.RealValue < startTs) {
+            cursor.next();
+        }
+
+        const list: { midi: number; timeOffset: number; duration: number }[] = [];
+        let currentRealTime = 0; // Relative seconds from start of loop
+
+        while (!cursor.Iterator.EndReached && cursor.Iterator.currentTimeStamp.RealValue < endTs) {
+            const notes = cursor.NotesUnderCursor();
+            const currentBpm = cursor.Iterator.CurrentMeasure?.TempoInBPM || this.bpm;
+            
+            let stepDuration = 0.05;
+            try {
+                const nextIterator = cursor.Iterator.clone();
+                nextIterator.moveToNext();
+                if (!nextIterator.EndReached) {
+                    stepDuration = nextIterator.currentTimeStamp.RealValue - cursor.Iterator.currentTimeStamp.RealValue;
+                } else {
+                    stepDuration = 0.25;
+                }
+            } catch (e) {
+                stepDuration = 0.25;
+            }
+
+            const secondsPerWhole = 240 / currentBpm;
+            const stepDurationSec = stepDuration * secondsPerWhole;
+
+            notes.forEach(note => {
+                if (note.isRest()) return;
+                const midi = note.halfTone !== undefined ? note.halfTone + 12 : (note.Pitch ? note.Pitch.getHalfTone() + 12 : 0);
+                if (midi > 0) {
+                    list.push({
+                        midi,
+                        timeOffset: currentRealTime,
+                        duration: stepDurationSec
+                    });
+                }
+            });
+
+            currentRealTime += stepDurationSec;
+            cursor.next();
+        }
+
+        // Restore original cursor position
+        cursor.reset();
+        while (!cursor.Iterator.EndReached && cursor.Iterator.currentTimeStamp.RealValue < originalTs) {
+            cursor.next();
+        }
+        cursor.update();
+
+        return list;
     }
 }

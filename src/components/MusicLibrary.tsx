@@ -2,11 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { useMusicLibrary } from '../hooks/useMusicLibrary';
 
 interface MusicLibraryProps {
-    onSelectScore: (file: File | null, url?: string, title?: string) => void;
+    onSelectScore: (file: File | null, url?: string, title?: string, id?: string) => void;
 }
 
 export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => {
-    const { scores, loading, error, addScore, deleteScore, bookmarkedIds, toggleBookmark } = useMusicLibrary();
+    const { scores, loading, error, addScore, deleteScore, updateScoreMetadata, bookmarkedIds, toggleBookmark } = useMusicLibrary();
     const [searchTerm, setSearchTerm] = useState('');
     const [isUploading, setIsUploading] = useState(false);
     const [activeTab, setActiveTab] = useState<'all' | 'bookmarks' | 'fundamentals' | 'classical' | 'modern' | 'custom'>('all');
@@ -42,8 +42,12 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
             // Difficulty filter
             if (difficultyFilter !== 'all') {
                 const tags = score.tags || [];
-                const diffTag = difficultyFilter.charAt(0).toUpperCase() + difficultyFilter.slice(1);
-                if (!tags.includes(diffTag)) return false;
+                const hasAnyDiffTag = tags.some(t => ['beginner', 'intermediate', 'advanced'].includes(t.toLowerCase()));
+                if (hasAnyDiffTag) {
+                    if (!tags.some(t => t.toLowerCase() === difficultyFilter)) return false;
+                } else {
+                    if (difficultyFilter !== 'beginner') return false;
+                }
             }
 
             return true;
@@ -152,6 +156,23 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
                     ].map(tab => {
                         const isActive = activeTab === tab.id;
                         const count = scores.filter(score => {
+                            // Apply search filter
+                            const matchesSearch = 
+                                score.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                score.composer?.toLowerCase().includes(searchTerm.toLowerCase());
+                            if (!matchesSearch) return false;
+
+                            // Apply difficulty filter
+                            if (difficultyFilter !== 'all') {
+                                const tags = score.tags || [];
+                                const hasAnyDiffTag = tags.some(t => ['beginner', 'intermediate', 'advanced'].includes(t.toLowerCase()));
+                                if (hasAnyDiffTag) {
+                                    if (!tags.some(t => t.toLowerCase() === difficultyFilter)) return false;
+                                } else {
+                                    if (difficultyFilter !== 'beginner') return false;
+                                }
+                            }
+
                             if (tab.id === 'all') return true;
                             if (tab.id === 'bookmarks') return bookmarkedIds.has(score.id);
                             if (tab.id === 'custom') return !score.id.startsWith('preset-');
@@ -227,9 +248,9 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
                         key={score.id}
                         onClick={() => {
                             if (score.songUrl) {
-                                onSelectScore(null, score.songUrl, score.title);
+                                onSelectScore(null, score.songUrl, score.title, score.id);
                             } else if (score.fileData) {
-                                onSelectScore(new File([score.fileData], score.fileName));
+                                onSelectScore(new File([score.fileData], score.fileName), undefined, undefined, score.id);
                             }
                         }}
                         className="group relative bg-white/70 dark:bg-slate-900/50 p-6 rounded-3xl shadow-md shadow-slate-100/10 dark:shadow-none border border-slate-200/60 dark:border-slate-800/80 hover:border-sky-400 dark:hover:border-sky-500/40 hover:shadow-2xl hover:shadow-sky-500/5 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col gap-4 backdrop-blur"
@@ -283,11 +304,51 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => 
 
                         {/* Meta Tags */}
                         <div className="flex gap-1.5 flex-wrap">
-                            {score.tags?.map(tag => (
-                                <span key={tag} className={`text-[9px] uppercase font-black px-2.5 py-1 rounded-lg tracking-wider border select-none ${getTagStyle(tag)}`}>
-                                    {tag}
+                            {/* Show a default Beginner tag for custom uploads that don't have any difficulty tag */}
+                            {!score.tags?.some(t => ['beginner', 'intermediate', 'advanced'].includes(t.toLowerCase())) && (
+                                <span 
+                                    onClick={!score.id.startsWith('preset-') ? (e) => {
+                                        e.stopPropagation();
+                                        updateScoreMetadata(score.id, { tags: ['Beginner', ...(score.tags || [])] });
+                                    } : undefined}
+                                    className={`text-[9px] uppercase font-black px-2.5 py-1 rounded-lg tracking-wider border select-none ${getTagStyle('Beginner')} ${!score.id.startsWith('preset-') ? 'cursor-pointer hover:bg-emerald-500/20 active:scale-95 transition-all' : ''}`}
+                                    title={!score.id.startsWith('preset-') ? "Click to set difficulty" : undefined}
+                                >
+                                    Beginner
                                 </span>
-                            ))}
+                            )}
+                            {score.tags?.map(tag => {
+                                const isDifficulty = ['beginner', 'intermediate', 'advanced'].includes(tag.toLowerCase());
+                                const isCustom = !score.id.startsWith('preset-');
+                                return (
+                                    <span 
+                                        key={tag} 
+                                        onClick={isDifficulty && isCustom ? (e) => {
+                                            e.stopPropagation();
+                                            const diffs = ['Beginner', 'Intermediate', 'Advanced'];
+                                            const currentIdx = diffs.findIndex(d => d.toLowerCase() === tag.toLowerCase());
+                                            const nextDiff = diffs[(currentIdx + 1) % diffs.length];
+                                            const otherTags = score.tags.filter(t => !diffs.some(d => d.toLowerCase() === t.toLowerCase()));
+                                            updateScoreMetadata(score.id, { tags: [nextDiff, ...otherTags] });
+                                        } : undefined}
+                                        className={`text-[9px] uppercase font-black px-2.5 py-1 rounded-lg tracking-wider border select-none ${getTagStyle(tag)} ${isDifficulty && isCustom ? 'cursor-pointer hover:scale-102 active:scale-95 transition-all' : ''}`}
+                                        title={isDifficulty && isCustom ? "Click to change difficulty" : undefined}
+                                    >
+                                        {tag}
+                                    </span>
+                                );
+                            })}
+                            {score.highScore !== undefined && score.rank !== undefined && (
+                                <span className={`text-[9px] uppercase font-black px-2.5 py-1 rounded-lg tracking-wider border select-none ${
+                                    score.rank === 'Gold' 
+                                        ? 'bg-amber-500/10 text-amber-600 dark:bg-amber-950/20 dark:text-amber-400 border-amber-500/20 shadow-sm' 
+                                        : score.rank === 'Silver'
+                                            ? 'bg-slate-100/50 text-slate-500 dark:bg-slate-800/60 dark:text-slate-400 border-slate-200/30 dark:border-slate-750/30'
+                                            : 'bg-orange-500/10 text-orange-600 dark:bg-orange-950/20 dark:text-orange-400 border-orange-500/20 shadow-sm'
+                                }`}>
+                                    🏆 {score.rank} {score.notesHit !== undefined ? `(${score.notesHit}/${score.maxNotes})` : `(${score.highScore}%)`}
+                                </span>
+                            )}
                             {/* Auto File-type Tag */}
                             <span className="text-[9px] uppercase font-black bg-slate-100/50 text-slate-450 dark:bg-slate-850/60 dark:text-slate-500 px-2.5 py-1 rounded-lg tracking-wider border border-slate-200/30 dark:border-slate-800/40 select-none">
                                 {score.fileName.split('.').pop()}

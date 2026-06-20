@@ -14,6 +14,10 @@ export interface LibraryScore {
     fileName: string;
     fileData?: Blob;
     songUrl?: string;
+    highScore?: number;
+    rank?: string;
+    notesHit?: number;
+    maxNotes?: number;
 }
 
 const PRESET_SCORES: LibraryScore[] = [
@@ -520,7 +524,26 @@ export function useMusicLibrary() {
             try {
                 const db = await openDB();
                 const loadedScores = await getAllScoresFromDB(db);
-                setScores([...PRESET_SCORES, ...loadedScores]);
+                
+                // Merge preset scores with preset definitions in IndexedDB
+                const mergedPresets = PRESET_SCORES.map(preset => {
+                    const dbRecord = loadedScores.find(s => s.id === preset.id);
+                    if (dbRecord) {
+                        return {
+                            ...preset,
+                            highScore: dbRecord.highScore,
+                            rank: dbRecord.rank,
+                            notesHit: dbRecord.notesHit,
+                            maxNotes: dbRecord.maxNotes
+                        };
+                    }
+                    return preset;
+                });
+
+                // Filter out preset records from the database loads to avoid duplicates
+                const customScores = loadedScores.filter(s => !s.id.startsWith('preset-'));
+
+                setScores([...mergedPresets, ...customScores]);
                 setLoading(false);
             } catch (err: any) {
                 console.error("Failed to init DB:", err);
@@ -569,12 +592,15 @@ export function useMusicLibrary() {
     const addScore = useCallback(async (file: File, title?: string, composer?: string, tags: string[] = []) => {
         try {
             const db = await openDB();
+            const hasDifficulty = tags.some(t => ['beginner', 'intermediate', 'advanced'].includes(t.toLowerCase()));
+            const finalTags = hasDifficulty ? tags : ['Beginner', ...tags];
+
             const newScore: LibraryScore = {
                 id: generateUUID(),
                 title: title || file.name.replace(/\.(xml|mxl|musicxml)$/i, ''),
                 composer: composer || 'Unknown',
                 dateAdded: Date.now(),
-                tags,
+                tags: finalTags,
                 fileName: file.name,
                 fileData: file
             };
@@ -649,6 +675,67 @@ export function useMusicLibrary() {
         }
     }, []);
 
+    const saveHighScore = useCallback(async (id: string, score: number, rank: string, notesHit: number, maxNotes: number) => {
+        try {
+            const db = await openDB();
+            const transaction = db.transaction(STORE_NAME, 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+
+            const existing = await new Promise<LibraryScore | undefined>((resolve, reject) => {
+                const req = store.get(id);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+
+            let updatedScore: LibraryScore;
+            const isNewHighScore = score > ((existing?.highScore) || 0);
+
+            if (existing) {
+                updatedScore = {
+                    ...existing,
+                    highScore: isNewHighScore ? score : existing.highScore,
+                    rank: isNewHighScore ? rank : existing.rank,
+                    notesHit: isNewHighScore ? notesHit : existing.notesHit,
+                    maxNotes: isNewHighScore ? maxNotes : existing.maxNotes
+                };
+            } else {
+                const preset = PRESET_SCORES.find(p => p.id === id);
+                if (preset) {
+                    updatedScore = {
+                        ...preset,
+                        highScore: score,
+                        rank: rank,
+                        notesHit: notesHit,
+                        maxNotes: maxNotes
+                    };
+                } else {
+                    throw new Error("Score not found in presets or custom database.");
+                }
+            }
+
+            await new Promise<void>((resolve, reject) => {
+                const req = store.put(updatedScore);
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject(req.error);
+            });
+
+            setScores(prev => prev.map(s => {
+                if (s.id === id) {
+                    return {
+                        ...s,
+                        highScore: isNewHighScore ? score : s.highScore,
+                        rank: isNewHighScore ? rank : s.rank,
+                        notesHit: isNewHighScore ? notesHit : s.notesHit,
+                        maxNotes: isNewHighScore ? maxNotes : s.maxNotes
+                    };
+                }
+                return s;
+            }));
+        } catch (err: any) {
+            console.error("Failed to save high score:", err);
+        }
+    }, []);
+
     const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set());
 
     useEffect(() => {
@@ -682,6 +769,7 @@ export function useMusicLibrary() {
         addScore,
         deleteScore,
         updateScoreMetadata,
+        saveHighScore,
         bookmarkedIds,
         toggleBookmark
     };

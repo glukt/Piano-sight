@@ -29,7 +29,7 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
     if (unlockedAchievements.length === 0 && completedChallenges.length === 0) return null;
 
     return (
-        <div className="fixed top-24 right-8 z-[60] flex flex-col gap-2 pointer-events-none">
+        <div className="fixed top-24 left-4 right-4 md:left-auto md:right-8 z-[60] flex flex-col items-center md:items-end gap-2 pointer-events-none">
             <AnimatePresence>
                 {unlockedAchievements.map(ach => (
                     <motion.div
@@ -37,7 +37,7 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
                         initial={{ opacity: 0, x: 50, scale: 0.9 }}
                         animate={{ opacity: 1, x: 0, scale: 1 }}
                         exit={{ opacity: 0, x: 50, scale: 0.9 }}
-                        className="bg-white dark:bg-gray-800 border-l-4 border-yellow-500 shadow-xl rounded-lg p-4 flex items-center gap-4 w-80 pointer-events-auto"
+                        className="bg-white dark:bg-gray-800 border-l-4 border-yellow-500 shadow-xl rounded-lg p-4 flex items-center gap-4 w-full max-w-sm md:w-80 pointer-events-auto"
                     >
                         <div className="text-3xl">{ach.icon}</div>
                         <div>
@@ -57,7 +57,7 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({
                             initial={{ opacity: 0, x: 50, scale: 0.9 }}
                             animate={{ opacity: 1, x: 0, scale: 1 }}
                             exit={{ opacity: 0, x: 50, scale: 0.9 }}
-                            className="bg-white dark:bg-gray-800 border-l-4 border-blue-500 shadow-xl rounded-lg p-4 flex items-center gap-4 w-80 pointer-events-auto"
+                            className="bg-white dark:bg-gray-800 border-l-4 border-blue-500 shadow-xl rounded-lg p-4 flex items-center gap-4 w-full max-w-sm md:w-80 pointer-events-auto"
                         >
                             <div className="text-3xl">📅</div>
                             <div>

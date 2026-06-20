@@ -38,6 +38,7 @@ function App() {
     const [xmlData, setXmlData] = useState<string | null>(null);
     const [songUrl, setSongUrl] = useState<string | null>(null);
     const [workoutReview, setWorkoutReview] = useState<{ songUrl: string; measure: number } | null>(null);
+    const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
 
     // Initialize Game Logic Hook
     // This hook manages the game state, audio, and gamification
@@ -48,7 +49,13 @@ function App() {
 
 
     // Handlers for MusicXML View
-    const handleScoreSelect = (file: File | null, url?: string, title?: string) => {
+    const handleScoreSelect = (file: File | null, url?: string, title?: string, id?: string) => {
+        if (id) {
+            setSelectedSongId(id);
+        } else {
+            setSelectedSongId(null);
+        }
+
         if (url) {
             setSongUrl(url);
             setFileName(title || 'Loaded Score');
@@ -67,6 +74,7 @@ function App() {
         setUploadedFile(null);
         setFileName(null);
         setSongUrl(null);
+        setSelectedSongId(null);
         gameLogic.exitLesson();
     };
 
@@ -77,6 +85,7 @@ function App() {
             if (nextLesson.type === 'song' && nextLesson.songUrl) {
                 setSongUrl(nextLesson.songUrl);
                 setFileName(nextLesson.name);
+                setSelectedSongId(nextLesson.id);
                 setUploadedFile(null);
                 setXmlData(null);
                 setCurrentView('musicxml');
@@ -132,6 +141,7 @@ function App() {
                             if (selectedLesson.type === 'song' && selectedLesson.songUrl) {
                                 setSongUrl(selectedLesson.songUrl);
                                 setFileName(selectedLesson.name);
+                                setSelectedSongId(selectedLesson.id);
                                 setUploadedFile(null);
                                 setXmlData(null);
                                 setCurrentView('musicxml');
@@ -161,14 +171,14 @@ function App() {
                     <div className="w-full flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         {uploadedFile || xmlData || songUrl ? (
                             <>
-                                <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex items-center justify-between mb-4">
-                                    <span className="font-bold text-gray-700 dark:text-gray-200">Current Score: {fileName || 'Loaded Score'}</span>
+                                <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                                    <span className="font-bold text-gray-700 dark:text-gray-200 truncate max-w-full sm:max-w-md">Current Score: {fileName || 'Loaded Score'}</span>
                                     <button
                                         onClick={() => {
                                             setWorkoutReview(null);
                                             handleClearScore();
                                         }}
-                                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-bold text-sm transition"
+                                        className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-bold text-sm transition w-full sm:w-auto text-center"
                                     >
                                         ← Back to Library
                                     </button>
@@ -177,6 +187,7 @@ function App() {
                                     file={uploadedFile || undefined}
                                     xmlContent={xmlData || undefined}
                                     xmlUrl={songUrl || undefined}
+                                    songId={selectedSongId}
                                     isDarkMode={isDarkMode}
                                     onAddXp={() => gameLogic.awardXp(10)} // Flat XP for custom practice
                                     userActiveNotes={gameLogic.effectiveActiveNotes}

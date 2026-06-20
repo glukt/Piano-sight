@@ -6,6 +6,7 @@ import { audio } from '../audio/Synth';
 import VirtualKeyboard from './VirtualKeyboard';
 // import { useMidi } from '../hooks/useMidi'; // Removed, passed as prop
 import { usePracticeMode } from '../hooks/usePracticeMode';
+import { useMusicLibrary } from '../hooks/useMusicLibrary';
 import LoopingControls from './LoopingControls';
 import { VexFlowGraphicalNote } from 'opensheetmusicdisplay/build/dist/src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote';
 import { ScoreControls } from './ScoreControls';
@@ -24,6 +25,7 @@ interface ScoreDisplayProps {
     isMutedKeys?: boolean; // NEW: mute state for keys
     onToggleMutedKeys?: (val: boolean) => void; // NEW: callback to toggle mute keys
     onNextLesson?: () => void; // NEW: callback to transition to next lesson
+    songId?: string | null;
 }
 
 export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
@@ -37,7 +39,8 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
     onCloseScore,
     isMutedKeys = false,
     onToggleMutedKeys,
-    onNextLesson
+    onNextLesson,
+    songId = null
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const osmdRef = useRef<OSMD | null>(null);
@@ -56,6 +59,8 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         }
     }, [isMutedPlayback, loading]);
 
+    const { saveHighScore } = useMusicLibrary();
+
     // Practice Mode
     const {
         isActive: isPracticeActive,
@@ -64,6 +69,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         feedback: practiceFeedback,
         startPractice,
         stopPractice,
+        setMode: setPracticeMode,
         nextSection,
         prevSection,
         expectedNotes,
@@ -78,7 +84,9 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         totalMeasures: playbackRef.current?.MeasureCount || 0,
         userActiveNotes,
         onNoteCorrect: onAddXp ? () => onAddXp(2) : undefined, // 2 XP per note
-        onSectionComplete: onAddXp ? () => onAddXp(50) : undefined // 50 XP per section (~1/2 level early on)
+        onSectionComplete: onAddXp ? () => onAddXp(50) : undefined, // 50 XP per section (~1/2 level early on)
+        songId,
+        saveHighScore
     });
 
     // ... (rest of code)
@@ -485,6 +493,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                     onNext={nextSection}
                     onPrev={prevSection}
                     onExit={stopPractice}
+                    onModeChange={setPracticeMode}
                 />
             )}
 
@@ -507,7 +516,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                     <VirtualKeyboard
                         activeNotes={activeNotes}
                         userActiveNotes={userActiveNotes}
-                        expectedNotes={isPracticeActive && practiceMode === 'wait' ? expectedNotes : []}
+                        expectedNotes={isPracticeActive && (practiceMode === 'wait' || practiceMode === 'play') ? expectedNotes : []}
                         showLabels={showPianoLabels}
                     />
                     {isPracticeActive && showHint && (
@@ -522,19 +531,27 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             <div className="relative w-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-950 mb-4">
                 {/* Continuous Playhead Line Overlay */}
                 {layoutMode === 'scrolling' && (
-                    <div 
-                        className="absolute top-0 bottom-0 w-0.5 bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.9)] z-20 pointer-events-none"
-                        style={{ left: '25%' }}
-                    >
-                        <div className="absolute top-3 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow whitespace-nowrap uppercase tracking-widest leading-none pointer-events-none select-none">
-                            Playhead
+                    <>
+                        <style>{`
+                            .scrolling-score-container svg {
+                                margin-left: 25% !important;
+                                margin-right: 75% !important;
+                            }
+                        `}</style>
+                        <div 
+                            className="absolute top-0 bottom-0 w-0.5 bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.9)] z-20 pointer-events-none"
+                            style={{ left: '25%' }}
+                        >
+                            <div className="absolute top-3 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded shadow whitespace-nowrap uppercase tracking-widest leading-none pointer-events-none select-none">
+                                Playhead
+                            </div>
                         </div>
-                    </div>
+                    </>
                 )}
 
                 <div 
                     ref={containerRef} 
-                    className={`w-full overflow-auto p-4 ${layoutMode === 'scrolling' ? 'no-scrollbar' : ''}`} 
+                    className={`w-full overflow-auto ${layoutMode === 'scrolling' ? 'no-scrollbar scrolling-score-container p-0' : 'p-4'}`} 
                     style={{ minHeight: '400px' }} 
                 />
             </div>

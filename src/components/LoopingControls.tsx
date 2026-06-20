@@ -230,7 +230,7 @@ const LoopingControls: React.FC<LoopingControlsProps> = ({
 
                 {/* Looping Controls Actions */}
                 <div className="flex justify-between items-center text-sm">
-                    <div className="flex gap-2.5">
+                    <div className="flex flex-wrap gap-2.5">
                         <button
                             onClick={() => onSetLoopStart(loopStart !== null ? null : currentTimestamp)}
                             className={`px-4 py-1.5 rounded-xl text-xs font-bold border transition duration-200 select-none ${

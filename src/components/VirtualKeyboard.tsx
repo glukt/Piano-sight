@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useWindowSize } from '../hooks/useWindowSize';
 
 interface VirtualKeyboardProps {
     activeNotes: Set<number>; // Playback notes (Blue)
@@ -27,15 +28,21 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
     showLabels = false,
     showStaff = false
 }) => {
+    const { width: windowWidth } = useWindowSize();
+    const isMobile = windowWidth < 768;
+
+    const actualRangeStart = rangeStart === 21 && isMobile ? 48 : rangeStart;
+    const actualRangeEnd = rangeEnd === 108 && isMobile ? 84 : rangeEnd;
+
     // Generate keys
     const keys = useMemo(() => {
         const k = [];
-        for (let i = rangeStart; i <= rangeEnd; i++) {
+        for (let i = actualRangeStart; i <= actualRangeEnd; i++) {
             const isBlack = [1, 3, 6, 8, 10].includes(i % 12);
             k.push({ midi: i, isBlack });
         }
         return k;
-    }, [rangeStart, rangeEnd]);
+    }, [actualRangeStart, actualRangeEnd]);
 
     // calculate white keys for width
     const whiteKeyCount = keys.filter(k => !k.isBlack).length;
@@ -180,7 +187,7 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
 
                     // Calculate position
                     let offset = 0;
-                    for (let i = rangeStart; i < key.midi; i++) {
+                    for (let i = actualRangeStart; i < key.midi; i++) {
                         if (![1, 3, 6, 8, 10].includes(i % 12)) offset++;
                     }
 

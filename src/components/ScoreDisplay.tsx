@@ -78,7 +78,10 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         setIsSongComplete,
         errorMeasures,
         notesCorrect,
-        notesMissed
+        notesMissed,
+        playModeStarted,
+        countdown,
+        startPlayMode
     } = usePracticeMode({
         playbackEngine: playbackRef.current,
         totalMeasures: playbackRef.current?.MeasureCount || 0,
@@ -489,11 +492,14 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                     practiceMode={practiceMode}
                     practiceSection={practiceSection}
                     practiceFeedback={practiceFeedback}
-                    onReplay={() => playbackRef.current?.seek(playbackRef.current.getMeasureTimestamp(practiceSection.startMeasure) || 0)}
+                    onReplay={practiceMode === 'play' ? startPlayMode : () => playbackRef.current?.seek(playbackRef.current.getMeasureTimestamp(practiceSection.startMeasure) || 0)}
                     onNext={nextSection}
                     onPrev={prevSection}
                     onExit={stopPractice}
                     onModeChange={setPracticeMode}
+                    playModeStarted={playModeStarted}
+                    countdown={countdown}
+                    onStartPlayMode={startPlayMode}
                 />
             )}
 
@@ -508,6 +514,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                     onSetLoopEnd={handleSetLoopEnd}
                     onClearLoop={handleClearLoop}
                     measureTimestamps={measureTimestamps}
+                    disabled={isPracticeActive && practiceMode === 'play'}
                 />
             </div>
 

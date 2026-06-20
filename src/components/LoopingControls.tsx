@@ -10,6 +10,7 @@ interface LoopingControlsProps {
     onSetLoopEnd: (value: number | null) => void;
     onClearLoop: () => void;
     measureTimestamps?: number[];
+    disabled?: boolean;
 }
 
 const LoopingControls: React.FC<LoopingControlsProps> = ({
@@ -21,7 +22,8 @@ const LoopingControls: React.FC<LoopingControlsProps> = ({
     onSetLoopStart,
     onSetLoopEnd,
     onClearLoop,
-    measureTimestamps = []
+    measureTimestamps = [],
+    disabled = false
 }) => {
     const trackRef = useRef<HTMLDivElement>(null);
     const [draggingHandle, setDraggingHandle] = useState<'start' | 'end' | 'progress' | null>(null);
@@ -151,11 +153,11 @@ const LoopingControls: React.FC<LoopingControlsProps> = ({
     const tickInterval = showAllTicks ? 1 : (measureTimestamps.length <= 80 ? 5 : 10);
 
     return (
-        <div className="w-full bg-white/60 dark:bg-slate-900/60 backdrop-blur-md p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-lg shadow-slate-100/10 dark:shadow-none transition-all duration-300">
+        <div className={`w-full bg-white/60 dark:bg-slate-900/60 backdrop-blur-md p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-lg shadow-slate-100/10 dark:shadow-none transition-all duration-300 ${disabled ? 'opacity-85' : ''}`}>
             <div className="flex flex-col space-y-4">
                 {/* Header Info */}
                 <div className="flex justify-between items-center text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest select-none">
-                    <span>Practice Loop (Measure Snapped)</span>
+                    <span>{disabled ? "Song Progress (Play & Grade)" : "Practice Loop (Measure Snapped)"}</span>
                     <span className="font-mono text-xs text-sky-600 dark:text-sky-400 normal-case bg-sky-50 dark:bg-sky-950/30 px-2.5 py-0.5 rounded-full">
                         Measure {currentMeasure} / {totalMeasures}
                     </span>
@@ -164,8 +166,8 @@ const LoopingControls: React.FC<LoopingControlsProps> = ({
                 {/* Snapping Ruler track */}
                 <div 
                     ref={trackRef}
-                    onMouseDown={handleTrackMouseDown}
-                    className="relative h-10 w-full cursor-pointer select-none flex items-center"
+                    onMouseDown={disabled ? undefined : handleTrackMouseDown}
+                    className={`relative h-10 w-full select-none flex items-center ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
                 >
                     {/* Track Base */}
                     <div className="absolute left-0 right-0 h-2 bg-slate-100 dark:bg-slate-800 rounded-full border border-slate-200/30 dark:border-slate-700/30"></div>
@@ -184,42 +186,48 @@ const LoopingControls: React.FC<LoopingControlsProps> = ({
                         );
                     })}
 
-                    {/* Loop Highlight Region */}
-                    <div
-                        className="absolute h-2 bg-sky-500/10 dark:bg-sky-400/10 border-y border-sky-400/20 pointer-events-none"
-                        style={{
-                            left: `${loopStartPercent}%`,
-                            width: `${loopEndPercent - loopStartPercent}%`
-                        }}
-                    />
+                    {/* Loop Highlight Region - Only when NOT disabled */}
+                    {!disabled && (
+                        <div
+                            className="absolute h-2 bg-sky-500/10 dark:bg-sky-400/10 border-y border-sky-400/20 pointer-events-none"
+                            style={{
+                                left: `${loopStartPercent}%`,
+                                width: `${loopEndPercent - loopStartPercent}%`
+                            }}
+                        />
+                    )}
 
-                    {/* Loop Start Handle (A) - Circular Pin */}
-                    <div
-                        onMouseDown={handleStartMouseDown}
-                        className={`absolute -ml-3 w-6 h-6 rounded-full border-2 shadow-lg z-30 cursor-ew-resize flex items-center justify-center text-[10px] font-black transition-all hover:scale-110 active:scale-120 ${
-                            loopStart !== null 
-                                ? 'bg-emerald-500 border-white text-white shadow-emerald-500/30 dark:shadow-emerald-950/20' 
-                                : 'bg-slate-300 border-white text-slate-600 hover:bg-emerald-500 hover:text-white dark:bg-slate-700 dark:text-slate-300'
-                        }`}
-                        style={{ left: `${loopStartPercent}%` }}
-                        title={startMeasureNum ? `Loop Start: Measure ${startMeasureNum}` : 'Set Loop Start'}
-                    >
-                        A
-                    </div>
+                    {/* Loop Start Handle (A) - Circular Pin - Only when NOT disabled */}
+                    {!disabled && (
+                        <div
+                            onMouseDown={handleStartMouseDown}
+                            className={`absolute -ml-3 w-6 h-6 rounded-full border-2 shadow-lg z-30 cursor-ew-resize flex items-center justify-center text-[10px] font-black transition-all hover:scale-110 active:scale-120 ${
+                                loopStart !== null 
+                                    ? 'bg-emerald-500 border-white text-white shadow-emerald-500/30 dark:shadow-emerald-950/20' 
+                                    : 'bg-slate-300 border-white text-slate-600 hover:bg-emerald-500 hover:text-white dark:bg-slate-700 dark:text-slate-300'
+                            }`}
+                            style={{ left: `${loopStartPercent}%` }}
+                            title={startMeasureNum ? `Loop Start: Measure ${startMeasureNum}` : 'Set Loop Start'}
+                        >
+                            A
+                        </div>
+                    )}
 
-                    {/* Loop End Handle (B) - Circular Pin */}
-                    <div
-                        onMouseDown={handleEndMouseDown}
-                        className={`absolute -ml-3 w-6 h-6 rounded-full border-2 shadow-lg z-30 cursor-ew-resize flex items-center justify-center text-[10px] font-black transition-all hover:scale-110 active:scale-120 ${
-                            loopEnd !== null 
-                                ? 'bg-rose-500 border-white text-white shadow-rose-500/30 dark:shadow-rose-950/20' 
-                                : 'bg-slate-300 border-white text-slate-600 hover:bg-rose-500 hover:text-white dark:bg-slate-700 dark:text-slate-300'
-                        }`}
-                        style={{ left: `${loopEndPercent}%` }}
-                        title={endMeasureNum ? `Loop End: Measure ${endMeasureNum}` : 'Set Loop End'}
-                    >
-                        B
-                    </div>
+                    {/* Loop End Handle (B) - Circular Pin - Only when NOT disabled */}
+                    {!disabled && (
+                        <div
+                            onMouseDown={handleEndMouseDown}
+                            className={`absolute -ml-3 w-6 h-6 rounded-full border-2 shadow-lg z-30 cursor-ew-resize flex items-center justify-center text-[10px] font-black transition-all hover:scale-110 active:scale-120 ${
+                                loopEnd !== null 
+                                    ? 'bg-rose-500 border-white text-white shadow-rose-500/30 dark:shadow-rose-950/20' 
+                                    : 'bg-slate-300 border-white text-slate-600 hover:bg-rose-500 hover:text-white dark:bg-slate-700 dark:text-slate-300'
+                            }`}
+                            style={{ left: `${loopEndPercent}%` }}
+                            title={endMeasureNum ? `Loop End: Measure ${endMeasureNum}` : 'Set Loop End'}
+                        >
+                            B
+                        </div>
+                    )}
 
                     {/* Playhead Progress Thumb */}
                     <div
@@ -228,39 +236,41 @@ const LoopingControls: React.FC<LoopingControlsProps> = ({
                     />
                 </div>
 
-                {/* Looping Controls Actions */}
-                <div className="flex justify-between items-center text-sm">
-                    <div className="flex flex-wrap gap-2.5">
-                        <button
-                            onClick={() => onSetLoopStart(loopStart !== null ? null : currentTimestamp)}
-                            className={`px-4 py-1.5 rounded-xl text-xs font-bold border transition duration-200 select-none ${
-                                loopStart !== null
-                                    ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/60'
-                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700'
-                            }`}
-                        >
-                            {startMeasureNum !== null ? `[A] Bar ${startMeasureNum}` : 'Set [A]'}
-                        </button>
-                        <button
-                            onClick={() => onSetLoopEnd(loopEnd !== null ? null : currentTimestamp)}
-                            className={`px-4 py-1.5 rounded-xl text-xs font-bold border transition duration-200 select-none ${
-                                loopEnd !== null
-                                    ? 'bg-rose-500/10 text-rose-600 border-rose-500/30 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/60'
-                                    : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-300 dark:border-slate-700'
-                            }`}
-                        >
-                            {endMeasureNum !== null ? `[B] Bar ${endMeasureNum}` : 'Set [B]'}
-                        </button>
-                        {(loopStart !== null || loopEnd !== null) && (
+                {/* Looping Controls Actions - Only when NOT disabled */}
+                {!disabled && (
+                    <div className="flex justify-between items-center text-sm">
+                        <div className="flex flex-wrap gap-2.5">
                             <button
-                                onClick={onClearLoop}
-                                className="px-4 py-1.5 bg-slate-150 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 rounded-xl text-xs font-bold transition duration-200 border border-slate-300/40 dark:border-slate-700 select-none"
+                                onClick={() => onSetLoopStart(loopStart !== null ? null : currentTimestamp)}
+                                className={`px-4 py-1.5 rounded-xl text-xs font-bold border transition duration-200 select-none ${
+                                    loopStart !== null
+                                        ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/60'
+                                        : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-300 dark:border-slate-700'
+                                }`}
                             >
-                                Clear Loop
+                                {startMeasureNum !== null ? `[A] Bar ${startMeasureNum}` : 'Set [A]'}
                             </button>
-                        )}
+                            <button
+                                onClick={() => onSetLoopEnd(loopEnd !== null ? null : currentTimestamp)}
+                                className={`px-4 py-1.5 rounded-xl text-xs font-bold border transition duration-200 select-none ${
+                                    loopEnd !== null
+                                        ? 'bg-rose-500/10 text-rose-600 border-rose-500/30 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/60'
+                                        : 'bg-slate-100 hover:bg-slate-200 text-slate-600 border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-300 dark:border-slate-700'
+                                }`}
+                            >
+                                {endMeasureNum !== null ? `[B] Bar ${endMeasureNum}` : 'Set [B]'}
+                            </button>
+                            {(loopStart !== null || loopEnd !== null) && (
+                                <button
+                                    onClick={onClearLoop}
+                                    className="px-4 py-1.5 bg-slate-150 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 rounded-xl text-xs font-bold transition duration-200 border border-slate-300/40 dark:border-slate-700 select-none"
+                                >
+                                    Clear Loop
+                                </button>
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

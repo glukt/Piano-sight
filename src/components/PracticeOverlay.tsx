@@ -10,6 +10,9 @@ interface PracticeOverlayProps {
     onPrev?: () => void;
     onExit: () => void;
     onModeChange?: (mode: PracticeModeType) => void;
+    playModeStarted?: boolean;
+    countdown?: number | null;
+    onStartPlayMode?: () => void;
 }
 
 export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
@@ -20,7 +23,10 @@ export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
     onNext,
     onPrev,
     onExit,
-    onModeChange
+    onModeChange,
+    playModeStarted = false,
+    countdown = null,
+    onStartPlayMode
 }) => {
     return (
         <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-32 w-auto md:w-80 bg-slate-900/90 dark:bg-slate-950/90 backdrop-blur-md text-white border border-slate-700/50 p-4 rounded-2xl shadow-2xl z-50 flex flex-col gap-3.5 animate-in fade-in slide-in-from-bottom-5 duration-300">
@@ -70,52 +76,89 @@ export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
             </div>
 
             {/* Action Button Row */}
-            <div className="flex gap-2 justify-between items-center">
-                {/* Previous Section */}
-                <button
-                    onClick={onPrev}
-                    disabled={!onPrev || practiceSection.startMeasure === 0}
-                    className="p-2.5 bg-slate-800 hover:bg-slate-750 disabled:opacity-30 disabled:hover:bg-slate-800 text-slate-200 rounded-xl transition-all duration-150 active:scale-95 border border-slate-700/40"
-                    title="Previous Section"
-                >
-                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                        <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                    </svg>
-                </button>
+            {practiceMode === 'play' ? (
+                <div className="flex gap-2 justify-between items-center w-full">
+                    {!playModeStarted && countdown === null ? (
+                        <button
+                            onClick={onStartPlayMode}
+                            className="flex-grow py-2.5 px-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl text-xs font-black transition-all duration-150 active:scale-95 shadow-md shadow-emerald-950/20 flex items-center justify-center gap-1.5"
+                        >
+                            <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                            </svg>
+                            Start Grading
+                        </button>
+                    ) : (
+                        <button
+                            onClick={onReplay}
+                            disabled={countdown !== null}
+                            className="flex-grow py-2.5 px-3 bg-slate-800 hover:bg-slate-750 text-slate-200 rounded-xl text-xs font-bold transition-all duration-150 active:scale-95 border border-slate-700/40 flex items-center justify-center gap-1.5 disabled:opacity-50"
+                        >
+                            <svg className="w-3.5 h-3.5 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
+                                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l.73-3.2"/>
+                            </svg>
+                            Restart
+                        </button>
+                    )}
 
-                {/* Replay Section */}
-                <button
-                    onClick={onReplay}
-                    className="flex-grow py-2.5 px-3 bg-slate-800 hover:bg-slate-750 text-slate-200 rounded-xl text-xs font-bold transition-all duration-150 active:scale-95 border border-slate-700/40 flex items-center justify-center gap-1.5"
-                >
-                    <svg className="w-3.5 h-3.5 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
-                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l.73-3.2"/>
-                    </svg>
-                    Restart
-                </button>
+                    <button
+                        onClick={onExit}
+                        className="p-2.5 bg-slate-800 hover:bg-rose-950/40 hover:text-rose-400 hover:border-rose-900/50 text-slate-300 rounded-xl transition-all duration-150 active:scale-95 border border-slate-700/40"
+                        title="Exit Practice"
+                    >
+                        <svg className="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
+                            <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            ) : (
+                <div className="flex gap-2 justify-between items-center">
+                    {/* Previous Section */}
+                    <button
+                        onClick={onPrev}
+                        disabled={!onPrev || practiceSection.startMeasure === 0}
+                        className="p-2.5 bg-slate-800 hover:bg-slate-750 disabled:opacity-30 disabled:hover:bg-slate-800 text-slate-200 rounded-xl transition-all duration-150 active:scale-95 border border-slate-700/40"
+                        title="Previous Section"
+                    >
+                        <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                        </svg>
+                    </button>
 
-                {/* Next Section */}
-                <button
-                    onClick={onNext}
-                    className="flex-grow py-2.5 px-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl text-xs font-bold transition-all duration-150 active:scale-95 shadow-md shadow-emerald-950/20 flex items-center justify-center gap-1"
-                >
-                    Next
-                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                        <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                    </svg>
-                </button>
+                    {/* Replay Section */}
+                    <button
+                        onClick={onReplay}
+                        className="flex-grow py-2.5 px-3 bg-slate-800 hover:bg-slate-750 text-slate-200 rounded-xl text-xs font-bold transition-all duration-150 active:scale-95 border border-slate-700/40 flex items-center justify-center gap-1.5"
+                    >
+                        <svg className="w-3.5 h-3.5 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l.73-3.2"/>
+                        </svg>
+                        Restart
+                    </button>
 
-                {/* Exit Practice */}
-                <button
-                    onClick={onExit}
-                    className="p-2.5 bg-slate-800 hover:bg-rose-950/40 hover:text-rose-400 hover:border-rose-900/50 text-slate-300 rounded-xl transition-all duration-150 active:scale-95 border border-slate-700/40"
-                    title="Exit Practice"
-                >
-                    <svg className="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
-                        <path d="M18 6L6 18M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
+                    {/* Next Section */}
+                    <button
+                        onClick={onNext}
+                        className="flex-grow py-2.5 px-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl text-xs font-bold transition-all duration-150 active:scale-95 shadow-md shadow-emerald-950/20 flex items-center justify-center gap-1"
+                    >
+                        Next
+                        <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                        </svg>
+                    </button>
+
+                    {/* Exit Practice */}
+                    <button
+                        onClick={onExit}
+                        className="p-2.5 bg-slate-800 hover:bg-rose-950/40 hover:text-rose-400 hover:border-rose-900/50 text-slate-300 rounded-xl transition-all duration-150 active:scale-95 border border-slate-700/40"
+                        title="Exit Practice"
+                    >
+                        <svg className="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
+                            <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

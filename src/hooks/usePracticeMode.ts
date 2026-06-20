@@ -45,6 +45,8 @@ export function usePracticeMode({
     // Play Mode Grading State
     const [overallCorrect, setOverallCorrect] = useState(0);
     const [overallMissed, setOverallMissed] = useState(0);
+    const [playModeStarted, setPlayModeStarted] = useState(false);
+    const [countdown, setCountdown] = useState<number | null>(null);
 
     interface ExpectedNoteEvent {
         midi: number;
@@ -78,6 +80,8 @@ export function usePracticeMode({
         setNotesMissed(0);
         setOverallCorrect(0);
         setOverallMissed(0);
+        setPlayModeStarted(false);
+        setCountdown(null);
         expectedEventsRef.current = [];
         setLastSuccessfulNotes(new Set());
         heldWrongNotesRef.current.clear();
@@ -192,7 +196,11 @@ export function usePracticeMode({
             const endTs = playbackEngine.getMeasureTimestamp(currentSection.endMeasure);
 
             if (startTs !== null && endTs !== null) {
-                playbackEngine.setLoop(startTs, endTs);
+                if (mode === 'play') {
+                    playbackEngine.setLoop(null, null);
+                } else {
+                    playbackEngine.setLoop(startTs, endTs);
+                }
 
                 // Handle Loop Callback for Preview Counter
                 playbackEngine.setLoopCallback(() => {
@@ -203,18 +211,23 @@ export function usePracticeMode({
                 if (mode === 'preview' || mode === 'tempo') {
                     playbackEngine.seek(startTs);
                     playbackEngine.play();
-                } else {
+                } else if (mode === 'wait') {
                     // Wait mode: Stop and wait for input
                     playbackEngine.stop();
                     playbackEngine.seek(startTs);
                     setFeedback("Play the notes to advance!");
+                } else if (mode === 'play' && !playModeStarted) {
+                    // Play mode: Stop and wait for Start click
+                    playbackEngine.stop();
+                    playbackEngine.seek(startTs);
+                    setFeedback("Ready to grade? Click Start to begin!");
                 }
             }
         };
 
         setupLoop();
 
-    }, [isActive, currentSection, mode, playbackEngine]);
+    }, [isActive, currentSection, mode, playbackEngine, playModeStarted]);
 
     // Effect to auto-transition from Preview to Wait
     useEffect(() => {
@@ -261,6 +274,7 @@ export function usePracticeMode({
     const nextSectionRef = useRef(nextSection);
     const retrySectionRef = useRef(retrySection);
     const onNoteCorrectRef = useRef(onNoteCorrect);
+    const playModeStartedRef = useRef(playModeStarted);
 
     useEffect(() => {
         userActiveNotesRef.current = userActiveNotes;
@@ -273,7 +287,49 @@ export function usePracticeMode({
         nextSectionRef.current = nextSection;
         retrySectionRef.current = retrySection;
         onNoteCorrectRef.current = onNoteCorrect;
+        playModeStartedRef.current = playModeStarted;
     });
+
+    const startPlayMode = useCallback(() => {
+        if (mode !== 'play' || !playbackEngine) return;
+
+        setNotesCorrect(0);
+        setNotesMissed(0);
+        setOverallCorrect(0);
+        setOverallMissed(0);
+        setErrorMeasures({});
+        expectedEventsRef.current = [];
+        heldWrongNotesRef.current.clear();
+        isTransitioningRef.current = false;
+
+        const startTs = playbackEngine.getMeasureTimestamp(0) || 0;
+        playbackEngine.seek(startTs);
+        playbackEngine.stop();
+
+        setCountdown(3);
+        setFeedback("Get ready... 3");
+    }, [mode, playbackEngine]);
+
+    // Effect to handle Play Mode countdown ticking
+    useEffect(() => {
+        if (countdown === null) return;
+
+        if (countdown > 0) {
+            const timer = setTimeout(() => {
+                const next = countdown - 1;
+                setCountdown(next);
+                if (next > 0) {
+                    setFeedback(`Get ready... ${next}`);
+                } else {
+                    setFeedback("GO!");
+                }
+            }, 1000);
+            return () => clearTimeout(timer);
+        } else {
+            setPlayModeStarted(true);
+            setCountdown(null);
+        }
+    }, [countdown]);
 
     // Active Logic for Wait Mode
     useEffect(() => {
@@ -483,11 +539,20 @@ export function usePracticeMode({
     const changeMode = useCallback((newMode: PracticeModeType) => {
         if (newMode === 'play') {
             setCurrentSection({ startMeasure: 0, endMeasure: totalMeasures });
+            setPlayModeStarted(false);
+            setCountdown(null);
+            setFeedback("Ready to grade? Click Start to begin!");
+            if (playbackEngine) {
+                playbackEngine.stop();
+                playbackEngine.seek(0);
+            }
         } else if (mode === 'play') {
             const currentMeasure = playbackEngine?.CurrentMeasureNumber || 0;
             const start = Math.floor(currentMeasure / 2) * 2;
             const end = Math.min(start + 2, totalMeasures);
             setCurrentSection({ startMeasure: start, endMeasure: end });
+            setPlayModeStarted(false);
+            setCountdown(null);
         }
         setMode(newMode);
         setNotesCorrect(0);
@@ -506,7 +571,7 @@ export function usePracticeMode({
 
     // Effect to build event timeline for Play Mode
     useEffect(() => {
-        if (!isActive || mode !== 'play' || !playbackEngine) return;
+        if (!isActive || mode !== 'play' || !playbackEngine || !playModeStarted) return;
 
         const startTs = playbackEngine.getMeasureTimestamp(currentSection.startMeasure);
         const endTs = playbackEngine.getMeasureTimestamp(currentSection.endMeasure);
@@ -535,7 +600,7 @@ export function usePracticeMode({
                 playbackEngine.setStepCallback(() => {});
             }
         };
-    }, [isActive, currentSection, mode, playbackEngine]);
+    }, [isActive, currentSection, mode, playbackEngine, playModeStarted]);
 
     const prevActiveNotesRef = useRef<Set<number>>(new Set());
 
@@ -607,11 +672,9 @@ export function usePracticeMode({
                 }
             });
 
-            // 2. End of Song Detection
-            const currentTimestamp = playbackEngine.CurrentTimestamp;
-            const endTimestamp = playbackEngine.getMeasureTimestamp(currentSectionRef.current.endMeasure);
-
-            if (endTimestamp !== null && currentTimestamp >= endTimestamp) {
+            // 2. End of Song Detection (Stopped status check with a 2s start safety buffer)
+            const elapsed = Date.now() - startTimeRef.current;
+            if (!playbackEngine.IsPlaying && playModeStartedRef.current && elapsed > 2000) {
                 isTransitioningRef.current = true;
                 playbackEngine.stop();
 
@@ -658,6 +721,9 @@ export function usePracticeMode({
         notesCorrect: mode === 'play' ? overallCorrect : notesCorrect,
         notesMissed: mode === 'play' ? overallMissed : notesMissed,
         overallCorrect,
-        overallMissed
+        overallMissed,
+        playModeStarted,
+        countdown,
+        startPlayMode
     };
 }

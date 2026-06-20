@@ -46,6 +46,8 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
     const osmdCanvasRef = useRef<HTMLDivElement>(null);
     const osmdRef = useRef<OSMD | null>(null);
     const playbackRef = useRef<PlaybackEngine | null>(null);
+    const lastCountdownRef = useRef<number | null>(null);
+    const canvasAnimFrameRef = useRef<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false);
     const [activeNotes, setActiveNotes] = useState<Set<number>>(new Set());
@@ -329,88 +331,128 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         }
     }, [highlightNotes, loading]); // loading dependency ensures it sets after init
 
-    // Horizontal Scroll Centering Controller
+    // Smooth scroll interpolation loop
     useEffect(() => {
         if (layoutMode !== 'scrolling' || !osmdRef.current || loading) return;
-        // Don't auto-snap scroll during Play Mode countdown sliding animation
-        if (isPracticeActive && practiceMode === 'play' && !playModeStarted) return;
-
-        const cursor = osmdRef.current.cursor;
-        const container = containerRef.current;
-        if (!container || !cursor || !cursor.cursorElement) return;
-
-        try {
-            const cursorEl = cursor.cursorElement;
-            const containerRect = container.getBoundingClientRect();
-            const cursorRect = cursorEl.getBoundingClientRect();
-
-            // Align center of cursor with 25% playhead
-            const targetLeft = container.scrollLeft + (cursorRect.left + cursorRect.width / 2 - containerRect.left) - (containerRect.width * 0.25);
-
-            container.scrollTo({
-                left: targetLeft,
-                behavior: 'auto' // Instant snap during normal playback to prevent smooth scroll lagging
-            });
-        } catch (e) {
-            // Cursor element might not be fully ready in DOM
-        }
-    }, [currentTimestamp, layoutMode, loading, isPracticeActive, practiceMode, playModeStarted]);
-
-    // Handle sliding scroll runway animation during Play Mode countdown
-    useEffect(() => {
-        if (practiceMode !== 'play' || countdown !== 3 || !containerRef.current || !osmdRef.current) return;
 
         const container = containerRef.current;
-        const cursorEl = osmdRef.current.cursor?.cursorElement;
-        if (!container || !cursorEl) return;
+        if (!container) return;
 
-        try {
-            const containerRect = container.getBoundingClientRect();
-            const cursorRect = cursorEl.getBoundingClientRect();
+        let animationFrameId: number;
+        let targetScrollLeft = container.scrollLeft;
 
-            // Calculate target scroll for first note center-aligned to 25% playhead
-            const targetScroll = container.scrollLeft + (cursorRect.left + cursorRect.width / 2 - containerRect.left) - (containerRect.width * 0.25);
+        const updateScroll = () => {
+            if (!container || !osmdRef.current) {
+                animationFrameId = requestAnimationFrame(updateScroll);
+                return;
+            }
 
-            // Scroll to 0 instantly at countdown start
-            container.scrollLeft = 0;
+            const isCountdownActive = isPracticeActive && practiceMode === 'play' && !playModeStarted;
 
-            // Animate scroll to target over 3000ms
-            const start = 0;
-            const change = targetScroll - start;
-            const startTime = performance.now();
-            const duration = 3000;
+            if (isCountdownActive) {
+                targetScrollLeft = 0;
+            } else {
+                const cursor = osmdRef.current.cursor;
+                const cursorEl = cursor?.cursorElement;
+                if (cursorEl) {
+                    try {
+                        const containerRect = container.getBoundingClientRect();
+                        const cursorRect = cursorEl.getBoundingClientRect();
 
-            let animationFrameId: number;
-
-            const animate = (currentTime: number) => {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                
-                // Easing: easeInOutQuad
-                const ease = progress < 0.5 
-                    ? 2 * progress * progress 
-                    : -1 + (4 - 2 * progress) * progress;
-
-                container.scrollLeft = start + change * ease;
-
-                if (progress < 1) {
-                    animationFrameId = requestAnimationFrame(animate);
+                        // Align center of cursor with 25% playhead
+                        const computedTarget = container.scrollLeft + (cursorRect.left + cursorRect.width / 2 - containerRect.left) - (containerRect.width * 0.25);
+                        
+                        const maxScroll = container.scrollWidth - containerRect.width;
+                        targetScrollLeft = Math.max(0, Math.min(computedTarget, maxScroll));
+                    } catch (e) {
+                        // Bounding box query might fail if element not mounted
+                    }
                 }
-            };
+            }
 
-            animationFrameId = requestAnimationFrame(animate);
+            // Interpolate scroll position smoothly
+            const diff = targetScrollLeft - container.scrollLeft;
+            if (Math.abs(diff) > 0.5) {
+                // If it's a huge difference (e.g. initial start, seek, loop reset), snap instantly to prevent lag
+                if (Math.abs(diff) > 300) {
+                    container.scrollLeft = targetScrollLeft;
+                } else {
+                    container.scrollLeft += diff * 0.08; // Buttery smooth LERP factor (8% of remaining distance per frame)
+                }
+            }
 
-            return () => {
-                cancelAnimationFrame(animationFrameId);
-            };
-        } catch (e) {
-            console.warn("Countdown animation failed:", e);
+            animationFrameId = requestAnimationFrame(updateScroll);
+        };
+
+        animationFrameId = requestAnimationFrame(updateScroll);
+
+        return () => {
+            cancelAnimationFrame(animationFrameId);
+        };
+    }, [layoutMode, loading, isPracticeActive, practiceMode, playModeStarted]);
+
+    // Handle sliding scroll runway animation using GPU transform translate during Play Mode countdown
+    useEffect(() => {
+        if (practiceMode !== 'play') {
+            if (canvasAnimFrameRef.current) {
+                cancelAnimationFrame(canvasAnimFrameRef.current);
+                canvasAnimFrameRef.current = null;
+            }
+            if (osmdCanvasRef.current) {
+                osmdCanvasRef.current.style.transform = '';
+            }
+            lastCountdownRef.current = null;
+            return;
         }
+
+        // Trigger animation when countdown goes from non-3 to 3
+        if (countdown === 3 && lastCountdownRef.current !== 3) {
+            const container = containerRef.current;
+            const canvas = osmdCanvasRef.current;
+            if (container && canvas) {
+                // Instantly reset scroll to 0 so the first note aligns with the 25% playhead as start reference
+                container.scrollLeft = 0;
+                
+                const containerRect = container.getBoundingClientRect();
+                // We start the first note at the right edge of the screen (100%) and animate it leftward to the playhead (25%)
+                // So the initial translateX should shift it by 75% of the container width to the right
+                const startTranslateX = containerRect.width * 0.75;
+                const duration = 3000; // 3 seconds countdown
+                const startTime = performance.now();
+
+                const animate = (currentTime: number) => {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    // Nice easeOutCubic to start fast and slow down as it approaches the playhead
+                    const ease = 1 - Math.pow(1 - progress, 3);
+                    const translateX = startTranslateX * (1 - ease);
+
+                    canvas.style.transform = `translateX(${translateX}px)`;
+
+                    if (progress < 1) {
+                        canvasAnimFrameRef.current = requestAnimationFrame(animate);
+                    } else {
+                        canvas.style.transform = '';
+                        canvasAnimFrameRef.current = null;
+                    }
+                };
+
+                if (canvasAnimFrameRef.current) {
+                    cancelAnimationFrame(canvasAnimFrameRef.current);
+                }
+                canvasAnimFrameRef.current = requestAnimationFrame(animate);
+            }
+        }
+
+        lastCountdownRef.current = countdown;
     }, [countdown, practiceMode]);
 
     useEffect(() => {
         return () => {
             playbackRef.current?.stop();
+            if (canvasAnimFrameRef.current) {
+                cancelAnimationFrame(canvasAnimFrameRef.current);
+            }
         };
     }, []);
 

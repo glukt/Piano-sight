@@ -43,6 +43,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
     songId = null
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
+    const osmdCanvasRef = useRef<HTMLDivElement>(null);
     const osmdRef = useRef<OSMD | null>(null);
     const playbackRef = useRef<PlaybackEngine | null>(null);
     const [loading, setLoading] = useState(true);
@@ -114,14 +115,14 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
     const effectiveShowKeyboard = showKeyboard || (isPracticeActive && showHint);
 
     useEffect(() => {
-        if (!containerRef.current) return;
+        if (!containerRef.current || !osmdCanvasRef.current) return;
 
         // Clear previous container contents to re-initialize layout cleanly
-        containerRef.current.innerHTML = '';
+        osmdCanvasRef.current.innerHTML = '';
 
         // Initialize OSMD
         // @ts-ignore - OSMD constructor types might be loose
-        osmdRef.current = new OSMD(containerRef.current, {
+        osmdRef.current = new OSMD(osmdCanvasRef.current, {
             autoResize: true,
             backend: "svg",
             drawingParameters: "compacttight", // Try to fit well
@@ -228,7 +229,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             // Ensure cursor stays shown
             osmdRef.current.cursor.show();
 
-            const container = containerRef.current?.querySelector('svg');
+            const container = osmdCanvasRef.current?.querySelector('svg');
             if (!container) return;
 
             // Clear existing labels
@@ -540,9 +541,10 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                 {layoutMode === 'scrolling' && (
                     <>
                         <style>{`
-                            .scrolling-score-container svg {
+                            .scrolling-score-inner {
                                 margin-left: 25% !important;
                                 margin-right: 75% !important;
+                                display: inline-block;
                             }
                         `}</style>
                         <div 
@@ -560,7 +562,12 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                     ref={containerRef} 
                     className={`w-full overflow-auto ${layoutMode === 'scrolling' ? 'no-scrollbar scrolling-score-container p-0' : 'p-4'}`} 
                     style={{ minHeight: '400px' }} 
-                />
+                >
+                    <div 
+                        ref={osmdCanvasRef}
+                        className={layoutMode === 'scrolling' ? 'scrolling-score-inner' : 'w-full'}
+                    />
+                </div>
             </div>
 
             {/* Performance Report Card Modal */}

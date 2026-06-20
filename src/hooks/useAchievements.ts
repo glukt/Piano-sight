@@ -103,6 +103,13 @@ export function useAchievements() {
         }));
     }, []);
 
+    const setStat = useCallback((statId: string, value: number) => {
+        setStats(prev => ({
+            ...prev,
+            [statId]: value
+        }));
+    }, []);
+
     // Check for Unlocks
     useEffect(() => {
         setAchievementsState(prevState => {
@@ -158,6 +165,7 @@ export function useAchievements() {
         stats,
         newUnlocks,
         incrementStat,
+        setStat,
         clearNewUnlocks,
         getProgress
     };

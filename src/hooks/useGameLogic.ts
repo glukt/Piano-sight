@@ -66,12 +66,19 @@ export const useGameLogic = () => {
     const { state: gameState, addXp, levelUp, clearLevelUp } = useGamification();
     const {
         incrementStat,
+        setStat,
         newUnlocks,
         clearNewUnlocks,
         achievements,
         achievementsState,
         getProgress
     } = useAchievements();
+
+    useEffect(() => {
+        if (gameState.level) {
+            setStat('level', gameState.level);
+        }
+    }, [gameState.level, setStat]);
 
     const {
         challenges: dailyChallenges,

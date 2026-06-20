@@ -169,6 +169,30 @@ export class PlaybackEngine {
         return measures[measureIndex].AbsoluteTimestamp.RealValue;
     }
 
+    public getMeasureAtTimestamp(timestamp: number): number {
+        if (!this.osmd.Sheet || !this.osmd.Sheet.SourceMeasures) return 0;
+        const measures = this.osmd.Sheet.SourceMeasures;
+        if (measures.length === 0) return 0;
+
+        // Find the measure whose start timestamp is closest to, or just before, the given timestamp
+        for (let i = 0; i < measures.length; i++) {
+            const currentVal = measures[i]?.AbsoluteTimestamp?.RealValue ?? 0;
+            const nextVal = (i + 1 < measures.length && measures[i + 1])
+                ? measures[i + 1].AbsoluteTimestamp.RealValue
+                : this.TotalDuration;
+            
+            if (timestamp >= currentVal && timestamp < nextVal) {
+                return i;
+            }
+        }
+
+        if (timestamp >= this.TotalDuration) {
+            return measures.length - 1;
+        }
+
+        return 0;
+    }
+
     public getNotesAtCurrentPosition(): { midi: number, isTied: boolean }[] {
         const cursor = this.getCursor();
         if (!cursor) return [];

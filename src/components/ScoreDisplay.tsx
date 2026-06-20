@@ -65,6 +65,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         startPractice,
         stopPractice,
         nextSection,
+        prevSection,
         expectedNotes,
         showHint,
         isSongComplete,
@@ -89,6 +90,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
     const [totalDuration, setTotalDuration] = useState(0);
     const [loopStart, setLoopStart] = useState<number | null>(null);
     const [loopEnd, setLoopEnd] = useState<number | null>(null);
+    const [measureTimestamps, setMeasureTimestamps] = useState<number[]>([]);
 
     // Visual Preferences
     const [showKeyboard, setShowKeyboard] = useState(true);
@@ -147,6 +149,16 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 
                 // Init Playback Engine
                 playbackRef.current = new PlaybackEngine(osmdRef.current);
+                const count = playbackRef.current.MeasureCount;
+                const timestamps: number[] = [];
+                for (let i = 0; i < count; i++) {
+                    const ts = playbackRef.current.getMeasureTimestamp(i);
+                    if (ts !== null) {
+                        timestamps.push(ts);
+                    }
+                }
+                setMeasureTimestamps(timestamps);
+
                 playbackRef.current.setPlaybackCallback((playing) => {
                     setIsPlaying(playing);
                 });
@@ -394,6 +406,14 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         if (playbackRef.current) {
             setActiveNotes(new Set());
             playbackRef.current.seek(val);
+            if (isPracticeActive) {
+                const seekedMeasure = playbackRef.current.getMeasureAtTimestamp(val);
+                if (seekedMeasure >= practiceSection.startMeasure && seekedMeasure < practiceSection.endMeasure) {
+                    startPractice(practiceSection.startMeasure);
+                } else {
+                    startPractice(seekedMeasure);
+                }
+            }
         }
     };
 
@@ -463,6 +483,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                     practiceFeedback={practiceFeedback}
                     onReplay={() => playbackRef.current?.seek(playbackRef.current.getMeasureTimestamp(practiceSection.startMeasure) || 0)}
                     onNext={nextSection}
+                    onPrev={prevSection}
                     onExit={stopPractice}
                 />
             )}
@@ -477,6 +498,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                     onSetLoopStart={handleSetLoopStart}
                     onSetLoopEnd={handleSetLoopEnd}
                     onClearLoop={handleClearLoop}
+                    measureTimestamps={measureTimestamps}
                 />
             </div>
 

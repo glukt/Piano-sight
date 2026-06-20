@@ -41,7 +41,15 @@ export function usePracticeMode({
     // Track held wrong notes to avoid counting the same press multiple times
     const heldWrongNotesRef = useRef<Set<number>>(new Set());
 
+    const isTransitioningRef = useRef(false);
+    const transitionTimeoutRef = useRef<any>(null);
+
     const startPractice = useCallback((startMeasure?: number) => {
+        if (transitionTimeoutRef.current) {
+            clearTimeout(transitionTimeoutRef.current);
+            transitionTimeoutRef.current = null;
+        }
+        isTransitioningRef.current = false;
         setIsActive(true);
         const start = startMeasure !== undefined ? startMeasure : 0;
         const end = Math.min(start + 2, totalMeasures);
@@ -58,12 +66,23 @@ export function usePracticeMode({
     }, [totalMeasures]);
 
     const stopPractice = useCallback(() => {
+        if (transitionTimeoutRef.current) {
+            clearTimeout(transitionTimeoutRef.current);
+            transitionTimeoutRef.current = null;
+        }
+        isTransitioningRef.current = false;
         setIsActive(false);
         playbackEngine?.stop();
         playbackEngine?.setLoop(null, null);
     }, [playbackEngine]);
 
     const nextSection = useCallback(() => {
+        if (transitionTimeoutRef.current) {
+            clearTimeout(transitionTimeoutRef.current);
+            transitionTimeoutRef.current = null;
+        }
+        isTransitioningRef.current = false;
+
         const nextStart = currentSection.endMeasure;
         const nextEnd = Math.min(nextStart + 2, totalMeasures);
 
@@ -89,6 +108,12 @@ export function usePracticeMode({
     }, [currentSection, totalMeasures, playbackEngine]);
 
     const retrySection = useCallback(() => {
+        if (transitionTimeoutRef.current) {
+            clearTimeout(transitionTimeoutRef.current);
+            transitionTimeoutRef.current = null;
+        }
+        isTransitioningRef.current = false;
+
         setFeedback("Let's try that again. Focus on accuracy.");
         setNotesCorrect(0);
         setNotesMissed(0);
@@ -99,6 +124,35 @@ export function usePracticeMode({
         setMode('preview');
         setPreviewLoopCount(0);
     }, []);
+
+    const prevSection = useCallback(() => {
+        if (transitionTimeoutRef.current) {
+            clearTimeout(transitionTimeoutRef.current);
+            transitionTimeoutRef.current = null;
+        }
+        isTransitioningRef.current = false;
+
+        const currentStart = currentSection.startMeasure;
+        const prevStart = Math.max(0, currentStart - 2);
+        const prevEnd = currentStart;
+
+        if (currentStart === 0) {
+            setFeedback("Already at the beginning!");
+            return;
+        }
+
+        // Force stop to clear notes and visuals immediately
+        playbackEngine?.stop();
+
+        setCurrentSection({ startMeasure: prevStart, endMeasure: prevEnd });
+        setMode('preview'); // Reset to preview for new section
+        setPreviewLoopCount(0);
+        setNotesCorrect(0);
+        setNotesMissed(0);
+        setLastSuccessfulNotes(new Set());
+        heldWrongNotesRef.current.clear();
+        setFeedback("Previous Section! Listen first.");
+    }, [currentSection, playbackEngine]);
 
     // Effect to handle Mode Transitions & Looping
     useEffect(() => {
@@ -205,6 +259,7 @@ export function usePracticeMode({
         if (!isActive || mode !== 'wait' || !playbackEngine) return;
 
         const checkInput = () => {
+            if (isTransitioningRef.current) return;
             const currentExpectedObjs = playbackEngine.getNotesAtCurrentPosition();
             const currentExpectedMidis = currentExpectedObjs.map(n => n.midi);
             const currentExpectedStr = currentExpectedMidis.slice().sort().join(',');
@@ -247,19 +302,24 @@ export function usePracticeMode({
             const endTimestamp = playbackEngine.getMeasureTimestamp(currentSectionRef.current.endMeasure);
 
             if (endTimestamp !== null && currentTimestamp >= endTimestamp) {
+                isTransitioningRef.current = true;
                 // End of Section Reached! Check Accuracy.
                 const total = notesCorrectRef.current + notesMissedRef.current;
                 // If total is 0 (empty section?), treat as 100%
                 const acc = total > 0 ? (notesCorrectRef.current / total) * 100 : 100;
                 setAccuracy(Math.round(acc));
 
+                if (transitionTimeoutRef.current) {
+                    clearTimeout(transitionTimeoutRef.current);
+                }
+
                 if (acc >= 90) {
                     setFeedback(`Great! Accuracy: ${Math.round(acc)}%. Moving on!`);
                     if (onSectionCompleteRef.current) onSectionCompleteRef.current(); // Major XP event
-                    setTimeout(() => nextSectionRef.current(), 1500);
+                    transitionTimeoutRef.current = setTimeout(() => nextSectionRef.current(), 1500);
                 } else {
                     setFeedback(`Accuracy: ${Math.round(acc)}%. Let's try again.`);
-                    setTimeout(() => retrySectionRef.current(), 1500);
+                    transitionTimeoutRef.current = setTimeout(() => retrySectionRef.current(), 1500);
                 }
                 playbackEngine.stop(); // Stop checking
                 setShowHint(false);
@@ -409,6 +469,7 @@ export function usePracticeMode({
         stopPractice,
         setMode,
         nextSection,
+        prevSection,
         retrySection,
         expectedNotes,
         showHint,

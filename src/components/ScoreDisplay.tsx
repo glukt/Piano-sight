@@ -332,6 +332,8 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
     // Horizontal Scroll Centering Controller
     useEffect(() => {
         if (layoutMode !== 'scrolling' || !osmdRef.current || loading) return;
+        // Don't auto-snap scroll during Play Mode countdown sliding animation
+        if (isPracticeActive && practiceMode === 'play' && !playModeStarted) return;
 
         const cursor = osmdRef.current.cursor;
         const container = containerRef.current;
@@ -342,17 +344,69 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             const containerRect = container.getBoundingClientRect();
             const cursorRect = cursorEl.getBoundingClientRect();
 
-            // Target scroll left so the cursor is exactly at 25% of the container width
-            const targetLeft = container.scrollLeft + (cursorRect.left - containerRect.left) - (containerRect.width * 0.25);
+            // Align center of cursor with 25% playhead
+            const targetLeft = container.scrollLeft + (cursorRect.left + cursorRect.width / 2 - containerRect.left) - (containerRect.width * 0.25);
 
             container.scrollTo({
                 left: targetLeft,
-                behavior: 'smooth'
+                behavior: 'auto' // Instant snap during normal playback to prevent smooth scroll lagging
             });
         } catch (e) {
             // Cursor element might not be fully ready in DOM
         }
-    }, [currentTimestamp, layoutMode, loading]);
+    }, [currentTimestamp, layoutMode, loading, isPracticeActive, practiceMode, playModeStarted]);
+
+    // Handle sliding scroll runway animation during Play Mode countdown
+    useEffect(() => {
+        if (practiceMode !== 'play' || countdown !== 3 || !containerRef.current || !osmdRef.current) return;
+
+        const container = containerRef.current;
+        const cursorEl = osmdRef.current.cursor?.cursorElement;
+        if (!container || !cursorEl) return;
+
+        try {
+            const containerRect = container.getBoundingClientRect();
+            const cursorRect = cursorEl.getBoundingClientRect();
+
+            // Calculate target scroll for first note center-aligned to 25% playhead
+            const targetScroll = container.scrollLeft + (cursorRect.left + cursorRect.width / 2 - containerRect.left) - (containerRect.width * 0.25);
+
+            // Scroll to 0 instantly at countdown start
+            container.scrollLeft = 0;
+
+            // Animate scroll to target over 3000ms
+            const start = 0;
+            const change = targetScroll - start;
+            const startTime = performance.now();
+            const duration = 3000;
+
+            let animationFrameId: number;
+
+            const animate = (currentTime: number) => {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Easing: easeInOutQuad
+                const ease = progress < 0.5 
+                    ? 2 * progress * progress 
+                    : -1 + (4 - 2 * progress) * progress;
+
+                container.scrollLeft = start + change * ease;
+
+                if (progress < 1) {
+                    animationFrameId = requestAnimationFrame(animate);
+                }
+            };
+
+            animationFrameId = requestAnimationFrame(animate);
+
+            return () => {
+                cancelAnimationFrame(animationFrameId);
+            };
+        } catch (e) {
+            console.warn("Countdown animation failed:", e);
+        }
+    }, [countdown, practiceMode]);
 
     useEffect(() => {
         return () => {

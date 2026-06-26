@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useWindowSize } from './hooks/useWindowSize';
 import { useGameLogic } from './hooks/useGameLogic';
+import { useMusicLibrary } from './hooks/useMusicLibrary';
+import { usePreferences } from './hooks/usePreferences';
 
 // Components
 import { TopNav } from './components/layout/TopNav';
@@ -19,16 +21,9 @@ import { DailyWorkout } from './components/DailyWorkout';
 
 function App() {
     const { width: windowWidth } = useWindowSize();
-    const [isDarkMode, setIsDarkMode] = useState(false);
-    
-    // Sync dark mode class to HTML document root for Tailwind dark support
-    useEffect(() => {
-        if (isDarkMode) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-    }, [isDarkMode]);
+    const { preferences, updatePreference } = usePreferences();
+    const isDarkMode = preferences.isDarkMode;
+    const setIsDarkMode = (val: boolean) => updatePreference('isDarkMode', val);
 
     const [currentView, setCurrentView] = useState<'game' | 'musicxml' | 'reference' | 'settings' | 'courseSelection' | 'intro' | 'dailyWorkout'>('courseSelection');
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
@@ -40,9 +35,16 @@ function App() {
     const [workoutReview, setWorkoutReview] = useState<{ songUrl: string; measure: number } | null>(null);
     const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
 
+    // Initialize Music Library Hook
+    const library = useMusicLibrary();
+
+    const completedLessonIds = useMemo(() => {
+        return new Set(Object.keys(library.lessonProgress));
+    }, [library.lessonProgress]);
+
     // Initialize Game Logic Hook
     // This hook manages the game state, audio, and gamification
-    const gameLogic = useGameLogic();
+    const gameLogic = useGameLogic(library.saveHighScore);
 
     // We removed the global auto-start audio hook here. Audio is now explicitly started 
     // when a user clicks 'Start Lesson' or explicitly loads a custom song.
@@ -101,16 +103,18 @@ function App() {
         <div className={`min-h-screen flex flex-col items-center p-4 md:p-8 transition-colors duration-500 ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
 
             {/* Top Navigation */}
-            <TopNav
-                currentView={currentView}
-                setCurrentView={setCurrentView}
-                level={gameLogic.gameState.level}
-                xp={gameLogic.gameState.xp}
-                newUnlocksCount={gameLogic.newUnlocks.length}
-                onOpenAchievements={() => setIsAchievementsOpen(true)}
-                isDarkMode={isDarkMode}
-                setIsDarkMode={setIsDarkMode}
-            />
+            {currentView !== 'musicxml' && currentView !== 'game' && (
+                <TopNav
+                    currentView={currentView}
+                    setCurrentView={setCurrentView}
+                    level={gameLogic.gameState.level}
+                    xp={gameLogic.gameState.xp}
+                    newUnlocksCount={gameLogic.newUnlocks.length}
+                    onOpenAchievements={() => setIsAchievementsOpen(true)}
+                    isDarkMode={isDarkMode}
+                    setIsDarkMode={setIsDarkMode}
+                />
+            )}
 
             {/* Main Content Area */}
             <main className="w-full max-w-6xl flex flex-col items-center">
@@ -120,6 +124,7 @@ function App() {
                     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <CourseSelection
                             userXp={gameLogic.gameState.xp}
+                            completedLessonIds={completedLessonIds}
                             onSelectLesson={(lesson) => {
                                 setSelectedLesson(lesson);
                                 setCurrentView('intro');
@@ -222,7 +227,7 @@ function App() {
                             </>
                         ) : (
                             <div className="w-full">
-                                <MusicLibrary onSelectScore={handleScoreSelect} />
+                                <MusicLibrary onSelectScore={handleScoreSelect} library={library} />
                             </div>
                         )}
                     </div>
@@ -233,6 +238,7 @@ function App() {
                     <div className="w-full flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <DailyWorkout
                             userXp={gameLogic.gameState.xp}
+                            completedLessonIds={completedLessonIds}
                             userActiveNotes={gameLogic.effectiveActiveNotes}
                             isDarkMode={isDarkMode}
                             onAddXp={gameLogic.awardXp}
@@ -263,8 +269,6 @@ function App() {
                         <SettingsPanel
                             isDarkMode={isDarkMode}
                             onToggleTheme={() => setIsDarkMode(!isDarkMode)}
-                            showNoteLabels={gameLogic.showNoteLabels}
-                            onToggleLabels={() => gameLogic.setShowNoteLabels(!gameLogic.showNoteLabels)}
                             audioStarted={gameLogic.audioStarted}
                             isAudioLoading={gameLogic.isAudioLoading}
                             onStartAudio={gameLogic.startAudio}

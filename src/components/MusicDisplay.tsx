@@ -120,17 +120,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                     }
                 }
 
-                if (showLabels && !isRest) {
-                    n.keys.forEach((key, index) => {
-                        const noteName = key.split('/')[0].toUpperCase();
-                        staveNote.addModifier(
-                            new VF.Annotation(noteName)
-                                .setVerticalJustification(VF.Annotation.VerticalJustify.BOTTOM)
-                                .setFont("Arial", 10, "")
-                            , index
-                        );
-                    });
-                }
+
                 return staveNote;
             });
 
@@ -196,7 +186,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                 const noteVal = noteMap[note.toLowerCase()[0]] ?? 0;
                 const diatonic = noteVal + octave * 7;
                 const stepDiff = diatonic - 34;
-                return 65 - stepDiff * 5;
+                return 60 - stepDiff * 5;
             };
 
             const getBassY = (key: string) => {
@@ -206,7 +196,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                 const noteVal = noteMap[note.toLowerCase()[0]] ?? 0;
                 const diatonic = noteVal + octave * 7;
                 const stepDiff = diatonic - 22;
-                return 165 - stepDiff * 5;
+                return 160 - stepDiff * 5;
             };
 
             positions.forEach((x, i) => {
@@ -218,19 +208,23 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                         tNote.keys.forEach(k => {
                             const noteName = k.split('/')[0].toUpperCase();
                             const y = getTrebleY(k);
+                            const isHollow = tNote.duration === 'h' || tNote.duration === 'w';
+                            const textColor = isHollow
+                                ? (isDarkMode ? "#ffffff" : "#1e3a8a")
+                                : (isDarkMode ? "#111827" : "#ffffff");
 
                             const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
                             label.setAttribute("class", "custom-watermark");
                             label.textContent = noteName.replace(/#/g, '♯').replace(/b/g, '♭');
                             label.setAttribute("x", x.toString());
-                            label.setAttribute("y", (y + 8).toString());
-                            label.setAttribute("fill", isDarkMode ? "rgba(255, 255, 255, 0.15)" : "rgba(59, 130, 246, 0.2)");
+                            label.setAttribute("y", (y + 4).toString());
+                            label.setAttribute("fill", textColor);
                             label.setAttribute("font-family", "Outfit, sans-serif");
                             label.setAttribute("font-weight", "900");
-                            label.setAttribute("font-size", "24");
+                            label.setAttribute("font-size", "12");
                             label.setAttribute("text-anchor", "middle");
                             label.setAttribute("pointer-events", "none");
-                            svgElement.insertBefore(label, svgElement.firstChild);
+                            svgElement.appendChild(label);
                         });
                     }
 
@@ -238,19 +232,23 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                         bNote.keys.forEach(k => {
                             const noteName = k.split('/')[0].toUpperCase();
                             const y = getBassY(k);
+                            const isHollow = bNote.duration === 'h' || bNote.duration === 'w';
+                            const textColor = isHollow
+                                ? (isDarkMode ? "#ffffff" : "#1e3a8a")
+                                : (isDarkMode ? "#111827" : "#ffffff");
 
                             const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
                             label.setAttribute("class", "custom-watermark");
                             label.textContent = noteName.replace(/#/g, '♯').replace(/b/g, '♭');
                             label.setAttribute("x", x.toString());
-                            label.setAttribute("y", (y + 8).toString());
-                            label.setAttribute("fill", isDarkMode ? "rgba(255, 255, 255, 0.15)" : "rgba(59, 130, 246, 0.2)");
+                            label.setAttribute("y", (y + 4).toString());
+                            label.setAttribute("fill", textColor);
                             label.setAttribute("font-family", "Outfit, sans-serif");
                             label.setAttribute("font-weight", "900");
-                            label.setAttribute("font-size", "24");
+                            label.setAttribute("font-size", "12");
                             label.setAttribute("text-anchor", "middle");
                             label.setAttribute("pointer-events", "none");
-                            svgElement.insertBefore(label, svgElement.firstChild);
+                            svgElement.appendChild(label);
                         });
                     }
                 }

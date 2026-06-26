@@ -1,10 +1,9 @@
 import React from 'react';
+import { usePreferences } from '../hooks/usePreferences';
 
 interface SettingsPanelProps {
     isDarkMode: boolean;
     onToggleTheme: () => void;
-    showNoteLabels: boolean;
-    onToggleLabels: () => void;
     audioStarted: boolean;
     isAudioLoading: boolean;
     onStartAudio: () => void;
@@ -18,8 +17,6 @@ interface SettingsPanelProps {
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     isDarkMode,
     onToggleTheme,
-    showNoteLabels,
-    onToggleLabels,
     audioStarted,
     isAudioLoading,
     onStartAudio,
@@ -29,6 +26,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     onMicSensitivityChange,
     midiInputs = []
 }) => {
+    const { preferences, updatePreference } = usePreferences();
     // Normalize volume for progress bar (RMS ranges roughly 0 to 0.1 for typical input)
     const volumePercentage = Math.min(100, Math.round((micVolume / 0.1) * 100));
 
@@ -129,7 +127,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-700">
                     <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-4">Appearance</h3>
 
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between">
                         <span className="text-gray-600 dark:text-gray-300 font-medium">Dark Mode</span>
                         <button
                             onClick={onToggleTheme}
@@ -138,15 +136,72 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                             <div className={`w-6 h-6 rounded-full bg-white shadow-sm transform transition-transform duration-300 ${isDarkMode ? 'translate-x-6' : 'translate-x-0'}`} />
                         </button>
                     </div>
+                </div>
 
-                    <div className="flex items-center justify-between">
-                        <span className="text-gray-600 dark:text-gray-300 font-medium">Show Note Labels</span>
+                {/* Tutor & Practice Preferences */}
+                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-4">Tutor & Practice Preferences</h3>
+
+                    {/* Show Keyboard */}
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <span className="text-gray-600 dark:text-gray-300 font-medium block">Show Virtual Keyboard</span>
+                            <span className="text-xs text-gray-400">Display the on-screen interactive piano keyboard</span>
+                        </div>
                         <button
-                            onClick={onToggleLabels}
-                            className={`w-14 h-8 rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 ${showNoteLabels ? 'bg-blue-600' : 'bg-gray-300'}`}
+                            onClick={() => updatePreference('showKeyboard', !preferences.showKeyboard)}
+                            className={`w-14 h-8 rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 ${preferences.showKeyboard ? 'bg-blue-600' : 'bg-gray-300'}`}
                         >
-                            <div className={`w-6 h-6 rounded-full bg-white shadow-sm transform transition-transform duration-300 ${showNoteLabels ? 'translate-x-6' : 'translate-x-0'}`} />
+                            <div className={`w-6 h-6 rounded-full bg-white shadow-sm transform transition-transform duration-300 ${preferences.showKeyboard ? 'translate-x-6' : 'translate-x-0'}`} />
                         </button>
+                    </div>
+
+                    {/* Show Piano Key Labels */}
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <span className="text-gray-600 dark:text-gray-300 font-medium block">Show Note Labels on Keys</span>
+                            <span className="text-xs text-gray-400">Show C, D, E, etc., directly on the piano keys</span>
+                        </div>
+                        <button
+                            onClick={() => updatePreference('showPianoLabels', !preferences.showPianoLabels)}
+                            className={`w-14 h-8 rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 ${preferences.showPianoLabels ? 'bg-blue-600' : 'bg-gray-300'}`}
+                        >
+                            <div className={`w-6 h-6 rounded-full bg-white shadow-sm transform transition-transform duration-300 ${preferences.showPianoLabels ? 'translate-x-6' : 'translate-x-0'}`} />
+                        </button>
+                    </div>
+
+                    {/* Sound Type Selection */}
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <span className="text-gray-600 dark:text-gray-300 font-medium block">Instrument Sound Type</span>
+                            <span className="text-xs text-gray-400">Synthesizer waveforms vs realistic piano samples</span>
+                        </div>
+                        <select
+                            value={preferences.soundType}
+                            onChange={(e) => updatePreference('soundType', e.target.value as 'synth' | 'samples')}
+                            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm font-bold text-gray-700 dark:text-gray-200 outline-none focus:border-indigo-500"
+                        >
+                            <option value="synth">Synthesizer</option>
+                            <option value="samples">Grand Piano Samples</option>
+                        </select>
+                    </div>
+
+                    {/* Hint Delay Dropdown */}
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <span className="text-gray-600 dark:text-gray-300 font-medium block">Tutor Hint Delay</span>
+                            <span className="text-xs text-gray-400">How long to wait before highlighting target keys when stuck</span>
+                        </div>
+                        <select
+                            value={preferences.hintDelay}
+                            onChange={(e) => updatePreference('hintDelay', Number(e.target.value))}
+                            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm font-bold text-gray-700 dark:text-gray-200 outline-none focus:border-indigo-500"
+                        >
+                            <option value={3000}>3 Seconds</option>
+                            <option value={5000}>5 Seconds</option>
+                            <option value={10000}>10 Seconds</option>
+                            <option value={0}>Off (No Hints)</option>
+                        </select>
                     </div>
                 </div>
 

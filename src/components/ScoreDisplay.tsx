@@ -7,6 +7,8 @@ import VirtualKeyboard from './VirtualKeyboard';
 // import { useMidi } from '../hooks/useMidi'; // Removed, passed as prop
 import { usePracticeMode } from '../hooks/usePracticeMode';
 import { useMusicLibrary } from '../hooks/useMusicLibrary';
+import { usePreferences } from '../hooks/usePreferences';
+import { midiToNoteName } from '../utils/midiUtils';
 import LoopingControls from './LoopingControls';
 import { VexFlowGraphicalNote } from 'opensheetmusicdisplay/build/dist/src/MusicalScore/Graphical/VexFlow/VexFlowGraphicalNote';
 import { ScoreControls } from './ScoreControls';
@@ -51,8 +53,10 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
     const [loading, setLoading] = useState(true);
     const [isPlaying, setIsPlaying] = useState(false);
     const [activeNotes, setActiveNotes] = useState<Set<number>>(new Set());
+    const { preferences, updatePreference } = usePreferences();
     const [error, setError] = useState<string | null>(null);
-    const [layoutMode, setLayoutMode] = useState<'standard' | 'scrolling'>('standard');
+    const layoutMode = preferences.layoutMode;
+    const setLayoutMode = (val: 'standard' | 'scrolling') => updatePreference('layoutMode', val);
 
     const [isMutedPlayback, setIsMutedPlayback] = useState(false);
 
@@ -107,10 +111,13 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
     const [measureTimestamps, setMeasureTimestamps] = useState<number[]>([]);
 
     // Visual Preferences
-    const [showKeyboard, setShowKeyboard] = useState(true);
+    const showKeyboard = preferences.showKeyboard;
+    const setShowKeyboard = (val: boolean) => updatePreference('showKeyboard', val);
     const [highlightNotes, setHighlightNotes] = useState(true);
-    const [showNoteNames, setShowNoteNames] = useState(false);
-    const [showPianoLabels, setShowPianoLabels] = useState(false);
+    const showNoteNames = preferences.showNoteNames;
+    const setShowNoteNames = (val: boolean) => updatePreference('showNoteNames', val);
+    const showPianoLabels = preferences.showPianoLabels;
+    const setShowPianoLabels = (val: boolean) => updatePreference('showPianoLabels', val);
 
     // Determine if we should show keyboard
     // Show if: User manually toggled ON OR (Practice Mode AND Hint is Active)
@@ -296,21 +303,52 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 
                                         // 2. Note Name Labels
                                         if (showNoteNames) {
-                                            const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
                                             const pitch = note.sourceNote.Pitch;
-                                            let text = pitch.ToString(); // e.g. "C4"
-                                            text = text.replace(/\d/, ''); // Remove octave
+                                            if (pitch) {
+                                                const midiVal = pitch.getHalfTone() + 12;
+                                                const noteName = midiToNoteName(midiVal);
+                                                let text = noteName.replace(/\d/g, '');
+                                                text = text.replace(/#/g, '♯').replace(/b/g, '♭');
 
-                                            label.textContent = text;
-                                            label.setAttribute("class", "osmd-note-label");
-                                            label.setAttribute("fill", isDarkMode ? "rgba(59, 130, 246, 0.45)" : "rgba(59, 130, 246, 0.25)");
-                                            label.setAttribute("font-family", "Outfit, sans-serif");
-                                            label.setAttribute("font-weight", "800");
-                                            label.setAttribute("font-size", "28");
-                                            label.setAttribute("text-anchor", "middle");
-                                            label.setAttribute("y", "8"); // Center with notehead
+                                                const paths = Array.from(svgEl.querySelectorAll('path'));
+                                                const noteheadPath = paths.find(path => {
+                                                    try {
+                                                        const bbox = path.getBBox();
+                                                        return bbox.width > 6 && bbox.width < 22 && bbox.height > 4 && bbox.height < 15;
+                                                    } catch (e) {
+                                                        return false;
+                                                    }
+                                                }) || svgEl.querySelector('path');
 
-                                            svgEl.insertBefore(label, svgEl.firstChild);
+                                                if (noteheadPath) {
+                                                    try {
+                                                        const bbox = noteheadPath.getBBox();
+                                                        const centerX = bbox.x + bbox.width / 2;
+                                                        const centerY = bbox.y + bbox.height / 2;
+
+                                                        const isHollow = note.sourceNote.Length && note.sourceNote.Length.RealValue >= 0.5;
+                                                        const textColor = isHollow
+                                                            ? (isDarkMode ? "#ffffff" : "#1e3a8a")
+                                                            : (isDarkMode ? "#111827" : "#ffffff");
+
+                                                        const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                                                        label.textContent = text;
+                                                        label.setAttribute("class", "osmd-note-label");
+                                                        label.setAttribute("x", centerX.toString());
+                                                        label.setAttribute("y", (centerY + 4).toString());
+                                                        label.setAttribute("fill", textColor);
+                                                        label.setAttribute("font-family", "Outfit, sans-serif");
+                                                        label.setAttribute("font-weight", "950");
+                                                        label.setAttribute("font-size", "11");
+                                                        label.setAttribute("text-anchor", "middle");
+                                                        label.setAttribute("pointer-events", "none");
+
+                                                        svgEl.appendChild(label); // Append last to render on top
+                                                    } catch (e) {
+                                                        console.error("Error setting note label coords:", e);
+                                                    }
+                                                }
+                                            }
                                         }
                                     });
                                 });

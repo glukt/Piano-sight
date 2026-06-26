@@ -128,12 +128,34 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         setSensitivity: setMicSensitivity
     } = useAudioInput();
 
+    // Simulated active notes state for touch/screen piano interactions
+    const [simulatedActiveNotes, setSimulatedActiveNotes] = useState<Set<number>>(new Set());
+
+    const handleSimulatedNoteOn = useCallback((note: number, velocity: number = 100) => {
+        setSimulatedActiveNotes(prev => {
+            const next = new Set(prev);
+            next.add(note);
+            return next;
+        });
+        onNoteOn.current(note, velocity);
+    }, []);
+
+    const handleSimulatedNoteOff = useCallback((note: number) => {
+        setSimulatedActiveNotes(prev => {
+            const next = new Set(prev);
+            next.delete(note);
+            return next;
+        });
+        onNoteOff.current(note);
+    }, []);
+
     // Merge Inputs
     const effectiveActiveNotes = useMemo(() => {
         const notes = new Set(activeNotes);
         if (micNote !== null) notes.add(micNote);
+        simulatedActiveNotes.forEach(n => notes.add(n));
         return notes;
-    }, [activeNotes, micNote]);
+    }, [activeNotes, micNote, simulatedActiveNotes]);
 
     // Mic Attack Handling
     const prevMicNote = useRef<number | null>(null);
@@ -694,6 +716,8 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         setIsMutedKeys,
         setIsLessonComplete,
         goToNextLesson,
+        handleSimulatedNoteOn,
+        handleSimulatedNoteOff,
 
         // Course specific
         currentLesson,

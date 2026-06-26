@@ -18,6 +18,7 @@ import { LessonIntro } from './components/game/LessonIntro';
 import { Lesson } from './utils/music/CourseData';
 import { LevelUpModal } from './components/game/LevelUpModal';
 import { DailyWorkout } from './components/DailyWorkout';
+import { SightReadingTrainer } from './components/game/SightReadingTrainer';
 
 function App() {
     const { width: windowWidth } = useWindowSize();
@@ -25,7 +26,7 @@ function App() {
     const isDarkMode = preferences.isDarkMode;
     const setIsDarkMode = (val: boolean) => updatePreference('isDarkMode', val);
 
-    const [currentView, setCurrentView] = useState<'game' | 'musicxml' | 'reference' | 'settings' | 'courseSelection' | 'intro' | 'dailyWorkout'>('courseSelection');
+    const [currentView, setCurrentView] = useState<'game' | 'musicxml' | 'reference' | 'settings' | 'courseSelection' | 'intro' | 'dailyWorkout' | 'trainer'>('courseSelection');
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
     const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -295,10 +296,20 @@ function App() {
                         />
                     </div>
                 )}
+
+                {/* SIGHT READING TRAINER VIEW */}
+                {currentView === 'trainer' && (
+                    <div className="w-full flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <SightReadingTrainer
+                            gameLogic={gameLogic}
+                            onBackHome={() => setCurrentView('courseSelection')}
+                        />
+                    </div>
+                )}
             </main>
 
             {/* Level Up Modal (deferred to selection screens only) */}
-            {(currentView === 'courseSelection' || currentView === 'dailyWorkout') && (
+            {(currentView === 'courseSelection' || currentView === 'dailyWorkout' || currentView === 'trainer') && (
                 <LevelUpModal
                     level={gameLogic.levelUp}
                     onClose={gameLogic.clearLevelUp}

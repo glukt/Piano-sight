@@ -9,6 +9,9 @@ interface VirtualKeyboardProps {
     rangeEnd?: number;   // MIDI note to end (default 108 - C8)
     showLabels?: boolean;
     showStaff?: boolean;
+    interactive?: boolean;
+    onNoteOn?: (midi: number) => void;
+    onNoteOff?: (midi: number) => void;
 }
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -26,7 +29,10 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
     rangeStart = 21,
     rangeEnd = 108,
     showLabels = false,
-    showStaff = false
+    showStaff = false,
+    interactive = false,
+    onNoteOn,
+    onNoteOff
 }) => {
     const { width: windowWidth } = useWindowSize();
     const isMobile = windowWidth < 768;
@@ -165,6 +171,18 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
         );
     };
 
+    const handleKeyDown = (midi: number, e: React.MouseEvent | React.TouchEvent) => {
+        if (!interactive) return;
+        e.preventDefault();
+        onNoteOn?.(midi);
+    };
+
+    const handleKeyUp = (midi: number, e: React.MouseEvent | React.TouchEvent) => {
+        if (!interactive) return;
+        e.preventDefault();
+        onNoteOff?.(midi);
+    };
+
     return (
         <div className="virtual-keyboard w-full h-32 bg-gray-900 p-2 rounded-lg flex relative overflow-hidden select-none">
             {keys.map((key) => {
@@ -199,9 +217,14 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
                     <div
                         key={key.midi}
                         className={`virtual-key-white flex-1 h-full border border-gray-400 rounded-b-sm relative transition-colors duration-75
-                             ${bgColor}
+                             ${bgColor} ${interactive ? 'cursor-pointer' : ''}
                         `}
                         style={{ zIndex: 1 }}
+                        onMouseDown={interactive ? (e) => handleKeyDown(key.midi, e) : undefined}
+                        onMouseUp={interactive ? (e) => handleKeyUp(key.midi, e) : undefined}
+                        onMouseLeave={interactive ? (e) => handleKeyUp(key.midi, e) : undefined}
+                        onTouchStart={interactive ? (e) => handleKeyDown(key.midi, e) : undefined}
+                        onTouchEnd={interactive ? (e) => handleKeyUp(key.midi, e) : undefined}
                     >
                         {showStaff && renderStaffNote(key.midi)}
                         {showLabels && (
@@ -249,12 +272,17 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
                         <div
                             key={key.midi}
                             className={`absolute top-0 h-full rounded-b-sm transition-colors duration-75
-                                ${bgColor}
+                                ${bgColor} ${interactive ? 'cursor-pointer pointer-events-auto' : ''}
                              `}
                             style={{
                                 left: `${leftPercent}%`,
                                 width: `${widthPercent}%`
                             }}
+                            onMouseDown={interactive ? (e) => handleKeyDown(key.midi, e) : undefined}
+                            onMouseUp={interactive ? (e) => handleKeyUp(key.midi, e) : undefined}
+                            onMouseLeave={interactive ? (e) => handleKeyUp(key.midi, e) : undefined}
+                            onTouchStart={interactive ? (e) => handleKeyDown(key.midi, e) : undefined}
+                            onTouchEnd={interactive ? (e) => handleKeyUp(key.midi, e) : undefined}
                         />
                     );
                 })}

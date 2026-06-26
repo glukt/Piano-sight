@@ -8,6 +8,7 @@ export interface Preferences {
     layoutMode: 'standard' | 'scrolling';
     hintDelay: number; // in milliseconds (e.g. 3000, 5000, 10000, 0 for off)
     soundType: 'synth' | 'samples';
+    inputMode: 'instrument' | 'touch';
 }
 
 const DEFAULT_PREFERENCES: Preferences = {
@@ -18,6 +19,7 @@ const DEFAULT_PREFERENCES: Preferences = {
     layoutMode: 'standard',
     hintDelay: 3000,
     soundType: 'synth',
+    inputMode: 'instrument',
 };
 
 interface PreferencesContextType {

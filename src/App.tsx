@@ -297,11 +297,13 @@ function App() {
                 )}
             </main>
 
-            {/* Level Up Modal (using hook state) */}
-            <LevelUpModal
-                level={gameLogic.levelUp}
-                onClose={gameLogic.clearLevelUp}
-            />
+            {/* Level Up Modal (deferred to selection screens only) */}
+            {(currentView === 'courseSelection' || currentView === 'dailyWorkout') && (
+                <LevelUpModal
+                    level={gameLogic.levelUp}
+                    onClose={gameLogic.clearLevelUp}
+                />
+            )}
 
             {/* Footer */}
             <div className="mt-8 opacity-50 text-xs">
@@ -322,6 +324,7 @@ function App() {
                 unlockedAchievements={gameLogic.newUnlocks}
                 completedChallenges={gameLogic.newDailyCompleted}
                 allChallenges={gameLogic.dailyChallenges}
+                levelUp={gameLogic.levelUp}
                 onClear={() => {
                     gameLogic.clearNewUnlocks();
                     gameLogic.clearNewDaily();

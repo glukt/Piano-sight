@@ -23,7 +23,7 @@ const CHALLENGE_TEMPLATES = [
     { id: 'xp_100', title: 'Learner', description: 'Gain 100 XP', target: 100, type: 'xp', rewardXp: 25 },
 ] as const;
 
-export function useDailyChallenges() {
+export function useDailyChallenges(onChallengeComplete?: (xp: number) => void) {
     const [challenges, setChallenges] = useState<DailyChallenge[]>([]);
     const [newCompleted, setNewCompleted] = useState<string[]>([]); // IDs of newly completed challenges
 
@@ -76,6 +76,9 @@ export function useDailyChallenges() {
                     // Check completion
                     if (newCurrent >= ch.target) {
                         setNewCompleted(c => [...c, ch.id]);
+                        if (onChallengeComplete) {
+                            onChallengeComplete(ch.rewardXp);
+                        }
                         return { ...ch, current: newCurrent, isCompleted: true };
                     }
                     return { ...ch, current: newCurrent };
@@ -84,7 +87,7 @@ export function useDailyChallenges() {
             });
             return hasChange ? next : prev;
         });
-    }, []);
+    }, [onChallengeComplete]);
 
 
 

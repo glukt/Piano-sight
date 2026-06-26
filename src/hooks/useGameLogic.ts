@@ -94,7 +94,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         updateChallengeProgress,
         newCompleted: newDailyCompleted,
         clearNewCompleted: clearNewDaily
-    } = useDailyChallenges();
+    } = useDailyChallenges(addXp);
 
     // Stats Ref for Callback Access
     const statRefs = useRef({ incrementStat, updateChallengeProgress });
@@ -102,22 +102,8 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         statRefs.current = { incrementStat, updateChallengeProgress };
     }, [incrementStat, updateChallengeProgress]);
 
-    // Level Up dismissal refs
-    const levelUpRef = useRef<number | null>(null);
-    const clearLevelUpRef = useRef<() => void>(() => {});
-    useEffect(() => {
-        levelUpRef.current = levelUp;
-    }, [levelUp]);
-    useEffect(() => {
-        clearLevelUpRef.current = clearLevelUp;
-    }, [clearLevelUp]);
-
     // Audio Callbacks
     const onNoteOn = useRef((note: number, velocity: number) => {
-        if (levelUpRef.current !== null) {
-            clearLevelUpRef.current();
-            return;
-        }
         if (audio.isInitialized && !isMutedKeysRef.current) audio.playNote(note, velocity);
         statRefs.current.incrementStat('totalNotes', 1);
         statRefs.current.updateChallengeProgress('notes', 1);
@@ -153,11 +139,6 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
     const prevMicNote = useRef<number | null>(null);
     useEffect(() => {
         if (micNote !== null && micNote !== prevMicNote.current) {
-            if (levelUpRef.current !== null) {
-                clearLevelUpRef.current();
-                prevMicNote.current = micNote;
-                return;
-            }
             if (audio.isInitialized && !isMutedKeys) audio.playNote(micNote, 100);
             statRefs.current.incrementStat('totalNotes', 1);
             statRefs.current.updateChallengeProgress('notes', 1);
@@ -380,6 +361,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
             setLevelData(LevelGenerator.generate(diff, errorStats));
         }
 
+        setIsLessonComplete(false);
         setCursorIndex(0);
         setStreak(0);
         setScore({ correct: 0, incorrect: 0 }); // Reset score for the new level/lesson!
@@ -391,7 +373,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         } else {
             stopRhythm();
         }
-    }, [errorStats, startRhythm, stopRhythm, currentLesson]); // errorStats? Refactor to ref if causes loop. LevelGenerator is external.
+    }, [errorStats, startRhythm, stopRhythm, currentLesson, setIsLessonComplete]); // errorStats? Refactor to ref if causes loop. LevelGenerator is external.
 
     const loadLesson = useCallback((lesson: Lesson) => {
         setCurrentLesson(lesson);
@@ -467,16 +449,16 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
 
     // Main Validation Loop (strictly event-driven, decoupled from rhythm 60Hz tick)
     useEffect(() => {
-        if (!audioStarted || levelUp) return;
+        if (!audioStarted) return;
 
         // End of Level
         const levelLength = levelData.treble.length;
         if (cursorIndex >= levelLength) {
-            if (cursorIndex === levelLength) {
+            if (cursorIndex === levelLength && !isLessonComplete) {
+                setIsLessonComplete(true);
+                stopRhythm();
                 handleAddXp(50);
                 if (currentLesson) {
-                    setIsLessonComplete(true);
-                    stopRhythm();
                     if (saveHighScore) {
                         const total = notesCorrect + notesMissed;
                         const finalAccuracy = total > 0 ? Math.round((notesCorrect / total) * 100) : 0;
@@ -623,7 +605,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
             if (inputStatus !== 'incorrect' && inputStatus !== 'waiting') setInputStatus('waiting');
         }
 
-    }, [effectiveActiveNotes, cursorIndex, levelData, audioStarted, difficulty, gameMode, isRhythmMode, inputStatus, preHeld, streak, maxStreak, addXp, handleAddXp, levelUp, generateNewLevel, notesCorrect, notesMissed, saveHighScore, currentLesson]);
+    }, [effectiveActiveNotes, cursorIndex, levelData, audioStarted, difficulty, gameMode, isRhythmMode, inputStatus, preHeld, streak, maxStreak, addXp, handleAddXp, levelUp, generateNewLevel, notesCorrect, notesMissed, saveHighScore, currentLesson, isLessonComplete]);
 
 
     const goToNextLesson = useCallback(() => {

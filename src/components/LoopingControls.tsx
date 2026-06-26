@@ -263,7 +263,7 @@ const LoopingControls: React.FC<LoopingControlsProps> = ({
                             {(loopStart !== null || loopEnd !== null) && (
                                 <button
                                     onClick={onClearLoop}
-                                    className="px-4 py-1.5 bg-slate-150 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 rounded-xl text-xs font-bold transition duration-200 border border-slate-300/40 dark:border-slate-700 select-none"
+                                    className="px-4 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-slate-200 rounded-xl text-xs font-bold transition duration-200 border border-slate-300/40 dark:border-slate-700 select-none"
                                 >
                                     Clear Loop
                                 </button>

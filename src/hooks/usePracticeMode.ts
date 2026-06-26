@@ -534,9 +534,10 @@ export function usePracticeMode({
         };
 
         const interval = setInterval(checkInput, 50); // Poll 20Hz
+        checkInput(); // Run check immediately on user input change for zero-latency response
         return () => clearInterval(interval);
 
-    }, [isActive, mode, playbackEngine]);
+    }, [isActive, mode, playbackEngine, userActiveNotes]);
 
 
     const changeMode = useCallback((newMode: PracticeModeType) => {

@@ -171,8 +171,13 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         // -----------------------------------------------------------------------
         // Extract Layout & Draw Custom Watermarks
         // -----------------------------------------------------------------------
-        const tickables = trebleVoice.getTickables();
-        const positions = tickables.map(t => (t as any).getAbsoluteX());
+        const trebleTickables = trebleVoice.getTickables();
+        const treblePositions = trebleTickables.map(t => (t as any).getAbsoluteX());
+
+        const bassTickables = bassVoice.getTickables();
+        const bassPositions = bassTickables.map(t => (t as any).getAbsoluteX());
+
+        const positions = treblePositions;
 
         const svgElement = containerRef.current?.querySelector('svg');
         if (svgElement) {
@@ -199,12 +204,10 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                 return 160 - stepDiff * 5;
             };
 
-            positions.forEach((x, i) => {
-                const tNote = trebleNotes[i];
-                const bNote = bassNotes[i];
-
-                if (showLabels) {
-                    if (tNote && tNote.keys && tNote.keys[0] !== 'b/4' && !tNote.duration.endsWith('r')) {
+            if (showLabels) {
+                trebleNotes.forEach((tNote, i) => {
+                    const x = treblePositions[i];
+                    if (x !== undefined && tNote && tNote.keys && tNote.keys[0] !== 'b/4' && !tNote.duration.endsWith('r')) {
                         tNote.keys.forEach(k => {
                             const noteName = k.split('/')[0].toUpperCase();
                             const y = getTrebleY(k);
@@ -227,8 +230,11 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                             svgElement.appendChild(label);
                         });
                     }
+                });
 
-                    if (bNote && bNote.keys && bNote.keys[0] !== 'd/3' && !bNote.duration.endsWith('r')) {
+                bassNotes.forEach((bNote, i) => {
+                    const x = bassPositions[i];
+                    if (x !== undefined && bNote && bNote.keys && bNote.keys[0] !== 'd/3' && !bNote.duration.endsWith('r')) {
                         bNote.keys.forEach(k => {
                             const noteName = k.split('/')[0].toUpperCase();
                             const y = getBassY(k);
@@ -251,8 +257,8 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                             svgElement.appendChild(label);
                         });
                     }
-                }
-            });
+                });
+            }
         }
 
         if (onLayout) {

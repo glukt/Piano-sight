@@ -15,8 +15,15 @@ import { Lesson, courses } from '../utils/music/CourseData';
 // Helper
 const parseKeyToMidi = (key: string): number => {
     const [note, octave] = key.split('/');
+    const baseNote = note.charAt(0).toLowerCase();
+    const accidental = note.slice(1);
     const noteMap: Record<string, number> = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 };
-    return noteMap[note.toLowerCase()] + (parseInt(octave) + 1) * 12;
+    let midi = noteMap[baseNote] + (parseInt(octave) + 1) * 12;
+    if (accidental === '#') midi += 1;
+    else if (accidental === '##') midi += 2;
+    else if (accidental === 'b') midi -= 1;
+    else if (accidental === 'bb') midi -= 2;
+    return midi;
 };
 
 // Pure helper to calculate playhead position at any given timestamp without React state
@@ -242,6 +249,21 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
     const setShowStaff = useCallback((val: boolean) => updatePreference('showPianoLabels', val), [updatePreference]);
     const [showMicPopup, setShowMicPopup] = useState(false);
 
+    useEffect(() => {
+        return () => {
+            audio.releaseAll();
+        };
+    }, []);
+
+    useEffect(() => {
+        if (lastHitType) {
+            const timer = setTimeout(() => {
+                setLastHitType(null);
+            }, 800);
+            return () => clearTimeout(timer);
+        }
+    }, [lastHitType]);
+
     // Scoring
     const [score, setScore] = useState({ correct: 0, incorrect: 0 });
     const [errorStats, setErrorStats] = useState<Record<string, number>>({});
@@ -440,7 +462,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         }
         const isHolding = Array.from(requiredNotes).some(n => effectiveActiveNotes.has(n));
         setPreHeld(isHolding);
-    }, [cursorIndex, levelData, gameMode, effectiveActiveNotes]);
+    }, [cursorIndex, levelData, gameMode]);
 
 
     // Main Validation Loop (strictly event-driven, decoupled from rhythm 60Hz tick)
@@ -492,17 +514,27 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
             else if (gameMode === 'bass' && n < 60) relevantActiveNotes.add(n);
         });
 
-        if (requiredNotes.size === 0) {
-            if (!isRhythmMode) {
-                setCursorIndex(prev => prev + 1);
-            }
-            return;
-        }
-
         // Filter out notes held continuously from the step start (legato overlap protection)
         const newlyPressedActiveNotes = Array.from(relevantActiveNotes).filter(
             n => !notesActiveAtStepStart.current.has(n)
         );
+
+        // If it's a rest note, auto-advance if not in rhythm mode
+        if (requiredNotes.size === 0) {
+            if (!isRhythmMode) {
+                setCursorIndex(prev => prev + 1);
+            } else if (newlyPressedActiveNotes.length > 0) {
+                // Penalize off-beat keys pressed during rest in rhythm mode
+                if (inputStatus !== 'incorrect') {
+                    setInputStatus('incorrect');
+                    setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
+                    setNotesMissed(prev => prev + 1);
+                    setStreak(0);
+                }
+            }
+            return;
+        }
+
         const hasIncorrect = newlyPressedActiveNotes.some(n => !requiredNotes.has(n));
         const allFound = requiredNotes.size > 0 && Array.from(requiredNotes).every(n => relevantActiveNotes.has(n));
 
@@ -510,10 +542,15 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
             // Wait for user to completely release the chord before letting them try again
             // Or wait until they are no longer holding ALL required notes from the previous level
             const stillHoldingAll = Array.from(requiredNotes).every(n => effectiveActiveNotes.has(n));
+            const pressedNewRequired = newlyPressedActiveNotes.some(n => requiredNotes.has(n));
 
             // To be safe, wait until they release at least one required note to break the pre-held lock
-            if (!stillHoldingAll) setPreHeld(false);
-            return;
+            // OR if they pressed a new correct note that is part of the required set
+            if (!stillHoldingAll || pressedNewRequired) {
+                setPreHeld(false);
+            } else {
+                return;
+            }
         }
 
         // Penalty: Only if they press a WRONG note for their current Hand mode
@@ -682,6 +719,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         exitLesson: () => {
             setCurrentLesson(null);
             setIsLessonComplete(false);
+            audio.releaseAll();
         },
 
         // Progression

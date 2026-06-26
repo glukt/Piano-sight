@@ -34,6 +34,7 @@ function App() {
     const [songUrl, setSongUrl] = useState<string | null>(null);
     const [workoutReview, setWorkoutReview] = useState<{ songUrl: string; measure: number } | null>(null);
     const [selectedSongId, setSelectedSongId] = useState<string | null>(null);
+    const [lessonSourceView, setLessonSourceView] = useState<'courseSelection' | 'dailyWorkout'>('courseSelection');
 
     // Initialize Music Library Hook
     const library = useMusicLibrary();
@@ -103,7 +104,7 @@ function App() {
         <div className={`min-h-screen flex flex-col items-center p-4 md:p-8 transition-colors duration-500 ${isDarkMode ? 'bg-gray-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
 
             {/* Top Navigation */}
-            {currentView !== 'musicxml' && currentView !== 'game' && (
+            {!(currentView === 'game' || (currentView === 'musicxml' && (uploadedFile || xmlData || songUrl))) && (
                 <TopNav
                     currentView={currentView}
                     setCurrentView={setCurrentView}
@@ -127,6 +128,7 @@ function App() {
                             completedLessonIds={completedLessonIds}
                             onSelectLesson={(lesson) => {
                                 setSelectedLesson(lesson);
+                                setLessonSourceView('courseSelection');
                                 setCurrentView('intro');
                             }}
                         />
@@ -139,7 +141,7 @@ function App() {
                         lesson={selectedLesson}
                         onBack={() => {
                             setSelectedLesson(null);
-                            setCurrentView('courseSelection');
+                            setCurrentView(lessonSourceView);
                         }}
                         onStart={() => {
                             gameLogic.loadLesson(selectedLesson);
@@ -166,7 +168,7 @@ function App() {
                         onNextLesson={handleNextLesson}
                         onExitLesson={() => {
                             gameLogic.exitLesson();
-                            setCurrentView('courseSelection');
+                            setCurrentView(lessonSourceView);
                         }}
                     />
                 )}
@@ -180,12 +182,16 @@ function App() {
                                     <span className="font-bold text-gray-700 dark:text-gray-200 truncate max-w-full sm:max-w-md">Current Score: {fileName || 'Loaded Score'}</span>
                                     <button
                                         onClick={() => {
+                                            const targetView = workoutReview ? 'dailyWorkout' : 'musicxml';
                                             setWorkoutReview(null);
                                             handleClearScore();
+                                            if (targetView !== 'musicxml') {
+                                                setCurrentView(targetView);
+                                            }
                                         }}
                                         className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-bold text-sm transition w-full sm:w-auto text-center"
                                     >
-                                        ← Back to Library
+                                        {workoutReview ? '← Back to Workout' : '← Back to Library'}
                                     </button>
                                 </div>
                                 <ScoreDisplay
@@ -219,9 +225,10 @@ function App() {
                                                 console.error(e);
                                             }
                                         }
+                                        const targetView = workoutReview ? 'dailyWorkout' : 'musicxml';
                                         setWorkoutReview(null);
                                         handleClearScore();
-                                        setCurrentView('dailyWorkout');
+                                        setCurrentView(targetView);
                                     }}
                                 />
                             </>
@@ -250,6 +257,7 @@ function App() {
                             }}
                             onSelectLesson={(lesson) => {
                                 setSelectedLesson(lesson);
+                                setLessonSourceView('dailyWorkout');
                                 setCurrentView('intro');
                             }}
                         />

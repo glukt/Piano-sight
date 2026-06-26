@@ -57,16 +57,29 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
     return (
         <div className="w-full flex flex-col items-center gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Stats Bar */}
-            <div className="flex gap-8 text-sm font-bold bg-white dark:bg-gray-800 px-6 py-3 rounded-full shadow-sm border border-gray-100 dark:border-gray-700">
-                <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${isMidiEnabled ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-                    <span className={isMidiEnabled ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400'}>{isMidiEnabled ? 'MIDI Connected' : 'No MIDI'}</span>
-                </div>
-                <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 self-center"></div>
-                <div className="flex items-center gap-4">
-                    <span className="text-green-600 dark:text-green-400">Correct: {score.correct}</span>
-                    <span className="text-red-500 dark:text-red-400">Missed: {score.incorrect}</span>
+            {/* Header / Stats Bar wrapper */}
+            <div className="w-full max-w-5xl flex flex-col sm:flex-row justify-between items-center gap-4 px-4">
+                {onExitLesson ? (
+                    <button
+                        onClick={onExitLesson}
+                        className="px-4 py-2 text-sm font-semibold rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition flex items-center gap-1.5 shadow-sm border border-gray-200/50 dark:border-gray-700/50 select-none active:scale-95"
+                    >
+                        ← Exit Lesson
+                    </button>
+                ) : (
+                    <div />
+                )}
+
+                <div className="flex gap-8 text-sm font-bold bg-white dark:bg-gray-800 px-6 py-3 rounded-full shadow-sm border border-gray-100 dark:border-gray-700">
+                    <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${isMidiEnabled ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+                        <span className={isMidiEnabled ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400'}>{isMidiEnabled ? 'MIDI Connected' : 'No MIDI'}</span>
+                    </div>
+                    <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 self-center"></div>
+                    <div className="flex items-center gap-4">
+                        <span className="text-green-600 dark:text-green-400">Correct: {score.correct}</span>
+                        <span className="text-red-500 dark:text-red-400">Missed: {score.incorrect}</span>
+                    </div>
                 </div>
             </div>
 
@@ -137,7 +150,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 */}
                 <div className="mt-4 w-full bg-white dark:bg-gray-800 p-2 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
                     <VirtualKeyboard
-                        activeNotes={effectiveActiveNotes}
+                        activeNotes={new Set()}
                         userActiveNotes={effectiveActiveNotes}
                         expectedNotes={expectedNotes}
                         showLabels={showNoteLabels}
@@ -146,7 +159,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 </div>
 
                 {/* Feedback Popups */}
-                {streak >= 5 && isRhythmMode && (
+                {streak >= 5 && (
                     <div className="absolute top-[-40px] right-0 animate-bounce text-yellow-500 font-bold text-xl drop-shadow-md">
                         🔥 {streak} Streak!
                     </div>

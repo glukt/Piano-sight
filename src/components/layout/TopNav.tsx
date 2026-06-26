@@ -59,7 +59,7 @@ export const TopNav: React.FC<TopNavProps> = ({
 
             {/* Center Navigation Tabs: Horizontally Scrollable on Mobile */}
             <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 p-1 rounded-xl w-full md:w-auto overflow-x-auto no-scrollbar scroll-smooth">
-                {(['courseSelection', 'dailyWorkout', 'game', 'musicxml', 'reference', 'settings'] as const).map(view => (
+                {(['courseSelection', 'dailyWorkout', 'musicxml', 'reference', 'settings'] as const).map(view => (
                     <button
                         key={view}
                         onClick={() => setCurrentView(view)}

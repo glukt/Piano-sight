@@ -15,8 +15,15 @@ interface DailyWorkoutProps {
 
 const parseKeyToMidi = (key: string): number => {
     const [note, octave] = key.split('/');
+    const baseNote = note.charAt(0).toLowerCase();
+    const accidental = note.slice(1);
     const noteMap: Record<string, number> = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 };
-    return noteMap[note.toLowerCase()] + (parseInt(octave) + 1) * 12;
+    let midi = noteMap[baseNote] + (parseInt(octave) + 1) * 12;
+    if (accidental === '#') midi += 1;
+    else if (accidental === '##') midi += 2;
+    else if (accidental === 'b') midi -= 1;
+    else if (accidental === 'bb') midi -= 2;
+    return midi;
 };
 
 const WARMUP_NOTES: StaveNoteData[] = [
@@ -162,7 +169,7 @@ export const DailyWorkout: React.FC<DailyWorkoutProps> = ({
             <div className={`p-8 rounded-2xl border text-left shadow-lg relative overflow-hidden transition-all duration-300 ${
                 isDarkMode 
                     ? 'bg-gray-800/80 border-gray-700/60 text-white' 
-                    : 'bg-white border-gray-150 text-gray-900'
+                    : 'bg-white border-gray-200 text-gray-900'
             }`}>
                 <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-500/10 to-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
                 <h2 className="text-3xl font-extrabold tracking-tight mb-2">🔥 Guided Daily Workout</h2>
@@ -174,7 +181,7 @@ export const DailyWorkout: React.FC<DailyWorkoutProps> = ({
             {activeStep === 'warmup' ? (
                 /* Interactive Warmup Interface */
                 <div className={`p-4 md:p-8 rounded-2xl border text-center shadow-lg transition-all duration-300 ${
-                    isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-150'
+                    isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
                 }`}>
                     <h3 className="text-xl font-bold mb-1">🪵 Step 1: Sight-Reading Warmup</h3>
                     <p className="text-xs text-gray-500 mb-6 font-semibold uppercase tracking-wider">
@@ -182,7 +189,7 @@ export const DailyWorkout: React.FC<DailyWorkoutProps> = ({
                     </p>
 
                     <div className="flex justify-center mb-6">
-                        <div className="w-full max-w-xl rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-inner">
+                        <div className="w-full max-w-xl rounded-xl overflow-x-auto border border-gray-200 dark:border-gray-700 shadow-inner">
                             <MusicDisplay
                                 trebleNotes={WARMUP_NOTES}
                                 bassNotes={[]}
@@ -219,7 +226,7 @@ export const DailyWorkout: React.FC<DailyWorkoutProps> = ({
                     <div className={`p-6 rounded-2xl border flex flex-col justify-between shadow-md transition-all ${
                         warmupComplete 
                             ? 'opacity-80 bg-green-500/5 border-green-500/20' 
-                            : isDarkMode ? 'bg-gray-800/60 border-gray-700/60' : 'bg-white border-gray-150'
+                            : isDarkMode ? 'bg-gray-800/60 border-gray-700/60' : 'bg-white border-gray-200'
                     }`}>
                         <div>
                             <div className="flex justify-between items-start mb-4">
@@ -256,7 +263,7 @@ export const DailyWorkout: React.FC<DailyWorkoutProps> = ({
                     <div className={`p-6 rounded-2xl border flex flex-col justify-between shadow-md transition-all ${
                         weakMeasures.length === 0 
                             ? 'opacity-80 bg-green-500/5 border-green-500/20' 
-                            : isDarkMode ? 'bg-gray-800/60 border-gray-700/60' : 'bg-white border-gray-150'
+                            : isDarkMode ? 'bg-gray-800/60 border-gray-700/60' : 'bg-white border-gray-200'
                     }`}>
                         <div>
                             <div className="flex justify-between items-start mb-4">
@@ -280,7 +287,7 @@ export const DailyWorkout: React.FC<DailyWorkoutProps> = ({
                         ) : (
                             <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
                                 {weakMeasures.slice(0, 3).map((item, idx) => (
-                                    <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-750 border border-gray-100 dark:border-gray-700/50">
+                                    <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700/50">
                                         <div className="text-left">
                                             <div className="text-[10px] font-black text-blue-500 truncate max-w-[120px]">
                                                 {item.song.split('/').pop()?.replace('.musicxml', '').replace('.mxl', '') || 'Song'}
@@ -317,7 +324,7 @@ export const DailyWorkout: React.FC<DailyWorkoutProps> = ({
 
                     {/* PROGRESSION CARD */}
                     <div className={`p-6 rounded-2xl border flex flex-col justify-between shadow-md transition-all ${
-                        isDarkMode ? 'bg-gray-800/60 border-gray-700/60' : 'bg-white border-gray-150'
+                        isDarkMode ? 'bg-gray-800/60 border-gray-700/60' : 'bg-white border-gray-200'
                     }`}>
                         <div>
                             <div className="flex justify-between items-start mb-4">
@@ -332,7 +339,7 @@ export const DailyWorkout: React.FC<DailyWorkoutProps> = ({
                             </p>
                             
                             {/* Recomended Lesson Detail Panel */}
-                            <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-755 border border-gray-100 dark:border-gray-700/50 mb-6 text-left">
+                            <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700/50 mb-6 text-left">
                                 <div className="text-xs font-black text-purple-500 uppercase tracking-widest leading-none mb-1.5">
                                     {recommendedLesson.type === 'song' ? '🎵 Song' : '🪵 Exercise'}
                                 </div>

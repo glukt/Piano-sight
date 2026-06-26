@@ -69,7 +69,7 @@ export const CourseSelection: React.FC<CourseSelectionProps> = ({ userXp, comple
                                             disabled={!isUnlocked}
                                             className={`relative text-left p-5 rounded-xl border-2 transition-all duration-200
                                                 ${isCompleted
-                                                    ? 'border-green-200 dark:border-green-900/50 bg-green-50/30 dark:bg-green-900/10 hover:border-green-300 dark:hover:border-green-700 cursor-pointer group'
+                                                    ? 'border-green-200 dark:border-green-900/50 bg-green-50/30 dark:bg-green-900/10 hover:border-green-300 dark:hover:border-green-700 hover:-translate-y-1 hover:shadow-md cursor-pointer group'
                                                     : isUnlocked
                                                         ? 'border-indigo-100 dark:border-indigo-900/50 bg-indigo-50/50 dark:bg-indigo-900/10 hover:border-indigo-300 dark:hover:border-indigo-700 hover:-translate-y-1 hover:shadow-md cursor-pointer group shadow-[0_0_15px_rgba(79,70,229,0.1)]'
                                                         : 'border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-60 cursor-not-allowed'

@@ -118,7 +118,7 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
                             placeholder="Search scores..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/40 text-slate-800 dark:text-slate-100 placeholder-slate-450 dark:placeholder-slate-500 focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 focus:outline-none font-semibold transition duration-200"
+                            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/40 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 focus:outline-none font-semibold transition duration-200"
                         />
                     </div>
 
@@ -126,7 +126,7 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
                     <label className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all duration-200 shadow-md cursor-pointer select-none active:scale-98 border flex-shrink-0 ${
                         isUploading 
                             ? 'opacity-50 pointer-events-none' 
-                            : 'bg-sky-550 hover:bg-sky-600 text-white border-sky-600 shadow-sky-500/25 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-sky-400 dark:border-sky-900/40 dark:shadow-none'
+                            : 'bg-sky-500 hover:bg-sky-600 text-white border-sky-600 shadow-sky-500/25 dark:bg-slate-800 dark:hover:bg-slate-750 dark:text-sky-400 dark:border-sky-900/40 dark:shadow-none'
                     }`}>
                         <svg className="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
@@ -206,7 +206,7 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
                                 <span className={`text-[9px] px-2 py-0.5 rounded-full font-black ${
                                     isActive
                                         ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400'
-                                        : 'bg-slate-200/60 dark:bg-slate-800 text-slate-450 dark:text-slate-500'
+                                        : 'bg-slate-200/60 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
                                 }`}>
                                     {count}
                                 </span>
@@ -231,8 +231,8 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
                                 onClick={() => setDifficultyFilter(diff.id as any)}
                                 className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 border select-none ${
                                     isActive
-                                        ? `${diff.id === 'all' ? 'bg-sky-550 border-sky-600 text-white shadow-sm' : `${diff.color} border shadow-sm`}`
-                                        : 'text-slate-500 dark:text-slate-400 hover:bg-slate-150 hover:text-slate-700 dark:hover:bg-slate-800 border-transparent'
+                                        ? `${diff.id === 'all' ? 'bg-sky-500 border-sky-600 text-white shadow-sm' : `${diff.color} border shadow-sm`}`
+                                        : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 border-transparent'
                                 }`}
                             >
                                 {diff.label}
@@ -275,7 +275,7 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
                                     className={`p-2 rounded-xl transition-all duration-200 border ${
                                         bookmarkedIds.has(score.id)
                                             ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 shadow-sm'
-                                            : 'bg-slate-100 border-slate-200 text-slate-450 hover:bg-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500 dark:hover:bg-slate-700 hover:text-amber-500 opacity-0 group-hover:opacity-100'
+                                            : 'bg-slate-100 border-slate-200 text-slate-400 hover:bg-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500 dark:hover:bg-slate-700 hover:text-amber-500 opacity-70 md:opacity-0 md:group-hover:opacity-100'
                                     }`}
                                     title={bookmarkedIds.has(score.id) ? "Remove from Favorites" : "Add to Favorites"}
                                 >
@@ -286,7 +286,7 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
                                 {!score.id.startsWith('preset-') && (
                                     <button
                                         onClick={(e) => handleDelete(e, score.id)}
-                                        className="bg-slate-100 hover:bg-rose-500/10 hover:text-rose-500 dark:bg-slate-800 dark:hover:bg-rose-950/30 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 hover:border-rose-300 dark:hover:border-rose-900/50 text-slate-450 transition-all duration-200 p-2 rounded-xl opacity-0 group-hover:opacity-100"
+                                        className="bg-slate-100 hover:bg-rose-500/10 hover:text-rose-500 dark:bg-slate-800 dark:hover:bg-rose-950/30 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-700 hover:border-rose-300 dark:hover:border-rose-900/50 text-slate-400 transition-all duration-200 p-2 rounded-xl opacity-70 md:opacity-0 md:group-hover:opacity-100"
                                         title="Delete Score"
                                     >
                                         <svg className="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
@@ -299,7 +299,7 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
 
                         {/* Title and Composer */}
                         <div className="text-left">
-                            <h3 className="font-extrabold text-base text-slate-850 dark:text-slate-100 line-clamp-1 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition duration-150">{score.title}</h3>
+                            <h3 className="font-extrabold text-base text-slate-800 dark:text-slate-100 line-clamp-1 group-hover:text-sky-500 dark:group-hover:text-sky-400 transition duration-150">{score.title}</h3>
                             <p className="text-xs text-slate-400 dark:text-slate-500 font-semibold mt-0.5">{score.composer}</p>
                         </div>
 
@@ -344,14 +344,14 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
                                     score.rank === 'Gold' 
                                         ? 'bg-amber-500/10 text-amber-600 dark:bg-amber-950/20 dark:text-amber-400 border-amber-500/20 shadow-sm' 
                                         : score.rank === 'Silver'
-                                            ? 'bg-slate-100/50 text-slate-500 dark:bg-slate-800/60 dark:text-slate-400 border-slate-200/30 dark:border-slate-750/30'
+                                            ? 'bg-slate-100/50 text-slate-500 dark:bg-slate-800/60 dark:text-slate-400 border-slate-200/30 dark:border-slate-700/30'
                                             : 'bg-orange-500/10 text-orange-600 dark:bg-orange-950/20 dark:text-orange-400 border-orange-500/20 shadow-sm'
                                 }`}>
                                     🏆 {score.rank} {score.notesHit !== undefined ? `(${score.notesHit}/${score.maxNotes})` : `(${score.highScore}%)`}
                                 </span>
                             )}
                             {/* Auto File-type Tag */}
-                            <span className="text-[9px] uppercase font-black bg-slate-100/50 text-slate-450 dark:bg-slate-850/60 dark:text-slate-500 px-2.5 py-1 rounded-lg tracking-wider border border-slate-200/30 dark:border-slate-800/40 select-none">
+                            <span className="text-[9px] uppercase font-black bg-slate-100/50 text-slate-400 dark:bg-slate-800/60 dark:text-slate-500 px-2.5 py-1 rounded-lg tracking-wider border border-slate-200/30 dark:border-slate-800/40 select-none">
                                 {score.fileName.split('.').pop()}
                             </span>
                         </div>
@@ -370,7 +370,7 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
                 {/* Empty State */}
                 {filteredScores.length === 0 && (
                     <div className="col-span-full py-16 px-4 text-center text-slate-400 dark:text-slate-500 bg-slate-50/20 dark:bg-slate-900/10 rounded-3xl border-dashed border-2 border-slate-200 dark:border-slate-800 font-bold flex flex-col items-center justify-center gap-3">
-                        <svg className="w-10 h-10 text-slate-350 dark:text-slate-600 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
+                        <svg className="w-10 h-10 text-slate-300 dark:text-slate-600 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
                             <circle cx="12" cy="12" r="10"/>
                             <path d="M8 12h8M12 8v8"/>
                         </svg>

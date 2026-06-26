@@ -122,11 +122,44 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
                     <circle cx="20" cy={noteY} r={radius} fill="currentColor" className="text-gray-800 dark:text-gray-200" />
 
                     {/* Ledger Lines Logic */}
-                    {/* If stepDiff < 0 (Below bottom line) or > 8 (Above top line) */}
-                    {/* Determine which ledger lines to draw. 
-                        Ledger lines are at even steps relative to lines.
-                        Bottom line is index 0. Top line is index 8 (2 * 4 gaps).
-                    */}
+                    {/* Below staff */}
+                    {stepDiff <= -2 && (
+                        Array.from({ length: Math.floor(Math.abs(stepDiff) / 2) }).map((_, idx) => {
+                            const lineStep = -2 - idx * 2;
+                            const lineY = bottomLineY - (lineStep * (lineSpacing / 2));
+                            return (
+                                <line
+                                    key={`below-${idx}`}
+                                    x1="10"
+                                    y1={lineY}
+                                    x2="30"
+                                    y2={lineY}
+                                    stroke="currentColor"
+                                    strokeWidth="1"
+                                    className="text-gray-400"
+                                />
+                            );
+                        })
+                    )}
+                    {/* Above staff */}
+                    {stepDiff >= 10 && (
+                        Array.from({ length: Math.floor((stepDiff - 8) / 2) }).map((_, idx) => {
+                            const lineStep = 10 + idx * 2;
+                            const lineY = bottomLineY - (lineStep * (lineSpacing / 2));
+                            return (
+                                <line
+                                    key={`above-${idx}`}
+                                    x1="10"
+                                    y1={lineY}
+                                    x2="30"
+                                    y2={lineY}
+                                    stroke="currentColor"
+                                    strokeWidth="1"
+                                    className="text-gray-400"
+                                />
+                            );
+                        })
+                    )}
                 </svg>
             </div>
         );

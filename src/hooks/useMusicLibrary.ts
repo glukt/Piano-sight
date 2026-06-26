@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { getLessonById } from '../utils/music/CourseData';
 
 // Simple UUID generator if uuid package isn't available
 const generateUUID = () => {
@@ -18,6 +19,15 @@ export interface LibraryScore {
     rank?: string;
     notesHit?: number;
     maxNotes?: number;
+}
+
+export interface LessonProgress {
+    lessonId: string;
+    completed: boolean;
+    dateCompleted: number;
+    bestAccuracy: number;
+    bestRank: string;
+    xpEarned: number;
 }
 
 const PRESET_SCORES: LibraryScore[] = [
@@ -511,10 +521,12 @@ const PRESET_SCORES: LibraryScore[] = [
 
 const DB_NAME = 'PianoPilotDB';
 const STORE_NAME = 'scores';
-const VERSION = 1;
+const LESSON_PROGRESS_STORE = 'lesson_progress';
+const VERSION = 2; // Bumped to 2 for lesson progress tracking
 
 export function useMusicLibrary() {
     const [scores, setScores] = useState<LibraryScore[]>([]);
+    const [lessonProgress, setLessonProgress] = useState<Record<string, LessonProgress>>({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -524,6 +536,7 @@ export function useMusicLibrary() {
             try {
                 const db = await openDB();
                 const loadedScores = await getAllScoresFromDB(db);
+                const loadedProgress = await getLessonProgressFromDB(db);
                 
                 // Merge preset scores with preset definitions in IndexedDB
                 const mergedPresets = PRESET_SCORES.map(preset => {
@@ -544,6 +557,14 @@ export function useMusicLibrary() {
                 const customScores = loadedScores.filter(s => !s.id.startsWith('preset-'));
 
                 setScores([...mergedPresets, ...customScores]);
+
+                // Map lesson progress array to keyed dictionary
+                const progressMap = loadedProgress.reduce((acc, curr) => {
+                    acc[curr.lessonId] = curr;
+                    return acc;
+                }, {} as Record<string, LessonProgress>);
+                setLessonProgress(progressMap);
+
                 setLoading(false);
             } catch (err: any) {
                 console.error("Failed to init DB:", err);
@@ -569,6 +590,9 @@ export function useMusicLibrary() {
                     store.createIndex('dateAdded', 'dateAdded', { unique: false });
                     store.createIndex('title', 'title', { unique: false });
                 }
+                if (!db.objectStoreNames.contains(LESSON_PROGRESS_STORE)) {
+                    db.createObjectStore(LESSON_PROGRESS_STORE, { keyPath: 'lessonId' });
+                }
             };
         });
     };
@@ -585,6 +609,16 @@ export function useMusicLibrary() {
                 result.sort((a, b) => b.dateAdded - a.dateAdded);
                 resolve(result);
             };
+            request.onerror = () => reject(request.error);
+        });
+    };
+
+    const getLessonProgressFromDB = (db: IDBDatabase): Promise<LessonProgress[]> => {
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction(LESSON_PROGRESS_STORE, 'readonly');
+            const store = transaction.objectStore(LESSON_PROGRESS_STORE);
+            const request = store.getAll();
+            request.onsuccess = () => resolve(request.result as LessonProgress[]);
             request.onerror = () => reject(request.error);
         });
     };
@@ -675,62 +709,107 @@ export function useMusicLibrary() {
         }
     }, []);
 
+    const savePresetOrCustomScoreInDB = async (db: IDBDatabase, targetId: string, score: number, rank: string, notesHit: number, maxNotes: number) => {
+        const transaction = db.transaction(STORE_NAME, 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+
+        const existing = await new Promise<LibraryScore | undefined>((resolve, reject) => {
+            const req = store.get(targetId);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+
+        let updatedScore: LibraryScore;
+        const isNewHighScore = score > (existing?.highScore || 0);
+
+        if (existing) {
+            updatedScore = {
+                ...existing,
+                highScore: isNewHighScore ? score : existing.highScore,
+                rank: isNewHighScore ? rank : existing.rank,
+                notesHit: isNewHighScore ? notesHit : existing.notesHit,
+                maxNotes: isNewHighScore ? maxNotes : existing.maxNotes
+            };
+        } else {
+            const preset = PRESET_SCORES.find(p => p.id === targetId);
+            if (preset) {
+                updatedScore = {
+                    ...preset,
+                    highScore: score,
+                    rank,
+                    notesHit,
+                    maxNotes
+                };
+            } else {
+                throw new Error("Score details not found in presets or custom database.");
+            }
+        }
+
+        await new Promise<void>((resolve, reject) => {
+            const req = store.put(updatedScore);
+            req.onsuccess = () => resolve();
+            req.onerror = () => reject(req.error);
+        });
+
+        setScores(prev => prev.map(s => {
+            if (s.id === targetId) {
+                return {
+                    ...s,
+                    highScore: isNewHighScore ? score : s.highScore,
+                    rank: isNewHighScore ? rank : s.rank,
+                    notesHit: isNewHighScore ? notesHit : s.notesHit,
+                    maxNotes: isNewHighScore ? maxNotes : s.maxNotes
+                };
+            }
+            return s;
+        }));
+    };
+
     const saveHighScore = useCallback(async (id: string, score: number, rank: string, notesHit: number, maxNotes: number) => {
         try {
             const db = await openDB();
-            const transaction = db.transaction(STORE_NAME, 'readwrite');
-            const store = transaction.objectStore(STORE_NAME);
+            const lesson = getLessonById(id);
 
-            const existing = await new Promise<LibraryScore | undefined>((resolve, reject) => {
-                const req = store.get(id);
-                req.onsuccess = () => resolve(req.result);
-                req.onerror = () => reject(req.error);
-            });
+            if (lesson) {
+                // 1. Save lesson completion progress
+                const progressTx = db.transaction(LESSON_PROGRESS_STORE, 'readwrite');
+                const progressStore = progressTx.objectStore(LESSON_PROGRESS_STORE);
+                
+                const existingProgress = await new Promise<LessonProgress | undefined>((resolve, reject) => {
+                    const req = progressStore.get(id);
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                });
 
-            let updatedScore: LibraryScore;
-            const isNewHighScore = score > ((existing?.highScore) || 0);
-
-            if (existing) {
-                updatedScore = {
-                    ...existing,
-                    highScore: isNewHighScore ? score : existing.highScore,
-                    rank: isNewHighScore ? rank : existing.rank,
-                    notesHit: isNewHighScore ? notesHit : existing.notesHit,
-                    maxNotes: isNewHighScore ? maxNotes : existing.maxNotes
+                const isNewBestAccuracy = score > (existingProgress?.bestAccuracy || 0);
+                const updatedProgress: LessonProgress = {
+                    lessonId: id,
+                    completed: true,
+                    dateCompleted: Date.now(),
+                    bestAccuracy: isNewBestAccuracy ? score : (existingProgress?.bestAccuracy || score),
+                    bestRank: isNewBestAccuracy ? rank : (existingProgress?.bestRank || rank),
+                    xpEarned: (existingProgress?.xpEarned || 0) + lesson.xpReward
                 };
+
+                await new Promise<void>((resolve, reject) => {
+                    const req = progressStore.put(updatedProgress);
+                    req.onsuccess = () => resolve();
+                    req.onerror = () => reject(req.error);
+                });
+
+                setLessonProgress(prev => ({
+                    ...prev,
+                    [id]: updatedProgress
+                }));
+
+                // 2. If it is a song lesson with a linked presetId, save to the scores store as well
+                if (lesson.type === 'song' && lesson.presetId) {
+                    await savePresetOrCustomScoreInDB(db, lesson.presetId, score, rank, notesHit, maxNotes);
+                }
             } else {
-                const preset = PRESET_SCORES.find(p => p.id === id);
-                if (preset) {
-                    updatedScore = {
-                        ...preset,
-                        highScore: score,
-                        rank: rank,
-                        notesHit: notesHit,
-                        maxNotes: maxNotes
-                    };
-                } else {
-                    throw new Error("Score not found in presets or custom database.");
-                }
+                // It is a standard library song (preset or custom upload)
+                await savePresetOrCustomScoreInDB(db, id, score, rank, notesHit, maxNotes);
             }
-
-            await new Promise<void>((resolve, reject) => {
-                const req = store.put(updatedScore);
-                req.onsuccess = () => resolve();
-                req.onerror = () => reject(req.error);
-            });
-
-            setScores(prev => prev.map(s => {
-                if (s.id === id) {
-                    return {
-                        ...s,
-                        highScore: isNewHighScore ? score : s.highScore,
-                        rank: isNewHighScore ? rank : s.rank,
-                        notesHit: isNewHighScore ? notesHit : s.notesHit,
-                        maxNotes: isNewHighScore ? maxNotes : s.maxNotes
-                    };
-                }
-                return s;
-            }));
         } catch (err: any) {
             console.error("Failed to save high score:", err);
         }
@@ -771,6 +850,7 @@ export function useMusicLibrary() {
         updateScoreMetadata,
         saveHighScore,
         bookmarkedIds,
-        toggleBookmark
+        toggleBookmark,
+        lessonProgress
     };
 }

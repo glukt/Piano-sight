@@ -5,6 +5,7 @@ import { courses, Lesson } from '../utils/music/CourseData';
 
 interface DailyWorkoutProps {
     userXp: number;
+    completedLessonIds: Set<string>;
     userActiveNotes: Set<number>;
     isDarkMode: boolean;
     onAddXp: (amount: number) => void;
@@ -35,6 +36,7 @@ const WARMUP_NOTES: StaveNoteData[] = [
 
 export const DailyWorkout: React.FC<DailyWorkoutProps> = ({
     userXp,
+    completedLessonIds,
     userActiveNotes,
     isDarkMode,
     onAddXp,
@@ -139,13 +141,19 @@ export const DailyWorkout: React.FC<DailyWorkoutProps> = ({
     // Next Lesson Progression Recommendation
     const recommendedLesson = useMemo(() => {
         const allLessons = courses.flatMap(c => c.lessons);
-        // Find next locked lesson
-        const nextLocked = allLessons.find(l => l.requiredXp > userXp);
-        if (nextLocked) return nextLocked;
-        // Or return the highest unlocked lesson
-        const unlocked = allLessons.filter(l => l.requiredXp <= userXp);
-        return unlocked[unlocked.length - 1] || courses[0].lessons[0];
-    }, [userXp]);
+        // Find first incomplete unlocked lesson
+        const firstIncompleteUnlocked = allLessons.find(
+            l => userXp >= l.requiredXp && !completedLessonIds.has(l.id)
+        );
+        if (firstIncompleteUnlocked) return firstIncompleteUnlocked;
+
+        // If all unlocked lessons are completed, recommend the first locked lesson
+        const firstLocked = allLessons.find(l => l.requiredXp > userXp);
+        if (firstLocked) return firstLocked;
+
+        // Fallback to the last lesson in the curriculum
+        return allLessons[allLessons.length - 1] || courses[0].lessons[0];
+    }, [userXp, completedLessonIds]);
 
     return (
         <div className="w-full max-w-4xl flex flex-col gap-8 p-4">

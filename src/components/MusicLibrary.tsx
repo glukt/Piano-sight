@@ -3,10 +3,11 @@ import { useMusicLibrary } from '../hooks/useMusicLibrary';
 
 interface MusicLibraryProps {
     onSelectScore: (file: File | null, url?: string, title?: string, id?: string) => void;
+    library: ReturnType<typeof useMusicLibrary>;
 }
 
-export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore }) => {
-    const { scores, loading, error, addScore, deleteScore, updateScoreMetadata, bookmarkedIds, toggleBookmark } = useMusicLibrary();
+export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, library }) => {
+    const { scores, loading, error, addScore, deleteScore, updateScoreMetadata, bookmarkedIds, toggleBookmark } = library;
     const [searchTerm, setSearchTerm] = useState('');
     const [isUploading, setIsUploading] = useState(false);
     const [activeTab, setActiveTab] = useState<'all' | 'bookmarks' | 'fundamentals' | 'classical' | 'modern' | 'custom'>('all');

@@ -1,10 +1,13 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
+import { PreferencesProvider } from './hooks/usePreferences'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-        <App />
+        <PreferencesProvider>
+            <App />
+        </PreferencesProvider>
     </React.StrictMode>,
 )

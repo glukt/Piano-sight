@@ -101,10 +101,13 @@ export const LevelGenerator = {
             let bKeys: string[] = [];
 
             if (tRange.length > 0) {
-                if (constraints.chordsAllowed && Math.random() > 0.5 && tRange.length >= 3) {
-                    // Grab a triad if possible
+                if (constraints.chordsAllowed && Math.random() > 0.5 && tRange.length >= 5) {
+                    // Grab a triad in thirds (e.g. C-E-G)
+                    const rootIdx = Math.floor(Math.random() * (tRange.length - 4));
+                    tKeys = [tRange[rootIdx], tRange[rootIdx + 2], tRange[rootIdx + 4]];
+                } else if (constraints.chordsAllowed && Math.random() > 0.5 && tRange.length >= 3) {
                     const rootIdx = Math.floor(Math.random() * (tRange.length - 2));
-                    tKeys = [tRange[rootIdx], tRange[rootIdx + 1], tRange[rootIdx + 2]]; // simple cluster
+                    tKeys = [tRange[rootIdx], tRange[rootIdx + 2]];
                 } else {
                     currentTrebleIdx = getNextIdx(currentTrebleIdx, tRange.length, constraints.maxJumps);
                     tKeys = [tRange[currentTrebleIdx]];
@@ -112,9 +115,12 @@ export const LevelGenerator = {
             }
 
             if (bRange.length > 0) {
-                if (constraints.chordsAllowed && Math.random() > 0.5 && bRange.length >= 3) {
+                if (constraints.chordsAllowed && Math.random() > 0.5 && bRange.length >= 5) {
+                    const rootIdx = Math.floor(Math.random() * (bRange.length - 4));
+                    bKeys = [bRange[rootIdx], bRange[rootIdx + 2], bRange[rootIdx + 4]];
+                } else if (constraints.chordsAllowed && Math.random() > 0.5 && bRange.length >= 3) {
                     const rootIdx = Math.floor(Math.random() * (bRange.length - 2));
-                    bKeys = [bRange[rootIdx], bRange[rootIdx + 1], bRange[rootIdx + 2]];
+                    bKeys = [bRange[rootIdx], bRange[rootIdx + 2]];
                 } else {
                     currentBassIdx = getNextIdx(currentBassIdx, bRange.length, constraints.maxJumps);
                     bKeys = [bRange[currentBassIdx]];

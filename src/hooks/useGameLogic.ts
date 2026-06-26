@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { usePreferences } from './usePreferences';
 import { useMidi } from './useMidi';
 import { useAudioInput } from './useAudioInput';
 import { useGamification } from './useGamification';
@@ -45,10 +46,11 @@ const getPlayheadPixelXAt = (elapsed: number, positions: number[]): number => {
     return 20;
 };
 
-export const useGameLogic = () => {
+export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: string, notesHit: number, maxNotes: number) => Promise<void>) => {
     // -------------------------------------------------------------------------
     // 1. Audio & Input Initialization
     // -------------------------------------------------------------------------
+    const { preferences, updatePreference } = usePreferences();
     const [audioStarted, setAudioStarted] = useState(false);
     const [isAudioLoading, setIsAudioLoading] = useState(false);
 
@@ -234,8 +236,10 @@ export const useGameLogic = () => {
     const [lastHitType, setLastHitType] = useState<'perfect' | 'good' | 'okay' | null>(null);
     const [preHeld, setPreHeld] = useState(false);
     const [notePositions, setNotePositions] = useState<number[]>([]);
-    const [showNoteLabels, setShowNoteLabels] = useState(false);
-    const [showStaff, setShowStaff] = useState(false);
+    const showNoteLabels = preferences.showNoteNames;
+    const setShowNoteLabels = useCallback((val: boolean) => updatePreference('showNoteNames', val), [updatePreference]);
+    const showStaff = preferences.showPianoLabels;
+    const setShowStaff = useCallback((val: boolean) => updatePreference('showPianoLabels', val), [updatePreference]);
     const [showMicPopup, setShowMicPopup] = useState(false);
 
     // Scoring
@@ -451,6 +455,15 @@ export const useGameLogic = () => {
                 if (currentLesson) {
                     setIsLessonComplete(true);
                     stopRhythm();
+                    if (saveHighScore) {
+                        const total = notesCorrect + notesMissed;
+                        const finalAccuracy = total > 0 ? Math.round((notesCorrect / total) * 100) : 0;
+                        let finalRank = 'Bronze';
+                        if (finalAccuracy >= 95) finalRank = 'Gold';
+                        else if (finalAccuracy >= 85) finalRank = 'Silver';
+                        
+                        saveHighScore(currentLesson.id, finalAccuracy, finalRank, notesCorrect, total);
+                    }
                 } else {
                     setTimeout(() => generateNewLevel(difficulty, isRhythmMode), 500);
                 }
@@ -573,7 +586,7 @@ export const useGameLogic = () => {
             if (inputStatus !== 'incorrect' && inputStatus !== 'waiting') setInputStatus('waiting');
         }
 
-    }, [effectiveActiveNotes, cursorIndex, levelData, audioStarted, difficulty, gameMode, isRhythmMode, inputStatus, preHeld, streak, maxStreak, addXp, handleAddXp, levelUp, generateNewLevel]);
+    }, [effectiveActiveNotes, cursorIndex, levelData, audioStarted, difficulty, gameMode, isRhythmMode, inputStatus, preHeld, streak, maxStreak, addXp, handleAddXp, levelUp, generateNewLevel, notesCorrect, notesMissed, saveHighScore, currentLesson]);
 
 
     const goToNextLesson = useCallback(() => {
@@ -600,6 +613,9 @@ export const useGameLogic = () => {
         }
         
         if (nextLesson) {
+            if (gameState.xp < nextLesson.requiredXp) {
+                return null;
+            }
             setIsLessonComplete(false);
             setCurrentLesson(nextLesson);
             // Switch hand mode based on topic
@@ -622,7 +638,7 @@ export const useGameLogic = () => {
             return nextLesson;
         }
         return null;
-    }, [currentLesson, difficulty, errorStats, stopRhythm]);
+    }, [currentLesson, difficulty, errorStats, stopRhythm, gameState.xp]);
 
     return {
         // State

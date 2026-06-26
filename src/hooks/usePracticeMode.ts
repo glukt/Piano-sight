@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { PlaybackEngine } from '../engine/PlaybackEngine';
+import { usePreferences } from './usePreferences';
 
 interface PracticeSection {
     startMeasure: number; // 0-indexed
@@ -27,6 +28,8 @@ export function usePracticeMode({
     songId,
     saveHighScore
 }: UsePracticeModeProps) {
+    const { preferences } = usePreferences();
+    const hintDelay = preferences.hintDelay;
     const [isActive, setIsActive] = useState(false);
     const [currentSection, setCurrentSection] = useState<PracticeSection>({ startMeasure: 0, endMeasure: 2 });
     const [mode, setMode] = useState<PracticeModeType>('preview');
@@ -359,7 +362,7 @@ export function usePracticeMode({
             if (currentExpectedObjs.length > 0) {
                 if (currentExpectedStr === prevExpectedNotesRef.current) {
                     stuckTimerRef.current += 50; // Add 50ms
-                    if (stuckTimerRef.current > 30000 && !showHintRef.current) {
+                    if (hintDelay > 0 && stuckTimerRef.current > hintDelay && !showHintRef.current) {
                         setShowHint(true);
                     }
                 } else {

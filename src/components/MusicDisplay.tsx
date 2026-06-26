@@ -211,22 +211,30 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                         tNote.keys.forEach(k => {
                             const noteName = k.split('/')[0].toUpperCase();
                             const y = getTrebleY(k);
-                            const isHollow = tNote.duration === 'h' || tNote.duration === 'w';
-                            const textColor = isHollow
-                                ? (isDarkMode ? "#ffffff" : "#1e3a8a")
-                                : (isDarkMode ? "#111827" : "#ffffff");
+
+                            const badge = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                            badge.setAttribute("class", "custom-watermark");
+                            badge.setAttribute("cx", x.toString());
+                            badge.setAttribute("cy", y.toString());
+                            badge.setAttribute("r", "7.5");
+                            badge.setAttribute("fill", isDarkMode ? "#4f46e5" : "#6366f1");
+                            badge.setAttribute("stroke", "#ffffff");
+                            badge.setAttribute("stroke-width", "1");
+                            badge.setAttribute("pointer-events", "none");
 
                             const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
                             label.setAttribute("class", "custom-watermark");
                             label.textContent = noteName.replace(/#/g, '♯').replace(/b/g, '♭');
                             label.setAttribute("x", x.toString());
-                            label.setAttribute("y", (y + 4).toString());
-                            label.setAttribute("fill", textColor);
+                            label.setAttribute("y", (y + 3.5).toString());
+                            label.setAttribute("fill", "#ffffff");
                             label.setAttribute("font-family", "Outfit, sans-serif");
                             label.setAttribute("font-weight", "900");
-                            label.setAttribute("font-size", "12");
+                            label.setAttribute("font-size", "10");
                             label.setAttribute("text-anchor", "middle");
                             label.setAttribute("pointer-events", "none");
+
+                            svgElement.appendChild(badge);
                             svgElement.appendChild(label);
                         });
                     }
@@ -238,22 +246,30 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                         bNote.keys.forEach(k => {
                             const noteName = k.split('/')[0].toUpperCase();
                             const y = getBassY(k);
-                            const isHollow = bNote.duration === 'h' || bNote.duration === 'w';
-                            const textColor = isHollow
-                                ? (isDarkMode ? "#ffffff" : "#1e3a8a")
-                                : (isDarkMode ? "#111827" : "#ffffff");
+
+                            const badge = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                            badge.setAttribute("class", "custom-watermark");
+                            badge.setAttribute("cx", x.toString());
+                            badge.setAttribute("cy", y.toString());
+                            badge.setAttribute("r", "7.5");
+                            badge.setAttribute("fill", isDarkMode ? "#0d9488" : "#10b981"); // Teal/emerald for bass clef distinction
+                            badge.setAttribute("stroke", "#ffffff");
+                            badge.setAttribute("stroke-width", "1");
+                            badge.setAttribute("pointer-events", "none");
 
                             const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
                             label.setAttribute("class", "custom-watermark");
                             label.textContent = noteName.replace(/#/g, '♯').replace(/b/g, '♭');
                             label.setAttribute("x", x.toString());
-                            label.setAttribute("y", (y + 4).toString());
-                            label.setAttribute("fill", textColor);
+                            label.setAttribute("y", (y + 3.5).toString());
+                            label.setAttribute("fill", "#ffffff");
                             label.setAttribute("font-family", "Outfit, sans-serif");
                             label.setAttribute("font-weight", "900");
-                            label.setAttribute("font-size", "12");
+                            label.setAttribute("font-size", "10");
                             label.setAttribute("text-anchor", "middle");
                             label.setAttribute("pointer-events", "none");
+
+                            svgElement.appendChild(badge);
                             svgElement.appendChild(label);
                         });
                     }

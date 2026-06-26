@@ -326,23 +326,35 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                                                         const centerX = bbox.x + bbox.width / 2;
                                                         const centerY = bbox.y + bbox.height / 2;
 
-                                                        const isHollow = note.sourceNote.Length && note.sourceNote.Length.RealValue >= 0.5;
-                                                        const textColor = isHollow
-                                                            ? (isDarkMode ? "#ffffff" : "#1e3a8a")
-                                                            : (isDarkMode ? "#111827" : "#ffffff");
+                                                        // Render a background badge to cover staff lines
+                                                        const badge = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                                                        badge.setAttribute("class", "osmd-note-label");
+                                                        badge.setAttribute("cx", centerX.toString());
+                                                        badge.setAttribute("cy", centerY.toString());
+                                                        badge.setAttribute("r", "7.5");
+                                                        // Determine clef type from graphical note if available to distinct treble/bass colors
+                                                        const isTreble = centerY < 110; // Simple bounding box heuristic for clef distinction in systems
+                                                        badge.setAttribute("fill", isTreble 
+                                                            ? (isDarkMode ? "#4f46e5" : "#6366f1") // Indigo for treble
+                                                            : (isDarkMode ? "#0d9488" : "#10b981") // Teal/emerald for bass
+                                                        );
+                                                        badge.setAttribute("stroke", "#ffffff");
+                                                        badge.setAttribute("stroke-width", "1");
+                                                        badge.setAttribute("pointer-events", "none");
 
                                                         const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
                                                         label.textContent = text;
                                                         label.setAttribute("class", "osmd-note-label");
                                                         label.setAttribute("x", centerX.toString());
-                                                        label.setAttribute("y", (centerY + 4).toString());
-                                                        label.setAttribute("fill", textColor);
+                                                        label.setAttribute("y", (centerY + 3.5).toString());
+                                                        label.setAttribute("fill", "#ffffff"); // Always white text for high contrast on badge
                                                         label.setAttribute("font-family", "Outfit, sans-serif");
                                                         label.setAttribute("font-weight", "950");
-                                                        label.setAttribute("font-size", "11");
+                                                        label.setAttribute("font-size", "10");
                                                         label.setAttribute("text-anchor", "middle");
                                                         label.setAttribute("pointer-events", "none");
 
+                                                        svgEl.appendChild(badge);
                                                         svgEl.appendChild(label); // Append last to render on top
                                                     } catch (e) {
                                                         console.error("Error setting note label coords:", e);

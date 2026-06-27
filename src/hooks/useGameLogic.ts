@@ -10,7 +10,7 @@ import { audio } from '../audio/Synth';
 import { LevelGenerator, Difficulty } from '../engine/LevelGenerator';
 import { StaveNoteData } from '../components/MusicDisplay';
 import { midiToNoteName } from '../utils/midiUtils';
-import { Lesson, courses } from '../utils/music/CourseData';
+import { Lesson, courses, isLessonCapstone } from '../utils/music/CourseData';
 
 // Helper
 const parseKeyToMidi = (key: string): number => {
@@ -274,6 +274,9 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
     // Muting & Completion
 
     const [isLessonComplete, setIsLessonComplete] = useState(false);
+    const [lessonPassed, setLessonPassed] = useState(false);
+    const [requiredAccuracy, setRequiredAccuracy] = useState(80);
+    const [isCapstone, setIsCapstone] = useState(false);
 
     // Active Note Overlapping Protection
     const notesActiveAtStepStart = useRef<Set<number>>(new Set());
@@ -383,6 +386,16 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
             setLevelData(LevelGenerator.generate(diff, errorStats));
         }
 
+        if (targetLesson) {
+            const isCap = isLessonCapstone(targetLesson);
+            setIsCapstone(isCap);
+            setRequiredAccuracy(isCap ? 85 : 80);
+        } else {
+            setIsCapstone(false);
+            setRequiredAccuracy(80);
+        }
+        setLessonPassed(false);
+
         setIsLessonComplete(false);
         setCursorIndex(0);
         setStreak(0);
@@ -479,18 +492,29 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
             if (cursorIndex === levelLength && !isLessonComplete) {
                 setIsLessonComplete(true);
                 stopRhythm();
-                handleAddXp(50);
                 if (currentLesson) {
-                    if (saveHighScore) {
-                        const total = notesCorrect + notesMissed;
-                        const finalAccuracy = total > 0 ? Math.round((notesCorrect / total) * 100) : 0;
-                        let finalRank = 'Bronze';
-                        if (finalAccuracy >= 95) finalRank = 'Gold';
-                        else if (finalAccuracy >= 85) finalRank = 'Silver';
-                        
-                        saveHighScore(currentLesson.id, finalAccuracy, finalRank, notesCorrect, total);
+                    const total = notesCorrect + notesMissed;
+                    const finalAccuracy = total > 0 ? Math.round((notesCorrect / total) * 100) : 0;
+                    const isCap = isLessonCapstone(currentLesson);
+                    const reqAcc = isCap ? 85 : 80;
+                    const passed = finalAccuracy >= reqAcc;
+
+                    setIsCapstone(isCap);
+                    setRequiredAccuracy(reqAcc);
+                    setLessonPassed(passed);
+
+                    if (passed) {
+                        handleAddXp(50); // only award completion XP if passed!
+                        if (saveHighScore) {
+                            let finalRank = 'Bronze';
+                            if (finalAccuracy >= 95) finalRank = 'Gold';
+                            else if (finalAccuracy >= 85) finalRank = 'Silver';
+                            
+                            saveHighScore(currentLesson.id, finalAccuracy, finalRank, notesCorrect, total);
+                        }
                     }
                 } else {
+                    handleAddXp(50);
                     setTimeout(() => generateNewLevel(difficulty, isRhythmMode), 500);
                 }
             }
@@ -654,10 +678,14 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         }
         
         if (nextLesson) {
-            if (gameState.xp < nextLesson.requiredXp) {
-                return null;
-            }
             setIsLessonComplete(false);
+            
+            // Set states for next lesson
+            const isCap = isLessonCapstone(nextLesson);
+            setIsCapstone(isCap);
+            setRequiredAccuracy(isCap ? 85 : 80);
+            setLessonPassed(false);
+            
             setCurrentLesson(nextLesson);
             // Switch hand mode based on topic
             if (nextLesson.topic === 'treble') setGameMode('treble');
@@ -679,7 +707,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
             return nextLesson;
         }
         return null;
-    }, [currentLesson, difficulty, errorStats, stopRhythm, gameState.xp]);
+    }, [currentLesson, difficulty, errorStats, stopRhythm]);
 
     return {
         // State
@@ -707,6 +735,9 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         isLessonComplete,
         notesCorrect,
         notesMissed,
+        lessonPassed,
+        requiredAccuracy,
+        isCapstone,
 
         // Actions
         startAudio, testAudio,

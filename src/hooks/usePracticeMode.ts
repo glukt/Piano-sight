@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { PlaybackEngine } from '../engine/PlaybackEngine';
 import { usePreferences } from './usePreferences';
+import { getLessonById, isLessonCapstone } from '../utils/music/CourseData';
 
 interface PracticeSection {
     startMeasure: number; // 0-indexed
@@ -50,6 +51,10 @@ export function usePracticeMode({
     const [overallMissed, setOverallMissed] = useState(0);
     const [playModeStarted, setPlayModeStarted] = useState(false);
     const [countdown, setCountdown] = useState<number | null>(null);
+
+    const [passed, setPassed] = useState(false);
+    const [requiredAccuracy, setRequiredAccuracy] = useState(80);
+    const [isCapstone, setIsCapstone] = useState(false);
 
     interface ExpectedNoteEvent {
         midi: number;
@@ -692,7 +697,16 @@ export function usePracticeMode({
                 if (finalAccuracy >= 95) finalRank = 'Gold';
                 else if (finalAccuracy >= 85) finalRank = 'Silver';
 
-                if (saveHighScore && songId) {
+                const lesson = songId ? getLessonById(songId) : undefined;
+                const isCap = lesson ? isLessonCapstone(lesson) : false;
+                const reqAcc = isCap ? 85 : 80;
+                const hasPassed = finalAccuracy >= reqAcc;
+
+                setIsCapstone(isCap);
+                setRequiredAccuracy(reqAcc);
+                setPassed(hasPassed);
+
+                if (saveHighScore && songId && hasPassed) {
                     saveHighScore(songId, finalAccuracy, finalRank, correct, total);
                 }
 
@@ -728,6 +742,9 @@ export function usePracticeMode({
         overallMissed,
         playModeStarted,
         countdown,
-        startPlayMode
+        startPlayMode,
+        passed,
+        requiredAccuracy,
+        isCapstone
     };
 }

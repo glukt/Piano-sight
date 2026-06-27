@@ -218,6 +218,9 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 errorMeasures={{}}
                 totalMeasures={0}
                 isDarkMode={isDarkMode}
+                passed={gameLogic.lessonPassed}
+                requiredAccuracy={gameLogic.requiredAccuracy}
+                isCapstone={gameLogic.isCapstone}
             />
         </div>
     );

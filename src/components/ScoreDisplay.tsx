@@ -88,7 +88,10 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         notesMissed,
         playModeStarted,
         countdown,
-        startPlayMode
+        startPlayMode,
+        passed,
+        requiredAccuracy,
+        isCapstone
     } = usePracticeMode({
         playbackEngine: playbackRef.current,
         totalMeasures: playbackRef.current?.MeasureCount || 0,
@@ -739,6 +742,9 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                 errorMeasures={errorMeasures}
                 totalMeasures={playbackRef.current?.MeasureCount || 8}
                 isDarkMode={isDarkMode}
+                passed={passed}
+                requiredAccuracy={requiredAccuracy}
+                isCapstone={isCapstone}
             />
         </div>
     );

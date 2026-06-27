@@ -12,6 +12,9 @@ interface PerformanceReportCardProps {
     errorMeasures: Record<number, number>;
     totalMeasures: number;
     isDarkMode: boolean;
+    passed?: boolean;
+    requiredAccuracy?: number;
+    isCapstone?: boolean;
 }
 
 export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
@@ -24,12 +27,17 @@ export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
     notesMissed,
     errorMeasures,
     totalMeasures,
-    isDarkMode
+    isDarkMode,
+    passed,
+    requiredAccuracy = 80,
+    isCapstone = false
 }) => {
     if (!isOpen) return null;
 
     const totalNotes = notesCorrect + notesMissed;
     const accuracy = totalNotes > 0 ? Math.round((notesCorrect / totalNotes) * 100) : 100;
+
+    const hasPassed = passed !== undefined ? passed : true;
 
     // Determine Grade
     let grade = 'F';
@@ -46,6 +54,10 @@ export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
     } else if (accuracy >= 70) {
         grade = 'C';
         gradeColor = 'text-orange-500';
+    }
+
+    if (!hasPassed) {
+        gradeColor = 'text-rose-500';
     }
 
     const xpEarned = notesCorrect * 2 + (accuracy >= 90 ? 100 : 20); // XP breakdown
@@ -74,7 +86,10 @@ export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
                     )}
 
                     <h2 className="text-3xl font-extrabold tracking-tight mb-2 z-10 relative">
-                        🎉 Song Completed!
+                        {hasPassed 
+                            ? (isCapstone ? '🏆 Capstone Mastered!' : '🎉 Lesson Completed!')
+                            : (isCapstone ? '❌ Capstone Failed' : '💪 Keep Practicing!')
+                        }
                     </h2>
                     <p className="text-sm text-gray-500 dark:text-gray-400 font-semibold mb-6 uppercase tracking-wider z-10 relative">
                         {songTitle}
@@ -83,9 +98,11 @@ export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
                     {/* Grade & Score Circle */}
                     <div className="flex justify-center mb-6 relative z-10">
                         <div className={`w-36 h-36 rounded-full border-4 flex flex-col justify-center items-center relative ${
-                            accuracy >= 90 
-                                ? 'border-yellow-400/60 bg-yellow-500/5' 
-                                : 'border-blue-500/40 bg-blue-500/5'
+                            !hasPassed
+                                ? 'border-rose-500/60 bg-rose-500/5'
+                                : accuracy >= 90 
+                                    ? 'border-yellow-400/60 bg-yellow-500/5' 
+                                    : 'border-blue-500/40 bg-blue-500/5'
                         }`}>
                             <span className={`text-6xl font-black ${gradeColor}`}>
                                 {grade}
@@ -93,6 +110,15 @@ export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
                             <span className="text-xs font-bold text-gray-500 dark:text-gray-400 mt-1">
                                 {accuracy}% Accuracy
                             </span>
+                            {passed !== undefined && (
+                                <span className={`text-[10px] font-black mt-1.5 px-2 py-0.5 rounded-full ${
+                                    hasPassed
+                                        ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20'
+                                        : 'text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/20'
+                                }`}>
+                                    {hasPassed ? 'Mastered!' : `Min: ${requiredAccuracy}%`}
+                                </span>
+                            )}
                         </div>
                     </div>
 
@@ -151,7 +177,7 @@ export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
                         >
                             🔄 Practice Again
                         </button>
-                        {onNext && accuracy >= 80 && (
+                        {onNext && hasPassed && (
                             <button
                                 onClick={onNext}
                                 className="flex-grow flex-shrink py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-600 hover:to-teal-700 transition active:scale-98"

@@ -546,3 +546,36 @@ export const getLessonById = (id: string): Lesson | undefined => {
     }
     return undefined;
 };
+
+export const isLessonCapstone = (lesson: Lesson): boolean => {
+    const course = courses.find(c => c.id === lesson.courseId);
+    if (!course) return false;
+    const idx = course.lessons.findIndex(l => l.id === lesson.id);
+    return idx === course.lessons.length - 1;
+};
+
+export const getLessonUnlockedStatus = (lesson: Lesson, completedIds: Set<string>, _userXp: number): boolean => {
+    const courseIndex = courses.findIndex(c => c.id === lesson.courseId);
+    if (courseIndex === -1) return false;
+    
+    const course = courses[courseIndex];
+    const lessonIndex = course.lessons.findIndex(l => l.id === lesson.id);
+    if (lessonIndex === -1) return false;
+    
+    // First lesson of the first course is unlocked by default
+    if (courseIndex === 0 && lessonIndex === 0) return true;
+    
+    // If it's not the first lesson of this course, the previous lesson in this course must be completed
+    if (lessonIndex > 0) {
+        return completedIds.has(course.lessons[lessonIndex - 1].id);
+    }
+    
+    // If it's the first lesson of a subsequent course, the last lesson of the previous course must be completed
+    if (courseIndex > 0) {
+        const prevCourse = courses[courseIndex - 1];
+        const lastLessonOfPrevCourse = prevCourse.lessons[prevCourse.lessons.length - 1];
+        return completedIds.has(lastLessonOfPrevCourse.id);
+    }
+    
+    return false;
+};

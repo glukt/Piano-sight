@@ -1,5 +1,5 @@
 import React from 'react';
-import { courses, Lesson } from '../../utils/music/CourseData';
+import { courses, Lesson, getLessonUnlockedStatus } from '../../utils/music/CourseData';
 
 interface CourseSelectionProps {
     userXp: number;
@@ -57,8 +57,19 @@ export const CourseSelection: React.FC<CourseSelectionProps> = ({ userXp, comple
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {course.lessons.map((lesson, index) => {
-                                    const isUnlocked = userXp >= lesson.requiredXp;
+                                    const isUnlocked = getLessonUnlockedStatus(lesson, completedLessonIds, userXp);
                                     const isCompleted = completedLessonIds.has(lesson.id);
+                                    
+                                    let lockReason = '';
+                                    if (!isUnlocked) {
+                                        const cIdx = courses.findIndex(c => c.id === lesson.courseId);
+                                        const lIdx = course.lessons.findIndex(l => l.id === lesson.id);
+                                        if (lIdx > 0) {
+                                            lockReason = `Play Lesson ${lIdx}`;
+                                        } else if (cIdx > 0) {
+                                            lockReason = `Complete Course ${cIdx}`;
+                                        }
+                                    }
 
                                     return (
                                         <button
@@ -87,7 +98,7 @@ export const CourseSelection: React.FC<CourseSelectionProps> = ({ userXp, comple
                                                 )}
                                                 {!isUnlocked && (
                                                     <span className="text-xs font-semibold text-gray-500 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full flex items-center gap-1">
-                                                        🔒 {lesson.requiredXp} XP
+                                                        🔒 {lockReason}
                                                     </span>
                                                 )}
                                             </div>

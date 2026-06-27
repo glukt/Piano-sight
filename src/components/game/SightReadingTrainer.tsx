@@ -689,6 +689,14 @@ export const SightReadingTrainer: React.FC<SightReadingTrainerProps> = ({ gameLo
 
                     {/* Action buttons */}
                     <div className="flex flex-col w-full gap-2 px-2">
+                        {currentLevel < 5 && (
+                            <button
+                                onClick={() => startLevel(currentLevel + 1)}
+                                className="w-full py-3 rounded-full text-sm font-extrabold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:scale-[0.98] shadow-lg shadow-emerald-500/25 transition-all animate-in slide-in-from-bottom-2 duration-300"
+                            >
+                                Next Level →
+                            </button>
+                        )}
                         <button
                             onClick={() => startLevel(currentLevel)}
                             className="w-full py-3 rounded-full text-sm font-extrabold text-white bg-blue-600 hover:bg-blue-700 active:scale-[0.98] shadow-lg shadow-blue-500/25 transition-all"

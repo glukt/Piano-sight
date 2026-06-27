@@ -280,6 +280,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
 
     // Active Note Overlapping Protection
     const notesActiveAtStepStart = useRef<Set<number>>(new Set());
+    const lastProcessedIndex = useRef<number>(-1);
 
     // Update notes active at step start when cursor index changes
     useEffect(() => {
@@ -395,6 +396,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
             setRequiredAccuracy(80);
         }
         setLessonPassed(false);
+        lastProcessedIndex.current = -1;
 
         setIsLessonComplete(false);
         setCursorIndex(0);
@@ -485,6 +487,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
     // Main Validation Loop (strictly event-driven, decoupled from rhythm 60Hz tick)
     useEffect(() => {
         if (!audioStarted) return;
+        if (cursorIndex === lastProcessedIndex.current) return;
 
         // End of Level
         const levelLength = levelData.treble.length;
@@ -550,6 +553,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         // If it's a rest note, auto-advance if not in rhythm mode
         if (requiredNotes.size === 0) {
             if (!isRhythmMode) {
+                lastProcessedIndex.current = cursorIndex;
                 setCursorIndex(prev => prev + 1);
             } else if (newlyPressedActiveNotes.length > 0) {
                 // Penalize off-beat keys pressed during rest in rhythm mode
@@ -604,6 +608,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
                 const diff = Math.abs(elapsed - targetTime);
                 if (diff > timeWindow) return;
 
+                lastProcessedIndex.current = cursorIndex;
                 if (diff <= 0.1) {
                     setLastHitType('perfect');
                     setScore(s => ({ ...s, correct: s.correct + 5 }));
@@ -632,6 +637,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
             }
 
             // Normal Mode
+            lastProcessedIndex.current = cursorIndex;
             setScore(s => ({ ...s, correct: s.correct + 1 }));
             setNotesCorrect(prev => prev + 1);
             if (streak + 1 > maxStreak) setMaxStreak(streak + 1);
@@ -692,11 +698,11 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
             else if (nextLesson.topic === 'bass') setGameMode('bass');
             else setGameMode('both');
             
-            // Generate new level
             setLevelData(nextLesson.constraints 
                 ? LevelGenerator.generateFromConstraints(nextLesson.constraints)
                 : LevelGenerator.generate(difficulty, errorStats)
             );
+            lastProcessedIndex.current = -1;
             setCursorIndex(0);
             setStreak(0);
             setScore({ correct: 0, incorrect: 0 }); // Reset score for the new lesson!

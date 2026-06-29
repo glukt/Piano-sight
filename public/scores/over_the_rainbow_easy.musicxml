@@ -29,6 +29,15 @@
           <line>2</line>
         </clef>
       </attributes>
+      <direction>
+        <direction-type>
+          <metronome parentheses="no">
+            <beat-unit>quarter</beat-unit>
+            <per-minute>89</per-minute>
+          </metronome>
+        </direction-type>
+        <sound tempo="89"/>
+      </direction>
       <note>
         <pitch>
           <step>C</step>

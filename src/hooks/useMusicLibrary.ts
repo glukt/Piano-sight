@@ -32,6 +32,24 @@ export interface LessonProgress {
 
 const PRESET_SCORES: LibraryScore[] = [
     {
+        id: 'preset-over-the-rainbow-easy',
+        title: 'Somewhere over the Rainbow (Easy)',
+        composer: 'Harold Arlen',
+        dateAdded: 1718000000000,
+        tags: ['Beginner', 'Classic', 'Folk'],
+        fileName: 'over_the_rainbow_easy.musicxml',
+        songUrl: '/scores/over_the_rainbow_easy.musicxml'
+    },
+    {
+        id: 'preset-over-the-rainbow-intermediate',
+        title: 'Somewhere over the Rainbow (Intermediate)',
+        composer: 'Harold Arlen',
+        dateAdded: 1718000000000,
+        tags: ['Intermediate', 'Classic', 'Folk'],
+        fileName: 'over_the_rainbow_intermediate.musicxml',
+        songUrl: '/scores/over_the_rainbow_intermediate.musicxml'
+    },
+    {
         id: 'preset-interstellar',
         title: 'Interstellar Theme (Cornfield Chase)',
         composer: 'Hans Zimmer',

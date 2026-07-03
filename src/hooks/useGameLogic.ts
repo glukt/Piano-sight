@@ -281,6 +281,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
     // Active Note Overlapping Protection
     const notesActiveAtStepStart = useRef<Set<number>>(new Set());
     const lastProcessedIndex = useRef<number>(-1);
+    const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Update notes active at step start when cursor index changes
     useEffect(() => {
@@ -538,124 +539,137 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
             targetBass.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
         }
 
-        const relevantActiveNotes = new Set<number>();
-        effectiveActiveNotes.forEach(n => {
-            if (gameMode === 'both') relevantActiveNotes.add(n);
-            else if (gameMode === 'treble' && n >= 60) relevantActiveNotes.add(n);
-            else if (gameMode === 'bass' && n < 60) relevantActiveNotes.add(n);
-        });
+        // Debounce evaluation window to allow chords to strike and filter transient noise/brushes
+        const elapsedAtTrigger = elapsedTimeRef.current;
+        
+        if (validationTimerRef.current) {
+            clearTimeout(validationTimerRef.current);
+        }
 
-        // Filter out notes held continuously from the step start (legato overlap protection)
-        const newlyPressedActiveNotes = Array.from(relevantActiveNotes).filter(
-            n => !notesActiveAtStepStart.current.has(n)
-        );
+        validationTimerRef.current = setTimeout(() => {
+            const currentRelevantActiveNotes = new Set<number>();
+            effectiveActiveNotes.forEach(n => {
+                if (gameMode === 'both') currentRelevantActiveNotes.add(n);
+                else if (gameMode === 'treble' && n >= 60) currentRelevantActiveNotes.add(n);
+                else if (gameMode === 'bass' && n < 60) currentRelevantActiveNotes.add(n);
+            });
 
-        // If it's a rest note, auto-advance if not in rhythm mode
-        if (requiredNotes.size === 0) {
-            if (!isRhythmMode) {
-                lastProcessedIndex.current = cursorIndex;
-                setCursorIndex(prev => prev + 1);
-            } else if (newlyPressedActiveNotes.length > 0) {
-                // Penalize off-beat keys pressed during rest in rhythm mode
+            const currentNewlyPressedActiveNotes = Array.from(currentRelevantActiveNotes).filter(
+                n => !notesActiveAtStepStart.current.has(n)
+            );
+
+            // If it's a rest note, auto-advance if not in rhythm mode
+            if (requiredNotes.size === 0) {
+                if (!isRhythmMode) {
+                    lastProcessedIndex.current = cursorIndex;
+                    setCursorIndex(prev => prev + 1);
+                } else if (currentNewlyPressedActiveNotes.length > 0) {
+                    // Penalize off-beat keys pressed during rest in rhythm mode
+                    if (inputStatus !== 'incorrect') {
+                        setInputStatus('incorrect');
+                        setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
+                        setNotesMissed(prev => prev + 1);
+                        setStreak(0);
+                    }
+                }
+                return;
+            }
+
+            const hasIncorrect = currentNewlyPressedActiveNotes.some(n => !requiredNotes.has(n));
+            const allFound = requiredNotes.size > 0 && Array.from(requiredNotes).every(n => currentRelevantActiveNotes.has(n));
+
+            let isPreHeldLocked = preHeld;
+            if (isPreHeldLocked) {
+                // Wait for user to completely release the chord before letting them try again
+                const stillHoldingAll = Array.from(requiredNotes).every(n => effectiveActiveNotes.has(n));
+                const pressedNewRequired = currentNewlyPressedActiveNotes.some(n => requiredNotes.has(n));
+
+                if (!stillHoldingAll || pressedNewRequired) {
+                    setPreHeld(false);
+                    isPreHeldLocked = false;
+                }
+            }
+
+            if (isPreHeldLocked) {
+                return;
+            }
+
+            // Penalty: Only if they press a WRONG note for their current Hand mode
+            if (hasIncorrect) {
                 if (inputStatus !== 'incorrect') {
                     setInputStatus('incorrect');
                     setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
                     setNotesMissed(prev => prev + 1);
                     setStreak(0);
+                    currentNewlyPressedActiveNotes.filter(n => !requiredNotes.has(n)).forEach(n => {
+                        const name = midiToNoteName(n);
+                        setErrorStats(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
+                    });
                 }
-            }
-            return;
-        }
-
-        const hasIncorrect = newlyPressedActiveNotes.some(n => !requiredNotes.has(n));
-        const allFound = requiredNotes.size > 0 && Array.from(requiredNotes).every(n => relevantActiveNotes.has(n));
-
-        if (preHeld) {
-            // Wait for user to completely release the chord before letting them try again
-            // Or wait until they are no longer holding ALL required notes from the previous level
-            const stillHoldingAll = Array.from(requiredNotes).every(n => effectiveActiveNotes.has(n));
-            const pressedNewRequired = newlyPressedActiveNotes.some(n => requiredNotes.has(n));
-
-            // To be safe, wait until they release at least one required note to break the pre-held lock
-            // OR if they pressed a new correct note that is part of the required set
-            if (!stillHoldingAll || pressedNewRequired) {
-                setPreHeld(false);
-            } else {
                 return;
             }
-        }
 
-        // Penalty: Only if they press a WRONG note for their current Hand mode
-        if (hasIncorrect) {
-            if (inputStatus !== 'incorrect') {
-                setInputStatus('incorrect');
-                setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
-                setNotesMissed(prev => prev + 1);
-                setStreak(0);
-                newlyPressedActiveNotes.filter(n => !requiredNotes.has(n)).forEach(n => {
-                    const name = midiToNoteName(n);
-                    setErrorStats(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
-                });
-            }
-            return;
-        }
+            // Success: Only if they have pressed ALL required notes for their current Hand mode 
+            if (allFound) {
+                if (isRhythmMode && isRhythmPlayingRef.current) {
+                    const diff = Math.abs(elapsedAtTrigger - targetTime);
+                    if (diff > timeWindow) return;
 
-        // Success: Only if they have pressed ALL required notes for their current Hand mode 
-        if (allFound) {
+                    lastProcessedIndex.current = cursorIndex;
+                    if (diff <= 0.1) {
+                        setLastHitType('perfect');
+                        setScore(s => ({ ...s, correct: s.correct + 5 }));
+                        setNotesCorrect(prev => prev + 1);
+                        setInputStatus('perfect');
+                        setStreak(p => p + 1);
+                        handleAddXp(10);
+                    } else if (diff <= 0.25) {
+                        setLastHitType('good');
+                        setScore(s => ({ ...s, correct: s.correct + 2 }));
+                        setNotesCorrect(prev => prev + 1);
+                        setInputStatus('correct');
+                        setStreak(p => p + 1);
+                        handleAddXp(5);
+                    } else {
+                        setLastHitType('okay');
+                        setScore(s => ({ ...s, correct: s.correct + 1 }));
+                        setNotesCorrect(prev => prev + 1);
+                        setInputStatus('correct');
+                        setStreak(p => p + 1);
+                        handleAddXp(2);
+                    }
+                    if (streak + 1 > maxStreak) setMaxStreak(streak + 1);
+                    setCursorIndex(prev => prev + 1);
+                    return;
+                }
 
-            if (isRhythmMode && isRhythmPlayingRef.current) {
-                const elapsed = elapsedTimeRef.current;
-                const diff = Math.abs(elapsed - targetTime);
-                if (diff > timeWindow) return;
-
+                // Normal Mode
                 lastProcessedIndex.current = cursorIndex;
-                if (diff <= 0.1) {
-                    setLastHitType('perfect');
-                    setScore(s => ({ ...s, correct: s.correct + 5 }));
-                    setNotesCorrect(prev => prev + 1);
-                    setInputStatus('perfect');
-                    setStreak(p => p + 1);
-                    handleAddXp(10);
-                } else if (diff <= 0.25) {
-                    setLastHitType('good');
-                    setScore(s => ({ ...s, correct: s.correct + 2 }));
-                    setNotesCorrect(prev => prev + 1);
-                    setInputStatus('correct');
-                    setStreak(p => p + 1);
-                    handleAddXp(5);
-                } else {
-                    setLastHitType('okay');
-                    setScore(s => ({ ...s, correct: s.correct + 1 }));
-                    setNotesCorrect(prev => prev + 1);
-                    setInputStatus('correct');
-                    setStreak(p => p + 1);
-                    handleAddXp(2);
-                }
+                setScore(s => ({ ...s, correct: s.correct + 1 }));
+                setNotesCorrect(prev => prev + 1);
                 if (streak + 1 > maxStreak) setMaxStreak(streak + 1);
-                setCursorIndex(prev => prev + 1);
-                return;
+                setStreak(p => p + 1);
+                handleAddXp(5);
+
+                setLastHitType('good');
+                setInputStatus('correct');
+
+                // Progression Delay
+                setTimeout(() => {
+                    setCursorIndex(prev => prev + 1);
+                    setInputStatus('waiting');
+                }, 100);
+
+            } else {
+                if (inputStatus !== 'incorrect' && inputStatus !== 'waiting') setInputStatus('waiting');
             }
+        }, 50);
 
-            // Normal Mode
-            lastProcessedIndex.current = cursorIndex;
-            setScore(s => ({ ...s, correct: s.correct + 1 }));
-            setNotesCorrect(prev => prev + 1);
-            if (streak + 1 > maxStreak) setMaxStreak(streak + 1);
-            setStreak(p => p + 1);
-            handleAddXp(5);
-
-            setLastHitType('good');
-            setInputStatus('correct');
-
-            // Progression Delay
-            setTimeout(() => {
-                setCursorIndex(prev => prev + 1);
-                setInputStatus('waiting');
-            }, 100);
-
-        } else {
-            if (inputStatus !== 'incorrect' && inputStatus !== 'waiting') setInputStatus('waiting');
-        }
+        return () => {
+            if (validationTimerRef.current) {
+                clearTimeout(validationTimerRef.current);
+            }
+        };
 
     }, [effectiveActiveNotes, cursorIndex, levelData, audioStarted, difficulty, gameMode, isRhythmMode, inputStatus, preHeld, streak, maxStreak, addXp, handleAddXp, levelUp, generateNewLevel, notesCorrect, notesMissed, saveHighScore, currentLesson, isLessonComplete]);
 

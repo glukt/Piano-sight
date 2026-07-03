@@ -71,6 +71,7 @@ export function usePracticeMode({
 
     const isTransitioningRef = useRef(false);
     const transitionTimeoutRef = useRef<any>(null);
+    const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const startPractice = useCallback((startMeasure?: number) => {
         if (transitionTimeoutRef.current) {
@@ -422,125 +423,105 @@ export function usePracticeMode({
             playbackEngine.highlightCurrentNotes();
             setExpectedNotes(currentExpectedMidis);
 
-            // 4. Repeated Note Logic (Re-trigger check)
-            // Identify notes that were correctly played in the PREVIOUS step
-            // AND are still currently held by the user.
-            // These notes must be released before they can count for the CURRENT step
-            // UNLESS they are tied notes (isTied = true).
-            const stillHeldFromPrevious = currentExpectedObjs.filter(n => {
-                // If it is TIED, we ignore the "must release" rule.
-                if (n.isTied) return false;
-
-                // Otherwise, check if it was last successful AND is still held
-                return lastSuccessfulNotesRef.current.has(n.midi) && userActiveNotesRef.current.has(n.midi);
-            });
-
-            if (stillHeldFromPrevious.length > 0) {
-                // User must release these notes first.
-                // Note: We don't block *other* notes, but "allNotesPressed" checks "every" expected note.
-                // So effectively, we block advancement until these specific notes are released and re-pressed.
-
-                // Cleanup: If user HAS released a note, remove it from lastSuccessfulNotes 
-                // so we know it's "clearguard" for next press.
-                const newLast = new Set(lastSuccessfulNotesRef.current);
-                let changed = false;
-                lastSuccessfulNotesRef.current.forEach(n => {
-                    if (!userActiveNotesRef.current.has(n)) {
-                        newLast.delete(n);
-                        changed = true;
-                    }
-                });
-                if (changed) setLastSuccessfulNotes(newLast);
-
-                // Wait for release. Do not advance.
-                return;
+            // Debounce the validation logic (Steps 4, 5, and 6)
+            if (validationTimerRef.current) {
+                clearTimeout(validationTimerRef.current);
             }
 
+            validationTimerRef.current = setTimeout(() => {
+                if (isTransitioningRef.current) return;
 
-            // 5. Check Input
-            const allNotesPressed = currentExpectedObjs.every(noteObj => {
-                // If tied, and we are holding it (from previous success or just holding), it counts?
-                // Wait, if it IS tied, we still require it to be ACTIVE.
-                // But we filtered out the "blocker" above.
-                return userActiveNotesRef.current.has(noteObj.midi);
-            });
+                const freshExpectedObjs = playbackEngine.getNotesAtCurrentPosition();
+                const freshExpectedMidis = freshExpectedObjs.map(n => n.midi);
+                if (freshExpectedObjs.length === 0) return;
 
-            if (allNotesPressed) {
-                setFeedback("Good!");
-                playbackEngine.nextStep();
-                setNotesCorrect(prev => prev + 1);
-                if (onNoteCorrectRef.current) onNoteCorrectRef.current(); // Minor XP event
-
-                // Mark these notes as successful so we require re-trigger next time if needed
-                setLastSuccessfulNotes(new Set(currentExpectedMidis));
-                // Reset hint immediately on success
-                // (though next tick will do it too via currentExpected change, this feels snappier)
-                setShowHint(false);
-            } else {
-                // 6. Mistake Tracking
-                // Count any active note that is NOT in expected notes
-                // LEGATO FIX: Ignore notes that are in existing "lastSuccessfulNotes" (trailing notes from previous step)
-                // Also ignore any notes that were already active when the step started.
-                const activeWrongNotes = [...userActiveNotesRef.current].filter(n => {
-                    // If it's in the current expected set, it's correct (or at least valid).
-                    if (currentExpectedMidis.includes(n)) return false;
-
-                    // If it was correct in the PREVIOUS step (and held over), ignore it (Legato tolerance).
-                    if (lastSuccessfulNotesRef.current.has(n)) return false;
-
-                    // If it was already active when this step started, ignore it.
-                    if (notesActiveAtStepStartRef.current.has(n)) return false;
-
-                    // Otherwise, it's a wrong note.
-                    return true;
+                // 4. Repeated Note Logic (Re-trigger check)
+                const stillHeldFromPrevious = freshExpectedObjs.filter(n => {
+                    if (n.isTied) return false;
+                    return lastSuccessfulNotesRef.current.has(n.midi) && userActiveNotesRef.current.has(n.midi);
                 });
 
-                let newMistakes = 0;
-
-                // Add new wrong notes to heldWrongNotes
-                activeWrongNotes.forEach(n => {
-                    if (!heldWrongNotesRef.current.has(n)) {
-                        heldWrongNotesRef.current.add(n);
-                        newMistakes++;
-                    }
-                });
-
-                // Remove released key from heldWrongNotes
-                // (Convert to array to avoid modification during iteration issues if any)
-                [...heldWrongNotesRef.current].forEach(n => {
-                    if (!userActiveNotesRef.current.has(n)) {
-                        heldWrongNotesRef.current.delete(n);
-                    }
-                });
-
-                if (newMistakes > 0) {
-                    setNotesMissed(prev => prev + newMistakes);
-
-                    // Track errors per measure for performance report card heatmap
-                    const measureNum = playbackEngine.CurrentMeasureNumber;
-                    setErrorMeasures(prev => ({
-                        ...prev,
-                        [measureNum]: (prev[measureNum] || 0) + newMistakes
-                    }));
-                    
-                    // Convert MIDI values to note names for explicit user correction feedback
-                    const MIDI_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-                    const getNoteName = (midi: number) => {
-                        const name = MIDI_NAMES[midi % 12];
-                        const octave = Math.floor(midi / 12) - 1;
-                        return `${name}${octave}`;
-                    };
-
-                    const wrongNoteName = getNoteName(activeWrongNotes[0]);
-                    const expectedNoteName = currentExpectedMidis.map(getNoteName).join(' + ');
-                    setFeedback(`❌ Played ${wrongNoteName}, expected ${expectedNoteName}`);
+                if (stillHeldFromPrevious.length > 0) {
+                    const newLast = new Set(lastSuccessfulNotesRef.current);
+                    let changed = false;
+                    lastSuccessfulNotesRef.current.forEach(n => {
+                        if (!userActiveNotesRef.current.has(n)) {
+                            newLast.delete(n);
+                            changed = true;
+                        }
+                    });
+                    if (changed) setLastSuccessfulNotes(newLast);
+                    return;
                 }
-            }
+
+                // 5. Check Input
+                const allNotesPressed = freshExpectedObjs.every(noteObj => {
+                    return userActiveNotesRef.current.has(noteObj.midi);
+                });
+
+                if (allNotesPressed) {
+                    setFeedback("Good!");
+                    playbackEngine.nextStep();
+                    setNotesCorrect(prev => prev + 1);
+                    if (onNoteCorrectRef.current) onNoteCorrectRef.current();
+
+                    setLastSuccessfulNotes(new Set(freshExpectedMidis));
+                    setShowHint(false);
+                } else {
+                    // 6. Mistake Tracking
+                    const activeWrongNotes = [...userActiveNotesRef.current].filter(n => {
+                        if (freshExpectedMidis.includes(n)) return false;
+                        if (lastSuccessfulNotesRef.current.has(n)) return false;
+                        if (notesActiveAtStepStartRef.current.has(n)) return false;
+                        return true;
+                    });
+
+                    let newMistakes = 0;
+                    activeWrongNotes.forEach(n => {
+                        if (!heldWrongNotesRef.current.has(n)) {
+                            heldWrongNotesRef.current.add(n);
+                            newMistakes++;
+                        }
+                    });
+
+                    [...heldWrongNotesRef.current].forEach(n => {
+                        if (!userActiveNotesRef.current.has(n)) {
+                            heldWrongNotesRef.current.delete(n);
+                        }
+                    });
+
+                    if (newMistakes > 0) {
+                        setNotesMissed(prev => prev + newMistakes);
+
+                        const measureNum = playbackEngine.CurrentMeasureNumber;
+                        setErrorMeasures(prev => ({
+                            ...prev,
+                            [measureNum]: (prev[measureNum] || 0) + newMistakes
+                        }));
+                        
+                        const MIDI_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+                        const getNoteName = (midi: number) => {
+                            const name = MIDI_NAMES[midi % 12];
+                            const octave = Math.floor(midi / 12) - 1;
+                            return `${name}${octave}`;
+                        };
+
+                        const wrongNoteName = getNoteName(activeWrongNotes[0]);
+                        const expectedNoteName = freshExpectedMidis.map(getNoteName).join(' + ');
+                        setFeedback(`❌ Played ${wrongNoteName}, expected ${expectedNoteName}`);
+                    }
+                }
+            }, 50);
         };
 
         const interval = setInterval(checkInput, 50); // Poll 20Hz
         checkInput(); // Run check immediately on user input change for zero-latency response
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval);
+            if (validationTimerRef.current) {
+                clearTimeout(validationTimerRef.current);
+            }
+        };
 
     }, [isActive, mode, playbackEngine, userActiveNotes]);
 

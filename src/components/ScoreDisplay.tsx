@@ -314,20 +314,47 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                                                 text = text.replace(/#/g, '♯').replace(/b/g, '♭');
 
                                                 const paths = Array.from(svgEl.querySelectorAll('path'));
-                                                const noteheadPath = paths.find(path => {
-                                                    try {
-                                                        const bbox = path.getBBox();
-                                                        return bbox.width > 6 && bbox.width < 22 && bbox.height > 4 && bbox.height < 15;
-                                                    } catch (e) {
-                                                        return false;
-                                                    }
-                                                }) || svgEl.querySelector('path');
+                                                let noteheadPath = paths.find(path => path.getAttribute('data-is-notehead') === 'true');
+
+                                                if (!noteheadPath) {
+                                                    noteheadPath = paths.find(path => {
+                                                        try {
+                                                            const bbox = path.getBBox();
+                                                            const isMatch = bbox.width > 6 && bbox.width < 22 && bbox.height > 4 && bbox.height < 15;
+                                                            if (isMatch) {
+                                                                path.setAttribute('data-is-notehead', 'true');
+                                                            }
+                                                            return isMatch;
+                                                        } catch (e) {
+                                                            return false;
+                                                        }
+                                                    }) || svgEl.querySelector('path') || undefined;
+                                                }
 
                                                 if (noteheadPath) {
                                                     try {
-                                                        const bbox = noteheadPath.getBBox();
-                                                        const centerX = bbox.x + bbox.width / 2;
-                                                        const centerY = bbox.y + bbox.height / 2;
+                                                        let centerX = parseFloat(noteheadPath.getAttribute('data-cx') || '');
+                                                        let centerY = parseFloat(noteheadPath.getAttribute('data-cy') || '');
+                                                        let isTrebleAttr = noteheadPath.getAttribute('data-istreble');
+                                                        
+                                                        if (isNaN(centerX) || isNaN(centerY) || !isTrebleAttr) {
+                                                            const bbox = noteheadPath.getBBox();
+                                                            centerX = bbox.x + bbox.width / 2;
+                                                            centerY = bbox.y + bbox.height / 2;
+                                                            
+                                                            const staffIndex = system.StaffLines.indexOf(staff);
+                                                            const isTrebleVal = staff.ParentStaff?.Header?.Clef?.ClefType === 0 
+                                                                || staff.ParentStaff?.id === 1 
+                                                                || staffIndex === 0 
+                                                                || centerY < 110;
+                                                            
+                                                            isTrebleAttr = isTrebleVal ? 'true' : 'false';
+                                                            noteheadPath.setAttribute('data-cx', centerX.toString());
+                                                            noteheadPath.setAttribute('data-cy', centerY.toString());
+                                                            noteheadPath.setAttribute('data-istreble', isTrebleAttr);
+                                                        }
+                                                        
+                                                        const isTreble = isTrebleAttr === 'true';
 
                                                         // Render a background badge to cover staff lines
                                                         const badge = document.createElementNS("http://www.w3.org/2000/svg", "circle");
@@ -335,8 +362,6 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                                                         badge.setAttribute("cx", centerX.toString());
                                                         badge.setAttribute("cy", centerY.toString());
                                                         badge.setAttribute("r", "7.5");
-                                                        // Determine clef type from graphical note if available to distinct treble/bass colors
-                                                        const isTreble = centerY < 110; // Simple bounding box heuristic for clef distinction in systems
                                                         badge.setAttribute("fill", isTreble 
                                                             ? (isDarkMode ? "#4f46e5" : "#6366f1") // Indigo for treble
                                                             : (isDarkMode ? "#0d9488" : "#10b981") // Teal/emerald for bass

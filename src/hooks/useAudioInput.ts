@@ -47,7 +47,7 @@ export function useAudioInput() {
             consecutiveSilenceRef.current = 0;
             if (currentNote === lastMidiNoteRef.current) {
                 consecutiveFramesRef.current++;
-                if (consecutiveFramesRef.current >= 2) {
+                if (consecutiveFramesRef.current >= 4) {
                     setDetectedNote(currentNote);
                 }
             } else {
@@ -57,7 +57,7 @@ export function useAudioInput() {
         } else {
             consecutiveFramesRef.current = 0;
             consecutiveSilenceRef.current++;
-            if (consecutiveSilenceRef.current >= 2) {
+            if (consecutiveSilenceRef.current >= 6) {
                 setDetectedNote(null);
                 lastMidiNoteRef.current = null;
             }

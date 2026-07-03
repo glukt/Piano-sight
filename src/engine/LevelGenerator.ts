@@ -63,6 +63,13 @@ export const LevelGenerator = {
     },
 
     generateFromConstraints(constraints: LessonConstraints): LevelData {
+        if (constraints.presetMelody) {
+            return {
+                treble: constraints.presetMelody.treble,
+                bass: constraints.presetMelody.bass
+            };
+        }
+
         const treble: StaveNoteData[] = [];
         const bass: StaveNoteData[] = [];
 

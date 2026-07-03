@@ -8,6 +8,10 @@ export interface LessonConstraints {
     maxJumps: number;      // Maximum interval jump allowed (1 = steps only, 2 = skips, etc)
     chordsAllowed: boolean;// Whether to generate chords or single notes
     numNotes: number;      // How long the generated level should be
+    presetMelody?: {
+        treble: { keys: string[]; duration: string }[];
+        bass: { keys: string[]; duration: string }[];
+    };
 }
 
 export interface Lesson {
@@ -86,14 +90,60 @@ export const courses: Course[] = [
                 constraints: { trebleRange: trebleStepsD_E, bassRange: [], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 16 }
             },
             {
+                id: "c1-l2-song", courseId: "keyboard-geography",
+                name: "Melody: Mary Had a Little Lamb",
+                description: "Play your first simple melody using notes C, D, E, and G.",
+                focus: "Follow the rising and falling steps of the tune. Keep a steady pace.",
+                instruction: "Place your Right Hand fingers in C Position. Follow the notes to play this classic nursery rhyme.",
+                type: 'exercise', topic: 'treble', xpReward: 60, requiredXp: 100,
+                handPosition: 'RH_C_POS',
+                constraints: {
+                    trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 26,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" },
+                            { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "h" },
+                            { keys: ["d/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["d/4"], duration: "h" },
+                            { keys: ["e/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["g/4"], duration: "h" },
+                            { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" },
+                            { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "q" },
+                            { keys: ["d/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" },
+                            { keys: ["c/4"], duration: "h" }
+                        ],
+                        bass: []
+                    }
+                }
+            },
+            {
                 id: "c1-l3", courseId: "keyboard-geography",
                 name: "Treble Guide Note G",
                 description: "Introduce the G4 landmark note on the second line of the treble staff.",
                 focus: "The Treble Clef curl wraps around G4. Focus on identifying it instantly.",
                 instruction: "Place your Right Hand Pinky (Finger 5) on G4. Practice playing steps surrounding this landmark note.",
-                type: 'exercise', topic: 'treble', xpReward: 60, requiredXp: 100,
+                type: 'exercise', topic: 'treble', xpReward: 60, requiredXp: 160,
                 handPosition: 'RH_C_POS',
                 constraints: { trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 16 }
+            },
+            {
+                id: "c1-l3-song", courseId: "keyboard-geography",
+                name: "Melody: Ode to Joy Theme",
+                description: "Play Beethoven's famous melody using all 5 notes in C Position.",
+                focus: "Try to read ahead so you can play each note smoothly without pausing.",
+                instruction: "Keep your hand in C Position. Play this simple and beautiful classical theme.",
+                type: 'exercise', topic: 'treble', xpReward: 70, requiredXp: 220,
+                handPosition: 'RH_C_POS',
+                constraints: {
+                    trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 15,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["g/4"], duration: "q" },
+                            { keys: ["g/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" },
+                            { keys: ["c/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "q" },
+                            { keys: ["e/4"], duration: "h" }, { keys: ["d/4"], duration: "q" }, { keys: ["d/4"], duration: "h" }
+                        ],
+                        bass: []
+                    }
+                }
             },
             {
                 id: "c1-l4", courseId: "keyboard-geography",
@@ -101,9 +151,30 @@ export const courses: Course[] = [
                 description: "Learn F3, the key landmark of the bass clef.",
                 focus: "The Bass Clef's two dots surround F3. Press the keys using your left hand index finger.",
                 instruction: "Place your Left Hand Index Finger (Finger 2) on F3. Play the step-wise notes centered around it.",
-                type: 'exercise', topic: 'bass', xpReward: 60, requiredXp: 160,
+                type: 'exercise', topic: 'bass', xpReward: 60, requiredXp: 290,
                 handPosition: 'LH_BASS_F_3FINGER',
                 constraints: { trebleRange: [], bassRange: bassGuideF, rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 16 }
+            },
+            {
+                id: "c1-l4-song", courseId: "keyboard-geography",
+                name: "Melody: Aura Lea (Love Me Tender)",
+                description: "Play a classic left-hand melody centered around Bass F3.",
+                focus: "Let your left arm feel heavy and relaxed. Play with a steady beat.",
+                instruction: "Place your Left Hand fingers in the Bass F anchor. Play the opening theme of Aura Lea.",
+                type: 'exercise', topic: 'bass', xpReward: 70, requiredXp: 350,
+                handPosition: 'LH_BASS_F_3FINGER',
+                constraints: {
+                    trebleRange: [], bassRange: bassGuideF, rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 12,
+                    presetMelody: {
+                        treble: [],
+                        bass: [
+                            { keys: ["f/3"], duration: "q" }, { keys: ["g/3"], duration: "q" }, { keys: ["f/3"], duration: "q" }, { keys: ["e/3"], duration: "q" },
+                            { keys: ["f/3"], duration: "q" }, { keys: ["g/3"], duration: "q" }, { keys: ["f/3"], duration: "h" },
+                            { keys: ["g/3"], duration: "q" }, { keys: ["g/3"], duration: "q" }, { keys: ["f/3"], duration: "q" }, { keys: ["e/3"], duration: "q" },
+                            { keys: ["f/3"], duration: "h" }
+                        ]
+                    }
+                }
             },
             {
                 id: "c1-l5", courseId: "keyboard-geography",
@@ -111,9 +182,29 @@ export const courses: Course[] = [
                 description: "Read High C on the third space of the treble staff, playing from a High C Anchor.",
                 focus: "High C (C5) is an octave above Middle C. Keep your wrist flexible and relaxed.",
                 instruction: "Place your Right Hand Thumb (Finger 1) on High C (C5). Practice playing the notes stepping up from this landmark.",
-                type: 'exercise', topic: 'treble', xpReward: 70, requiredXp: 220,
+                type: 'exercise', topic: 'treble', xpReward: 70, requiredXp: 420,
                 handPosition: 'RH_HIGH_C_POS',
                 constraints: { trebleRange: trebleHighC, bassRange: [], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 16 }
+            },
+            {
+                id: "c1-l5-song", courseId: "keyboard-geography",
+                name: "Melody: Over the Rainbow Jump",
+                description: "Practice the famous octave leap from Middle C to High C.",
+                focus: "Look at the high note first, then move your hand. Accurate jumps require look-before-you-leap!",
+                instruction: "Follow the notation to play the iconic opening jump of Somewhere Over the Rainbow.",
+                type: 'exercise', topic: 'treble', xpReward: 80, requiredXp: 490,
+                handPosition: 'GRAND_C_POS',
+                constraints: {
+                    trebleRange: ["c/4", "c/5", "b/4", "g/4", "a/4"], bassRange: [], rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 7,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["c/4"], duration: "h" }, { keys: ["c/5"], duration: "h" }, { keys: ["b/4"], duration: "h" },
+                            { keys: ["g/4"], duration: "q" }, { keys: ["a/4"], duration: "q" }, { keys: ["b/4"], duration: "q" },
+                            { keys: ["c/5"], duration: "h" }
+                        ],
+                        bass: []
+                    }
+                }
             },
             {
                 id: "c1-l6", courseId: "keyboard-geography",
@@ -121,19 +212,19 @@ export const courses: Course[] = [
                 description: "Read Low C on the second space of the bass staff.",
                 focus: "Bass C (C3) is an octave below Middle C. Use your Left Hand Pinky (Finger 5) to play it.",
                 instruction: "Place your Left Hand Pinky (Finger 5) on Bass C (C3). Practice playing notes stepping up from this landmark.",
-                type: 'exercise', topic: 'bass', xpReward: 70, requiredXp: 290,
+                type: 'exercise', topic: 'bass', xpReward: 70, requiredXp: 570,
                 handPosition: 'LH_LOW_C_POS',
                 constraints: { trebleRange: [], bassRange: bassLowC, rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 16 }
             },
             {
                 id: "c1-l7", courseId: "keyboard-geography",
                 name: "Landmark Guide Notes Challenge",
-                description: "Test your recognition of all five guide notes simultaneously.",
-                focus: "Look ahead at the staff to anticipate jumps between C3, F3, Middle C, G4, and C5.",
-                instruction: "Play notes across both clefs. This exercise checks your ability to jump your eyes and hands between landmarks.",
-                type: 'exercise', topic: 'both', xpReward: 100, requiredXp: 360,
+                description: "Test your skills with a gentle stepwise capstone combining both hands in Middle C position.",
+                focus: "Keep your hands anchored. Share the Middle C key or take turns playing it between hands.",
+                instruction: "Play stepwise notes alternating between your left hand (A3-C4) and right hand (C4-E4). Focus on seamless transitions.",
+                type: 'exercise', topic: 'both', xpReward: 100, requiredXp: 640,
                 handPosition: 'GRAND_C_POS',
-                constraints: { trebleRange: ["c/4", "g/4", "c/5"], bassRange: ["c/3", "f/3", "c/4"], rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 20 }
+                constraints: { trebleRange: ["c/4", "d/4", "e/4"], bassRange: ["c/4", "b/3", "a/3"], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 12 }
             }
         ]
     },

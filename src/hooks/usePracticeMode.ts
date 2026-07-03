@@ -424,7 +424,7 @@ export function usePracticeMode({
     useEffect(() => {
         if (!isActive || mode !== 'wait' || !playbackEngine) return;
 
-        const checkInput = () => {
+        const checkInput = (isFromPoll = false) => {
             if (isTransitioningRef.current) return;
             const currentExpectedObjs = playbackEngine.getNotesAtCurrentPosition();
             const currentExpectedMidis = currentExpectedObjs.map(n => n.midi);
@@ -483,6 +483,9 @@ export function usePracticeMode({
                 setShowHint(false);
             }
 
+            // If we are just polling for the stuck timer, we exit early here!
+            // This prevents the poll from clearing or restarting the validation timer.
+            if (isFromPoll) return;
 
             // 1. Check for End of Section
             const currentTimestamp = playbackEngine.CurrentTimestamp;
@@ -631,8 +634,8 @@ export function usePracticeMode({
             }, 50);
         };
 
-        const interval = setInterval(checkInput, 50); // Poll 20Hz
-        checkInput(); // Run check immediately on user input change for zero-latency response
+        const interval = setInterval(() => checkInput(true), 50); // Poll 20Hz
+        checkInput(false); // Run check immediately on user input change for zero-latency response
         return () => {
             clearInterval(interval);
             if (validationTimerRef.current) {

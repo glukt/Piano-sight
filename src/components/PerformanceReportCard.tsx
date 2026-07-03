@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface PerformanceReportCardProps {
@@ -15,6 +15,7 @@ interface PerformanceReportCardProps {
     passed?: boolean;
     requiredAccuracy?: number;
     isCapstone?: boolean;
+    userActiveNotes?: Set<number>;
 }
 
 export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
@@ -30,14 +31,49 @@ export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
     isDarkMode,
     passed,
     requiredAccuracy = 80,
-    isCapstone = false
+    isCapstone = false,
+    userActiveNotes
 }) => {
+    const hasPassed = passed !== undefined ? passed : true;
+
+    // 1. Listen for piano key strikes to progress
+    useEffect(() => {
+        if (!isOpen || !userActiveNotes || userActiveNotes.size === 0) return;
+
+        // Small debounce to prevent accidental double triggering
+        const timer = setTimeout(() => {
+            if (onNext && hasPassed) {
+                onNext();
+            } else {
+                onClose();
+            }
+        }, 150);
+        return () => clearTimeout(timer);
+    }, [userActiveNotes, isOpen, onNext, hasPassed, onClose]);
+
+    // 2. Listen for computer keyboard shortcuts (Enter/Space) to progress
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') {
+                e.preventDefault();
+                if (onNext && hasPassed) {
+                    onNext();
+                } else {
+                    onClose();
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, onNext, hasPassed, onClose]);
+
     if (!isOpen) return null;
 
     const totalNotes = notesCorrect + notesMissed;
     const accuracy = totalNotes > 0 ? Math.round((notesCorrect / totalNotes) * 100) : 100;
-
-    const hasPassed = passed !== undefined ? passed : true;
 
     // Determine Grade
     let grade = 'F';

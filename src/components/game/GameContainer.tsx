@@ -221,6 +221,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 passed={gameLogic.lessonPassed}
                 requiredAccuracy={gameLogic.requiredAccuracy}
                 isCapstone={gameLogic.isCapstone}
+                userActiveNotes={effectiveActiveNotes}
             />
         </div>
     );

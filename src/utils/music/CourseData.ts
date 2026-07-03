@@ -54,7 +54,6 @@ const upperTreble = ["f/4", "g/4", "a/4", "b/4", "c/5"];
 const fullTreble = ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5"];
 
 const cPosBass = ["c/3", "d/3", "e/3", "f/3", "g/3"];
-const lowerBass = ["f/2", "g/2", "a/2", "b/2", "c/3"];
 const fullBass = ["f/2", "g/2", "a/2", "b/2", "c/3", "d/3", "e/3", "f/3", "g/3", "a/3", "b/3", "c/4"];
 
 // Accidentals & key signatures
@@ -246,23 +245,45 @@ export const courses: Course[] = [
             },
             {
                 id: "c2-l2", courseId: "treble-clef-mastery",
-                name: "Treble Skips (3rds)",
-                description: "Read skips (thirds) in the Right Hand C Position.",
-                focus: "A skip moves from line-to-line or space-to-space. Notice the visual gap on the staff.",
-                instruction: "Play the skipping notes in C position. Maintain your hand shape and finger curve.",
+                name: "Melody: Lightly Row",
+                description: "Play a classic step-and-skip melody in Right Hand C Position.",
+                focus: "Recognize thirds (skips). Skip over fingers smoothly without pausing.",
+                instruction: "Keep your hand in C Position. Follow the steps and skips of Lightly Row.",
                 type: 'exercise', topic: 'treble', xpReward: 80, requiredXp: 540,
                 handPosition: 'RH_C_POS',
-                constraints: { trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 20 }
+                constraints: {
+                    trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 14,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["g/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "h" },
+                            { keys: ["f/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["d/4"], duration: "h" },
+                            { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["f/4"], duration: "q" },
+                            { keys: ["g/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["g/4"], duration: "h" }
+                        ],
+                        bass: []
+                    }
+                }
             },
             {
                 id: "c2-l3", courseId: "treble-clef-mastery",
-                name: "Treble Leaps (4ths & 5ths)",
-                description: "Read wider interval leaps in the right hand.",
-                focus: "Do not tense your fingers during wide leaps. Keep your hand relaxed.",
-                instruction: "Play intervals of 4ths and 5ths, such as jumping directly from C4 up to F4 or G4.",
+                name: "Melody: Twinkle Twinkle",
+                description: "Play a beautiful melody featuring 5th leaps.",
+                focus: "Leap directly from Middle C to G4. Do not tense your hand.",
+                instruction: "Keep your hand in C Position. Play the opening of Twinkle Twinkle.",
                 type: 'exercise', topic: 'treble', xpReward: 90, requiredXp: 620,
                 handPosition: 'RH_C_POS',
-                constraints: { trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 24 }
+                constraints: {
+                    trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 14,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["c/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["g/4"], duration: "q" },
+                            { keys: ["a/4"], duration: "q" }, { keys: ["a/4"], duration: "q" }, { keys: ["g/4"], duration: "h" },
+                            { keys: ["f/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "q" },
+                            { keys: ["d/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "h" }
+                        ],
+                        bass: []
+                    }
+                }
             },
             {
                 id: "c2-l4", courseId: "treble-clef-mastery",
@@ -277,13 +298,28 @@ export const courses: Course[] = [
             },
             {
                 id: "c2-l5", courseId: "treble-clef-mastery",
-                name: "Upper Treble Register",
-                description: "Expand past G4 up to High C (C5) in the right hand.",
-                focus: "Transition your eyes to read notes placed higher on the treble staff.",
-                instruction: "Position your right hand so that you can reach F4 up to C5. Read and play this register.",
+                name: "Melody: Jingle Bells Chorus",
+                description: "Play Jingle Bells in the upper treble register (up to C5).",
+                focus: "Play repeated notes with a steady, bouncy touch.",
+                instruction: "Prepare your hand in C Position. Follow the rhythm to play Jingle Bells.",
                 type: 'exercise', topic: 'treble', xpReward: 100, requiredXp: 830,
-                handPosition: 'RH_UPPER_TREBLE',
-                constraints: { trebleRange: upperTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 24 }
+                handPosition: 'RH_C_POS',
+                constraints: {
+                    trebleRange: upperTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 3, chordsAllowed: false, numNotes: 25,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "h" },
+                            { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "h" },
+                            { keys: ["e/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" },
+                            { keys: ["e/4"], duration: "w" },
+                            { keys: ["f/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["f/4"], duration: "q" },
+                            { keys: ["f/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "q" },
+                            { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "q" },
+                            { keys: ["d/4"], duration: "h" }, { keys: ["g/4"], duration: "h" }
+                        ],
+                        bass: []
+                    }
+                }
             },
             {
                 id: "c2-l6", courseId: "treble-clef-mastery",
@@ -326,23 +362,45 @@ export const courses: Course[] = [
             },
             {
                 id: "c3-l2", courseId: "bass-clef-mastery",
-                name: "Bass Skips (3rds)",
-                description: "Read skips (thirds) in the Left Hand C Position.",
-                focus: "Bass clef lines and spaces can be tricky. Look at whether the note jumps to an adjacent line/space.",
-                instruction: "Practice skipping notes in the left hand C position. Take it slowly and ensure accuracy.",
+                name: "Melody: Lightly Row (LH)",
+                description: "Practice skips in Left Hand C Position.",
+                focus: "Recognize thirds in the bass staff. Guide notes C3, E3, G3.",
+                instruction: "Place your Left Hand fingers in C Position. Play the melody of Lightly Row.",
                 type: 'exercise', topic: 'bass', xpReward: 80, requiredXp: 1360,
                 handPosition: 'LH_C_POS',
-                constraints: { trebleRange: [], bassRange: cPosBass, rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 20 }
+                constraints: {
+                    trebleRange: [], bassRange: cPosBass, rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 13,
+                    presetMelody: {
+                        treble: [],
+                        bass: [
+                            { keys: ["g/3"], duration: "q" }, { keys: ["e/3"], duration: "q" }, { keys: ["e/3"], duration: "h" },
+                            { keys: ["f/3"], duration: "q" }, { keys: ["d/3"], duration: "q" }, { keys: ["d/3"], duration: "h" },
+                            { keys: ["c/3"], duration: "q" }, { keys: ["d/3"], duration: "q" }, { keys: ["e/3"], duration: "q" }, { keys: ["f/3"], duration: "q" },
+                            { keys: ["g/3"], duration: "q" }, { keys: ["g/3"], duration: "q" }, { keys: ["g/3"], duration: "h" }
+                        ]
+                    }
+                }
             },
             {
                 id: "c3-l3", courseId: "bass-clef-mastery",
-                name: "Bass Leaps (4ths & 5ths)",
-                description: "Read wider interval leaps in the left hand.",
-                focus: "Keep your wrist loose. Use arm weight rather than finger tension to play leaps.",
-                instruction: "Play intervals of 4ths and 5ths, leaping from C3 up to F3 or G3.",
+                name: "Melody: London Bridge (LH)",
+                description: "Read left hand leaps in the bass clef.",
+                focus: "Play leaps cleanly. Lift your fingers only slightly to transition.",
+                instruction: "Place your Left Hand in Bass C position. Play the tune of London Bridge.",
                 type: 'exercise', topic: 'bass', xpReward: 90, requiredXp: 1440,
                 handPosition: 'LH_C_POS',
-                constraints: { trebleRange: [], bassRange: cPosBass, rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 24 }
+                constraints: {
+                    trebleRange: [], bassRange: cPosBass, rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 14,
+                    presetMelody: {
+                        treble: [],
+                        bass: [
+                            { keys: ["g/3"], duration: "q" }, { keys: ["a/3"], duration: "q" }, { keys: ["g/3"], duration: "q" }, { keys: ["f/3"], duration: "q" },
+                            { keys: ["e/3"], duration: "q" }, { keys: ["f/3"], duration: "q" }, { keys: ["g/3"], duration: "h" },
+                            { keys: ["d/3"], duration: "q" }, { keys: ["e/3"], duration: "q" }, { keys: ["f/3"], duration: "h" },
+                            { keys: ["e/3"], duration: "q" }, { keys: ["f/3"], duration: "q" }, { keys: ["g/3"], duration: "h" }
+                        ]
+                    }
+                }
             },
             {
                 id: "c3-l4", courseId: "bass-clef-mastery",
@@ -357,13 +415,24 @@ export const courses: Course[] = [
             },
             {
                 id: "c3-l5", courseId: "bass-clef-mastery",
-                name: "Lower Bass Register",
-                description: "Read notes below C3 down to Low F (F2) on ledger lines.",
-                focus: "Memorize the ledger lines. Low F (F2) sits just below the bottom line of the bass staff.",
-                instruction: "Shift your left hand down so your pinky rests on Low F (F2). Practice reading in this low register.",
+                name: "Melody: Old MacDonald (LH)",
+                description: "Explore the lower register of the bass clef down to C3.",
+                focus: "Coordinate low guide notes C3 and G2.",
+                instruction: "Shift your Left Hand to the Low C Position. Play the lower bass melody of Old MacDonald.",
                 type: 'exercise', topic: 'bass', xpReward: 100, requiredXp: 1680,
-                handPosition: 'LH_LOWER_BASS',
-                constraints: { trebleRange: [], bassRange: lowerBass, rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 24 }
+                handPosition: 'LH_LOW_C_POS',
+                constraints: {
+                    trebleRange: [], bassRange: bassLowC, rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 14,
+                    presetMelody: {
+                        treble: [],
+                        bass: [
+                            { keys: ["c/3"], duration: "q" }, { keys: ["c/3"], duration: "q" }, { keys: ["c/3"], duration: "q" }, { keys: ["g/2"], duration: "q" },
+                            { keys: ["a/2"], duration: "q" }, { keys: ["a/2"], duration: "q" }, { keys: ["g/2"], duration: "h" },
+                            { keys: ["e/3"], duration: "q" }, { keys: ["e/3"], duration: "q" }, { keys: ["d/3"], duration: "q" }, { keys: ["d/3"], duration: "q" },
+                            { keys: ["c/3"], duration: "h" }
+                        ]
+                    }
+                }
             },
             {
                 id: "c3-l6", courseId: "bass-clef-mastery",
@@ -395,13 +464,31 @@ export const courses: Course[] = [
             },
             {
                 id: "c4-l2", courseId: "grand-staff-coordination",
-                name: "Simple Harmony (LH Drone)",
-                description: "Play static bass notes in the left hand while the right hand plays a melody.",
-                focus: "Lock the first beat of each measure. Make sure both hands play exactly together on beat one.",
-                instruction: "Your left hand will hold long, stable bass notes (C3 or G3) while your right hand plays a stepwise melody.",
+                name: "Duet: Heart and Soul",
+                description: "Play the iconic pop duet combining right-hand melody and left-hand root chord drones.",
+                focus: "Play chords exactly together. Align the first beat of each measure.",
+                instruction: "RH plays the C position melody. LH plays drone root chords C, A, F, G. Play them together.",
                 type: 'exercise', topic: 'both', xpReward: 110, requiredXp: 2030,
                 handPosition: 'GRAND_C_POS',
-                constraints: { trebleRange: cPosTreble, bassRange: ["c/3", "g/3"], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: true, numNotes: 24 }
+                constraints: {
+                    trebleRange: cPosTreble, bassRange: cPosBass, rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: true, numNotes: 17,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["c/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["c/4"], duration: "h" },
+                            { keys: ["c/4"], duration: "q" }, { keys: ["b/3"], duration: "q" }, { keys: ["a/3"], duration: "q" }, { keys: ["b/3"], duration: "q" },
+                            { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "h" },
+                            { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" },
+                            { keys: ["e/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["g/4"], duration: "h" }
+                        ],
+                        bass: [
+                            { keys: ["c/3"], duration: "w" },
+                            { keys: ["a/2"], duration: "w" },
+                            { keys: ["f/2"], duration: "w" },
+                            { keys: ["g/2"], duration: "w" },
+                            { keys: ["c/3"], duration: "w" }
+                        ]
+                    }
+                }
             },
             {
                 id: "c4-l3", courseId: "grand-staff-coordination",
@@ -454,21 +541,46 @@ export const courses: Course[] = [
         lessons: [
             {
                 id: "c5-l1", courseId: "rhythm-mastery",
-                name: "Introducing Eighth Notes",
-                description: "Play eighth notes at twice the speed of quarter notes.",
-                focus: "Count '1-and-2-and' to divide the beats. Keep your arm relaxed.",
-                instruction: "Play exercises containing combinations of quarter notes and eighth notes.",
-                type: 'exercise', topic: 'both', xpReward: 120, requiredXp: 2720,
-                constraints: { trebleRange: cPosTreble, bassRange: ["c/3", "g/3"], rhythms: ["q", "8"], maxJumps: 1, chordsAllowed: false, numNotes: 32 }
+                name: "Melody: Yankee Doodle",
+                description: "Practice brisk eighth notes in 4/4 time.",
+                focus: "Count the eighth notes evenly. Feel the division of the beat.",
+                instruction: "Keep your hand in C position. Play the eighth note runs of Yankee Doodle.",
+                type: 'exercise', topic: 'treble', xpReward: 120, requiredXp: 2720,
+                handPosition: 'RH_C_POS',
+                constraints: {
+                    trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "8"], maxJumps: 1, chordsAllowed: false, numNotes: 14,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["c/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "q" },
+                            { keys: ["c/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "h" },
+                            { keys: ["c/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "q" },
+                            { keys: ["c/4"], duration: "h" }, { keys: ["b/3"], duration: "h" }
+                        ],
+                        bass: []
+                    }
+                }
             },
             {
                 id: "c5-l2", courseId: "rhythm-mastery",
-                name: "Dotted Half Notes & 3/4 Time",
-                description: "Feel the triple meter waltz feel (3 beats per measure).",
-                focus: "A dotted half note holds for 3 full beats. Count '1, 2, 3' for each measure.",
-                instruction: "Play this waltz-style drill. Make sure you lift only after counting all 3 beats.",
-                type: 'exercise', topic: 'both', xpReward: 120, requiredXp: 2840,
-                constraints: { trebleRange: cPosTreble, bassRange: ["c/3", "g/3"], rhythms: ["q", "h", "w"], maxJumps: 2, chordsAllowed: false, numNotes: 24 }
+                name: "Melody: Amazing Grace",
+                description: "Learn 3/4 waltz time using dotted half notes.",
+                focus: "Hold dotted half notes for exactly 3 beats. Feel the triple meter.",
+                instruction: "Place your Right Hand in C Position. Follow the waltz rhythm to play Amazing Grace.",
+                type: 'exercise', topic: 'treble', xpReward: 120, requiredXp: 2840,
+                handPosition: 'RH_C_POS',
+                constraints: {
+                    trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 9,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["d/4"], duration: "q" },
+                            { keys: ["g/4"], duration: "h" }, { keys: ["b/4"], duration: "q" },
+                            { keys: ["g/4"], duration: "q" }, { keys: ["b/4"], duration: "h" },
+                            { keys: ["a/4"], duration: "q" }, { keys: ["g/4"], duration: "h" }, { keys: ["e/4"], duration: "q" },
+                            { keys: ["d/4"], duration: "h" }
+                        ],
+                        bass: []
+                    }
+                }
             },
             {
                 id: "c5-l3", courseId: "rhythm-mastery",
@@ -498,21 +610,54 @@ export const courses: Course[] = [
         lessons: [
             {
                 id: "c6-l1", courseId: "expanding-positions",
-                name: "Hand Extensions (6ths)",
-                description: "Play 6th intervals by stretching fingers without shifting the hand.",
-                focus: "Stretch your pinky to reach A4 while keeping C4 anchored with your thumb. Keep fingers loose.",
-                instruction: "Practice playing intervals of 6ths by expanding your fingers without shifting your hand position.",
-                type: 'exercise', topic: 'treble', xpReward: 120, requiredXp: 3230,
-                constraints: { trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4"], bassRange: [], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 24 }
+                name: "Melody: Chopsticks",
+                description: "Stretch your hands to play thirds and sixths simultaneously.",
+                focus: "Keep your hand expanded. Move both hands together.",
+                instruction: "Play the classic Chopsticks theme using expanded intervals.",
+                type: 'exercise', topic: 'both', xpReward: 120, requiredXp: 3230,
+                handPosition: 'GRAND_C_POS',
+                constraints: {
+                    trebleRange: ["f/4", "g/4"], bassRange: ["f/3", "g/3"], rhythms: ["q"], maxJumps: 1, chordsAllowed: true, numNotes: 10,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["f/4", "g/4"], duration: "q" }, { keys: ["f/4", "g/4"], duration: "q" }, { keys: ["f/4", "g/4"], duration: "q" },
+                            { keys: ["e/4", "g/4"], duration: "q" }, { keys: ["e/4", "g/4"], duration: "q" }, { keys: ["e/4", "g/4"], duration: "q" },
+                            { keys: ["d/4", "b/4"], duration: "q" }, { keys: ["d/4", "b/4"], duration: "q" }, { keys: ["d/4", "b/4"], duration: "q" },
+                            { keys: ["c/4", "c/5"], duration: "h" }
+                        ],
+                        bass: [
+                            { keys: ["f/3"], duration: "q" }, { keys: ["f/3"], duration: "q" }, { keys: ["f/3"], duration: "q" },
+                            { keys: ["g/3"], duration: "q" }, { keys: ["g/3"], duration: "q" }, { keys: ["g/3"], duration: "q" },
+                            { keys: ["b/3"], duration: "q" }, { keys: ["b/3"], duration: "q" }, { keys: ["b/3"], duration: "q" },
+                            { keys: ["c/3"], duration: "h" }
+                        ]
+                    }
+                }
             },
             {
                 id: "c6-l2", courseId: "expanding-positions",
-                name: "Thumb-Under Crossings",
-                description: "Cross your thumb under Finger 3 to shift positions up.",
-                focus: "Tuck your thumb smoothly under Finger 3 as you pass from E4 to F4.",
-                instruction: "Play C, D, E, then tuck the thumb to play F, and continue up to C5. Keep your wrist level.",
+                name: "Melody: Joy to the World (Scale)",
+                description: "Practice thumb crossing techniques on a descending C major scale.",
+                focus: "Tuck Finger 3 over your thumb smoothly as you play descending notes.",
+                instruction: "Start on High C. Follow the descending scale of Joy to the World.",
                 type: 'exercise', topic: 'treble', xpReward: 130, requiredXp: 3350,
-                constraints: { trebleRange: fullTreble, bassRange: [], rhythms: ["q"], maxJumps: 1, chordsAllowed: false, numNotes: 24 }
+                handPosition: 'RH_C_POS',
+                constraints: {
+                    trebleRange: fullTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 8,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["c/5"], duration: "q" },
+                            { keys: ["b/4"], duration: "h" },
+                            { keys: ["a/4"], duration: "q" },
+                            { keys: ["g/4"], duration: "h" },
+                            { keys: ["f/4"], duration: "q" },
+                            { keys: ["e/4"], duration: "q" },
+                            { keys: ["d/4"], duration: "q" },
+                            { keys: ["c/4"], duration: "h" }
+                        ],
+                        bass: []
+                    }
+                }
             },
             {
                 id: "c6-l3", courseId: "expanding-positions",
@@ -521,6 +666,7 @@ export const courses: Course[] = [
                 focus: "Cross your middle finger (Finger 3) over your thumb to play lower notes smoothly.",
                 instruction: "Practice descending crossings in your left hand, expanding your range down to Low F (F2).",
                 type: 'exercise', topic: 'bass', xpReward: 130, requiredXp: 3480,
+                handPosition: 'LH_C_POS',
                 constraints: { trebleRange: [], bassRange: ["f/2", "g/2", "a/2", "b/2", "c/3", "d/3", "e/3", "f/3", "g/3"], rhythms: ["q"], maxJumps: 1, chordsAllowed: false, numNotes: 24 }
             },
             {
@@ -530,6 +676,7 @@ export const courses: Course[] = [
                 focus: "Keep a light, even touch. Feel your arm gliding horizontally across the keyboard.",
                 instruction: "Play chord tones C, E, G, C sequentially. Relax your fingers between notes.",
                 type: 'exercise', topic: 'both', xpReward: 140, requiredXp: 3610,
+                handPosition: 'GRAND_C_POS',
                 constraints: { trebleRange: ["c/4", "e/4", "g/4", "c/5"], bassRange: ["c/3", "e/3", "g/3", "c/4"], rhythms: ["q", "8"], maxJumps: 3, chordsAllowed: false, numNotes: 28 }
             }
         ]
@@ -542,12 +689,23 @@ export const courses: Course[] = [
         lessons: [
             {
                 id: "c7-l1", courseId: "accidentals-key-sigs",
-                name: "Introducing Sharps (#)",
-                description: "Read and play sharp accidentals on black keys.",
-                focus: "Locate F#4 and C#5. Black keys sit higher, strike them centered.",
-                instruction: "Play exercises containing F#4 and C#5. Sharps raise the pitch by one half-step.",
+                name: "Melody: Für Elise Hook",
+                description: "Play the chromatic opening theme of Für Elise.",
+                focus: "Navigate the alternating chromatic notes E5 and D#5 smoothly.",
+                instruction: "Place your Right Hand index and middle fingers on E5 and D#5. Follow the classic Beethoven theme.",
                 type: 'exercise', topic: 'treble', xpReward: 130, requiredXp: 3750,
-                constraints: { trebleRange: trebleSharps, bassRange: [], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 24 }
+                handPosition: 'RH_HIGH_C_POS',
+                constraints: {
+                    trebleRange: trebleSharps, bassRange: [], rhythms: ["q"], maxJumps: 4, chordsAllowed: false, numNotes: 9,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["e/5"], duration: "q" }, { keys: ["d#/5"], duration: "q" }, { keys: ["e/5"], duration: "q" }, { keys: ["d#/5"], duration: "q" },
+                            { keys: ["e/5"], duration: "q" }, { keys: ["b/4"], duration: "q" }, { keys: ["d/5"], duration: "q" }, { keys: ["c/5"], duration: "q" },
+                            { keys: ["a/4"], duration: "h" }
+                        ],
+                        bass: []
+                    }
+                }
             },
             {
                 id: "c7-l2", courseId: "accidentals-key-sigs",
@@ -556,6 +714,7 @@ export const courses: Course[] = [
                 focus: "Locate Bb4 and Eb4. Watch for the flat symbol preceding the notes.",
                 instruction: "Play exercises containing Bb4 and Eb4. Flats lower the pitch by one half-step.",
                 type: 'exercise', topic: 'treble', xpReward: 130, requiredXp: 3880,
+                handPosition: 'RH_C_POS',
                 constraints: { trebleRange: trebleFlats, bassRange: [], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 24 }
             },
             {
@@ -565,6 +724,7 @@ export const courses: Course[] = [
                 focus: "Look at the sharp at the start of the staff. Remember to play all Fs as F# automatically.",
                 instruction: "Practice reading with a G Major key signature. Sharps at the clef apply to the whole piece.",
                 type: 'exercise', topic: 'both', xpReward: 140, requiredXp: 4010,
+                handPosition: 'GRAND_C_POS',
                 constraints: { trebleRange: gMajorTreble, bassRange: ["g/3", "a/3", "b/3", "c/4", "d/4"], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: true, numNotes: 28 }
             },
             {
@@ -574,6 +734,7 @@ export const courses: Course[] = [
                 focus: "Coordinate the right-hand melody with the left-hand chord changes in 3/4 time.",
                 instruction: "Play this beautiful classic. Pay attention to the F# in the key signature.",
                 type: 'song', topic: 'chords', xpReward: 250, requiredXp: 4150,
+                handPosition: 'GRAND_C_POS',
                 songUrl: '/scores/bach_minuet_g_major.musicxml',
                 presetId: 'preset-minuet-g'
             },
@@ -584,6 +745,7 @@ export const courses: Course[] = [
                 focus: "Navigate the chromatic transitions (Eb to D#) smoothly in 3/8 meter.",
                 instruction: "Use both hands to play this famous, expressive Beethoven piece.",
                 type: 'song', topic: 'both', xpReward: 250, requiredXp: 4400,
+                handPosition: 'GRAND_C_POS',
                 songUrl: '/scores/Fur_Elise_Simplified.musicxml',
                 presetId: 'preset-fur-elise-easy'
             }
@@ -602,16 +764,42 @@ export const courses: Course[] = [
                 focus: "Keep your crossings seamless. Make sure the thumb crossing does not disrupt the rhythm.",
                 instruction: "Play C4 to C5 using finger crossing technique. Keep your tempo perfectly steady.",
                 type: 'exercise', topic: 'treble', xpReward: 150, requiredXp: 4650,
+                handPosition: 'RH_C_POS',
                 constraints: { trebleRange: fullTreble, bassRange: [], rhythms: ["8", "q"], maxJumps: 1, chordsAllowed: false, numNotes: 32 }
             },
             {
                 id: "c8-l2", courseId: "intermediate-mastery",
-                name: "Triad Inversions",
-                description: "Practice Root, 1st, and 2nd inversions of the C Major chord.",
-                focus: "Press all three keys exactly together. Feel the shape changes in your palm.",
-                instruction: "Alternate playing Root position (C-E-G), 1st inversion (E-G-C), and 2nd inversion (G-C-E).",
-                type: 'exercise', topic: 'chords', xpReward: 160, requiredXp: 4800,
-                constraints: { trebleRange: ["c/4", "e/4", "g/4", "e/4", "g/4", "c/5", "g/4", "c/5", "e/5"], bassRange: ["c/3", "g/3"], rhythms: ["h", "w"], maxJumps: 0, chordsAllowed: true, numNotes: 24 }
+                name: "Melody: Canon in D Theme",
+                description: "Coordinate left hand bass notes with right hand harmony inversions.",
+                focus: "Change chords precisely on the first beat of each measure.",
+                instruction: "Your left hand plays the descending ground bass of Pachelbel's Canon while your right hand supports with triads.",
+                type: 'exercise', topic: 'both', xpReward: 160, requiredXp: 4800,
+                handPosition: 'GRAND_C_POS',
+                constraints: {
+                    trebleRange: ["c/4", "e/4", "g/4"], bassRange: ["c/3", "g/3"], rhythms: ["h"], maxJumps: 0, chordsAllowed: true, numNotes: 8,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["c/4", "e/4", "g/4"], duration: "h" },
+                            { keys: ["g/3", "b/3", "d/4"], duration: "h" },
+                            { keys: ["a/3", "c/4", "e/4"], duration: "h" },
+                            { keys: ["e/3", "g/3", "b/3"], duration: "h" },
+                            { keys: ["f/3", "a/3", "c/4"], duration: "h" },
+                            { keys: ["c/3", "e/3", "g/3"], duration: "h" },
+                            { keys: ["f/3", "a/3", "c/4"], duration: "h" },
+                            { keys: ["g/3", "b/3", "d/4"], duration: "h" }
+                        ],
+                        bass: [
+                            { keys: ["c/3"], duration: "h" },
+                            { keys: ["b/2"], duration: "h" },
+                            { keys: ["a/2"], duration: "h" },
+                            { keys: ["g/2"], duration: "h" },
+                            { keys: ["f/2"], duration: "h" },
+                            { keys: ["e/2"], duration: "h" },
+                            { keys: ["f/2"], duration: "h" },
+                            { keys: ["g/2"], duration: "h" }
+                        ]
+                    }
+                }
             },
             {
                 id: "c8-l3", courseId: "intermediate-mastery",
@@ -620,6 +808,7 @@ export const courses: Course[] = [
                 focus: "Coordinate the chord transitions on beat one of each measure with the melody.",
                 instruction: "Your left hand will play full C, F, and G Major chords while your right hand plays the theme.",
                 type: 'song', topic: 'chords', xpReward: 200, requiredXp: 4960,
+                handPosition: 'GRAND_C_POS',
                 songUrl: '/scores/Twinkle_Twinkle.musicxml',
                 presetId: 'preset-twinkle-twinkle'
             },
@@ -630,6 +819,7 @@ export const courses: Course[] = [
                 focus: "Play very softly (piano) and smoothly. Take your time with the left-hand bass jumps.",
                 instruction: "Use both hands together to play this atmospheric, beautiful piece by Erik Satie.",
                 type: 'song', topic: 'both', xpReward: 300, requiredXp: 5160,
+                handPosition: 'GRAND_C_POS',
                 songUrl: '/scores/Gymnopdie_No._1__Satie.mxl',
                 presetId: 'preset-satie'
             },
@@ -640,6 +830,7 @@ export const courses: Course[] = [
                 focus: "Read fluently across both clefs. Handle eighth notes, accidentals, and shifts smoothly.",
                 instruction: "The ultimate generative sight-reading test. Take it slow and focus on rhythmic accuracy.",
                 type: 'exercise', topic: 'both', xpReward: 250, requiredXp: 5460,
+                handPosition: 'GRAND_C_POS',
                 constraints: { trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5", "d/5"], bassRange: ["f/2", "g/2", "a/2", "b/2", "c/3", "d/3", "e/3", "f/3", "g/3"], rhythms: ["q", "8", "h"], maxJumps: 4, chordsAllowed: true, numNotes: 48 }
             },
             {
@@ -649,6 +840,7 @@ export const courses: Course[] = [
                 focus: "Coordinate independent hand parts as the subdivisions speed up. Keep a rock-steady tempo.",
                 instruction: "Your final capstone song! Use all the coordination, rhythm, and reading skills you've mastered.",
                 type: 'song', topic: 'both', xpReward: 500, requiredXp: 5710,
+                handPosition: 'GRAND_C_POS',
                 songUrl: '/scores/Canon_in_D.mxl',
                 presetId: 'preset-canon'
             }

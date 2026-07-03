@@ -168,7 +168,11 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                     n.keys.forEach((key, keyIndex) => {
                         const info = highlights[key];
                         if (info) {
-                            staveNote.addModifier(new VF.Annotation(String(info.finger)), keyIndex);
+                            const justify = clef === 'bass' ? VF.Annotation.VerticalJustify.BOTTOM : VF.Annotation.VerticalJustify.TOP;
+                            staveNote.addModifier(
+                                new VF.Annotation(String(info.finger)).setVerticalJustification(justify),
+                                keyIndex
+                            );
                         }
                     });
                 }

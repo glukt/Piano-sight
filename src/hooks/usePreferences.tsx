@@ -5,6 +5,7 @@ export interface Preferences {
     showKeyboard: boolean;
     showPianoLabels: boolean;
     showNoteNames: boolean;
+    showFingering: boolean;
     layoutMode: 'standard' | 'scrolling';
     hintDelay: number; // in milliseconds (e.g. 3000, 5000, 10000, 0 for off)
     soundType: 'synth' | 'samples';
@@ -16,6 +17,7 @@ const DEFAULT_PREFERENCES: Preferences = {
     showKeyboard: true,
     showPianoLabels: false,
     showNoteNames: false,
+    showFingering: true,
     layoutMode: 'standard',
     hintDelay: 3000,
     soundType: 'synth',

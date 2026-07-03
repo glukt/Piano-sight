@@ -17,9 +17,77 @@ interface MusicDisplayProps {
     onLayout?: (positions: number[]) => void;
     isDarkMode?: boolean;
     gameMode?: 'treble' | 'bass' | 'both';
+    handPosition?: string;
+    showFingering?: boolean;
 }
 
 const VF = Vex.Flow;
+
+const POSITION_MAPS: Record<string, Record<string, { hand: 'LH' | 'RH'; finger: number }>> = {
+    'RH_MIDDLE_C': {
+        'c/4': { hand: 'RH', finger: 1 }
+    },
+    'RH_C_3FINGER': {
+        'c/4': { hand: 'RH', finger: 1 },
+        'd/4': { hand: 'RH', finger: 2 },
+        'e/4': { hand: 'RH', finger: 3 }
+    },
+    'LH_BASS_F_3FINGER': {
+        'e/3': { hand: 'LH', finger: 3 },
+        'f/3': { hand: 'LH', finger: 2 },
+        'g/3': { hand: 'LH', finger: 1 }
+    },
+    'RH_C_POS': {
+        'c/4': { hand: 'RH', finger: 1 },
+        'd/4': { hand: 'RH', finger: 2 },
+        'e/4': { hand: 'RH', finger: 3 },
+        'f/4': { hand: 'RH', finger: 4 },
+        'g/4': { hand: 'RH', finger: 5 }
+    },
+    'LH_C_POS': {
+        'c/3': { hand: 'LH', finger: 5 },
+        'd/3': { hand: 'LH', finger: 4 },
+        'e/3': { hand: 'LH', finger: 3 },
+        'f/3': { hand: 'LH', finger: 2 },
+        'g/3': { hand: 'LH', finger: 1 }
+    },
+    'RH_HIGH_C_POS': {
+        'c/5': { hand: 'RH', finger: 1 },
+        'd/5': { hand: 'RH', finger: 2 },
+        'e/5': { hand: 'RH', finger: 3 }
+    },
+    'LH_LOW_C_POS': {
+        'c/3': { hand: 'LH', finger: 5 },
+        'd/3': { hand: 'LH', finger: 4 },
+        'e/3': { hand: 'LH', finger: 3 }
+    },
+    'RH_UPPER_TREBLE': {
+        'f/4': { hand: 'RH', finger: 1 },
+        'g/4': { hand: 'RH', finger: 2 },
+        'a/4': { hand: 'RH', finger: 3 },
+        'b/4': { hand: 'RH', finger: 4 },
+        'c/5': { hand: 'RH', finger: 5 }
+    },
+    'LH_LOWER_BASS': {
+        'f/2': { hand: 'LH', finger: 5 },
+        'g/2': { hand: 'LH', finger: 4 },
+        'a/2': { hand: 'LH', finger: 3 },
+        'b/2': { hand: 'LH', finger: 2 },
+        'c/3': { hand: 'LH', finger: 1 }
+    },
+    'GRAND_C_POS': {
+        'c/3': { hand: 'LH', finger: 5 },
+        'd/3': { hand: 'LH', finger: 4 },
+        'e/3': { hand: 'LH', finger: 3 },
+        'f/3': { hand: 'LH', finger: 2 },
+        'g/3': { hand: 'LH', finger: 1 },
+        'c/4': { hand: 'RH', finger: 1 },
+        'd/4': { hand: 'RH', finger: 2 },
+        'e/4': { hand: 'RH', finger: 3 },
+        'f/4': { hand: 'RH', finger: 4 },
+        'g/4': { hand: 'RH', finger: 5 }
+    }
+};
 
 export const MusicDisplay: React.FC<MusicDisplayProps> = ({
     trebleNotes = [{ keys: ["c/4"], duration: "q" }],
@@ -30,7 +98,9 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
     cursorIndex = 0,
     inputStatus = 'waiting',
     onLayout,
-    isDarkMode = false
+    isDarkMode = false,
+    handPosition,
+    showFingering = true
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const prevPositionsRef = useRef<number[] | null>(null);
@@ -84,12 +154,24 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         // Create Voices
         // -----------------------------------------------------------------------
         const createVoice = (notesData: StaveNoteData[], clef: string) => {
+            const highlights = handPosition ? POSITION_MAPS[handPosition] : null;
+
             const notes = notesData.map((n, i) => {
                 const staveNote = new VF.StaveNote({
                     clef: clef,
                     keys: n.keys,
                     duration: n.duration,
                 });
+
+                // Add fingering annotations if enabled and mapped
+                if (showFingering && highlights && !n.duration.endsWith('r')) {
+                    n.keys.forEach((key, keyIndex) => {
+                        const info = highlights[key];
+                        if (info) {
+                            staveNote.addModifier(new VF.Annotation(String(info.finger)), keyIndex);
+                        }
+                    });
+                }
 
                 // Apply Theme Styles (Default notes)
                 staveNote.setStyle({ fillStyle: foregroundColor, strokeStyle: foregroundColor });
@@ -290,7 +372,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
             }
         }
 
-    }, [trebleNotes, bassNotes, width, height, showLabels, cursorIndex, inputStatus, isDarkMode, onLayout]);
+    }, [trebleNotes, bassNotes, width, height, showLabels, cursorIndex, inputStatus, isDarkMode, onLayout, handPosition, showFingering]);
 
     return (
         <div className="w-full h-full flex justify-center items-center relative overflow-hidden bg-white dark:bg-gray-800 transition-colors duration-300">

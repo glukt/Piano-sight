@@ -170,6 +170,20 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         </button>
                     </div>
 
+                    {/* Show Fingering Guides */}
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <span className="text-gray-600 dark:text-gray-300 font-medium block">Show Fingering Guides</span>
+                            <span className="text-xs text-gray-400">Display recommended finger numbers (1-5) above noteheads</span>
+                        </div>
+                        <button
+                            onClick={() => updatePreference('showFingering', !preferences.showFingering)}
+                            className={`w-14 h-8 rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 ${preferences.showFingering ? 'bg-blue-600' : 'bg-gray-300'}`}
+                        >
+                            <div className={`w-6 h-6 rounded-full bg-white shadow-sm transform transition-transform duration-300 ${preferences.showFingering ? 'translate-x-6' : 'translate-x-0'}`} />
+                        </button>
+                    </div>
+
                     {/* Sound Type Selection */}
                     <div className="flex items-center justify-between mb-4">
                         <div>

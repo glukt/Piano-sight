@@ -64,10 +64,25 @@ export const LevelGenerator = {
 
     generateFromConstraints(constraints: LessonConstraints): LevelData {
         if (constraints.presetMelody) {
-            return {
-                treble: constraints.presetMelody.treble,
-                bass: constraints.presetMelody.bass
-            };
+            let treble = constraints.presetMelody.treble;
+            let bass = constraints.presetMelody.bass;
+
+            // If bass is empty, fill it with rests matching the treble note durations
+            if (bass.length === 0 && treble.length > 0) {
+                bass = treble.map(n => ({
+                    keys: ["d/3"],
+                    duration: n.duration.endsWith('r') ? n.duration : `${n.duration}r`
+                }));
+            }
+            // If treble is empty, fill it with rests matching the bass note durations
+            if (treble.length === 0 && bass.length > 0) {
+                treble = bass.map(n => ({
+                    keys: ["b/4"],
+                    duration: n.duration.endsWith('r') ? n.duration : `${n.duration}r`
+                }));
+            }
+
+            return { treble, bass };
         }
 
         const treble: StaveNoteData[] = [];

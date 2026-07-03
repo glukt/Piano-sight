@@ -235,6 +235,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             osmdRef.current.setOptions({
                 darkMode: isDarkMode,
                 defaultColorMusic: isDarkMode ? "#f3f4f6" : "#000000",
+                drawFingerings: preferences.showFingering
             });
             osmdRef.current.render();
 

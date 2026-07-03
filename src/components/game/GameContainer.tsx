@@ -6,6 +6,7 @@ import { PerformanceReportCard } from '../PerformanceReportCard';
 
 // Import Types
 import { useGameLogic } from '../../hooks/useGameLogic';
+import { usePreferences } from '../../hooks/usePreferences';
 
 interface GameContainerProps {
     gameLogic: ReturnType<typeof useGameLogic>;
@@ -22,6 +23,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     onNextLesson,
     onExitLesson
 }) => {
+    const { preferences } = usePreferences();
     const {
         // State
         audioStarted,
@@ -132,6 +134,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                         onLayout={setNotePositions}
                         isDarkMode={isDarkMode}
                         showLabels={showNoteLabels}
+                        handPosition={gameLogic.currentLesson?.handPosition}
+                        showFingering={preferences.showFingering}
                     />
                     {/* Rhythm Playhead */}
                     {isRhythmMode && (

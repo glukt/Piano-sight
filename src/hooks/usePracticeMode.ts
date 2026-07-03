@@ -3,6 +3,86 @@ import { PlaybackEngine } from '../engine/PlaybackEngine';
 import { usePreferences } from './usePreferences';
 import { getLessonById, isLessonCapstone } from '../utils/music/CourseData';
 
+const POSITION_MAPS: Record<string, Record<string, { hand: 'LH' | 'RH'; finger: number }>> = {
+    'RH_MIDDLE_C': {
+        'c/4': { hand: 'RH', finger: 1 }
+    },
+    'RH_C_3FINGER': {
+        'c/4': { hand: 'RH', finger: 1 },
+        'd/4': { hand: 'RH', finger: 2 },
+        'e/4': { hand: 'RH', finger: 3 }
+    },
+    'LH_BASS_F_3FINGER': {
+        'e/3': { hand: 'LH', finger: 3 },
+        'f/3': { hand: 'LH', finger: 2 },
+        'g/3': { hand: 'LH', finger: 1 }
+    },
+    'RH_C_POS': {
+        'c/4': { hand: 'RH', finger: 1 },
+        'd/4': { hand: 'RH', finger: 2 },
+        'e/4': { hand: 'RH', finger: 3 },
+        'f/4': { hand: 'RH', finger: 4 },
+        'g/4': { hand: 'RH', finger: 5 }
+    },
+    'LH_C_POS': {
+        'c/3': { hand: 'LH', finger: 5 },
+        'd/3': { hand: 'LH', finger: 4 },
+        'e/3': { hand: 'LH', finger: 3 },
+        'f/3': { hand: 'LH', finger: 2 },
+        'g/3': { hand: 'LH', finger: 1 }
+    },
+    'RH_HIGH_C_POS': {
+        'c/5': { hand: 'RH', finger: 1 },
+        'd/5': { hand: 'RH', finger: 2 },
+        'e/5': { hand: 'RH', finger: 3 }
+    },
+    'LH_LOW_C_POS': {
+        'c/3': { hand: 'LH', finger: 5 },
+        'd/3': { hand: 'LH', finger: 4 },
+        'e/3': { hand: 'LH', finger: 3 }
+    },
+    'RH_UPPER_TREBLE': {
+        'f/4': { hand: 'RH', finger: 1 },
+        'g/4': { hand: 'RH', finger: 2 },
+        'a/4': { hand: 'RH', finger: 3 },
+        'b/4': { hand: 'RH', finger: 4 },
+        'c/5': { hand: 'RH', finger: 5 }
+    },
+    'LH_LOWER_BASS': {
+        'f/2': { hand: 'LH', finger: 5 },
+        'g/2': { hand: 'LH', finger: 4 },
+        'a/2': { hand: 'LH', finger: 3 },
+        'b/2': { hand: 'LH', finger: 2 },
+        'c/3': { hand: 'LH', finger: 1 }
+    },
+    'GRAND_C_POS': {
+        'c/3': { hand: 'LH', finger: 5 },
+        'd/3': { hand: 'LH', finger: 4 },
+        'e/3': { hand: 'LH', finger: 3 },
+        'f/3': { hand: 'LH', finger: 2 },
+        'g/3': { hand: 'LH', finger: 1 },
+        'c/4': { hand: 'RH', finger: 1 },
+        'd/4': { hand: 'RH', finger: 2 },
+        'e/4': { hand: 'RH', finger: 3 },
+        'f/4': { hand: 'RH', finger: 4 },
+        'g/4': { hand: 'RH', finger: 5 }
+    }
+};
+
+const midiToKeyString = (midi: number): string => {
+    const MIDI_NAMES = ['c', 'c#', 'd', 'd#', 'e', 'f', 'f#', 'g', 'g#', 'a', 'a#', 'b'];
+    const name = MIDI_NAMES[midi % 12];
+    const octave = Math.floor(midi / 12) - 1;
+    return `${name}/${octave}`;
+};
+
+const getNoteName = (midi: number): string => {
+    const MIDI_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const name = MIDI_NAMES[midi % 12];
+    const octave = Math.floor(midi / 12) - 1;
+    return `${name}${octave}`;
+};
+
 interface PracticeSection {
     startMeasure: number; // 0-indexed
     endMeasure: number;   // Exclusive
@@ -370,6 +450,27 @@ export function usePracticeMode({
                     stuckTimerRef.current += 50; // Add 50ms
                     if (hintDelay > 0 && stuckTimerRef.current > hintDelay && !showHintRef.current) {
                         setShowHint(true);
+
+                        const lesson = songId ? getLessonById(songId) : null;
+                        const handPosition = lesson?.handPosition;
+                        let fingerAdvice = '';
+                        if (handPosition && POSITION_MAPS[handPosition]) {
+                            const map = POSITION_MAPS[handPosition];
+                            const advices = currentExpectedMidis.map(m => {
+                                const keyStr = midiToKeyString(m);
+                                const info = map[keyStr];
+                                if (info) {
+                                    const fingerNames = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky'];
+                                    return `${info.hand} Finger ${info.finger} (${fingerNames[info.finger - 1]})`;
+                                }
+                                return null;
+                            }).filter(Boolean);
+                            if (advices.length > 0) {
+                                fingerAdvice = ` - Use ${advices.join(' + ')}`;
+                            }
+                        }
+                        const expectedNoteNames = currentExpectedMidis.map(getNoteName).join(' + ');
+                        setFeedback(`💡 Stuck? Play ${expectedNoteNames}${fingerAdvice}`);
                     }
                 } else {
                     // New notes! Reset.
@@ -419,8 +520,12 @@ export function usePracticeMode({
                 return;
             }
 
-            // 3. Highlight Notes
-            playbackEngine.highlightCurrentNotes();
+            // 3. Highlight Notes with correct and wrong subsets passed
+            const userPressedMidis = new Set(userActiveNotesRef.current);
+            const correctSet = new Set(currentExpectedMidis.filter(m => userPressedMidis.has(m)));
+            const incorrectSet = new Set(Array.from(heldWrongNotesRef.current));
+            
+            playbackEngine.highlightCurrentNotes(correctSet, incorrectSet);
             setExpectedNotes(currentExpectedMidis);
 
             // Debounce the validation logic (Steps 4, 5, and 6)
@@ -498,17 +603,29 @@ export function usePracticeMode({
                             ...prev,
                             [measureNum]: (prev[measureNum] || 0) + newMistakes
                         }));
-                        
-                        const MIDI_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-                        const getNoteName = (midi: number) => {
-                            const name = MIDI_NAMES[midi % 12];
-                            const octave = Math.floor(midi / 12) - 1;
-                            return `${name}${octave}`;
-                        };
+
+                        const lesson = songId ? getLessonById(songId) : null;
+                        const handPosition = lesson?.handPosition;
+                        let fingerAdvice = '';
+                        if (handPosition && POSITION_MAPS[handPosition]) {
+                            const map = POSITION_MAPS[handPosition];
+                            const advices = freshExpectedMidis.map(m => {
+                                const keyStr = midiToKeyString(m);
+                                const info = map[keyStr];
+                                if (info) {
+                                    const fingerNames = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky'];
+                                    return `${info.hand} Finger ${info.finger} (${fingerNames[info.finger - 1]})`;
+                                }
+                                return null;
+                            }).filter(Boolean);
+                            if (advices.length > 0) {
+                                fingerAdvice = ` - Use ${advices.join(' + ')}`;
+                            }
+                        }
 
                         const wrongNoteName = getNoteName(activeWrongNotes[0]);
                         const expectedNoteName = freshExpectedMidis.map(getNoteName).join(' + ');
-                        setFeedback(`❌ Played ${wrongNoteName}, expected ${expectedNoteName}`);
+                        setFeedback(`❌ Played ${wrongNoteName}, expected ${expectedNoteName}${fingerAdvice}`);
                     }
                 }
             }, 50);

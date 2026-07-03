@@ -108,14 +108,14 @@ export class PlaybackEngine {
     }
 
     private clearHighlights() {
+        const isDark = document.documentElement.classList.contains('dark') || document.body.classList.contains('dark');
+        const defaultColor = isDark ? "#f3f4f6" : "#000000";
         this.currentStyledNotes.forEach(gn => {
-            // Revert to black (or original style if complex, but black is standard)
-            // OSMD's setColor doesn't have a "revert" easily typically, but setting to black is safe for standard scores.
-            gn.setColor("#000000", { applyToNoteheads: true, applyToStem: true, applyToBeams: true });
+            gn.setColor(defaultColor, { applyToNoteheads: true, applyToStem: true, applyToBeams: true });
         });
         this.currentStyledNotes = [];
     }
-    public highlightCurrentNotes() {
+    public highlightCurrentNotes(correctSet?: Set<number>, incorrectSet?: Set<number>) {
         const cursor = this.getCursor();
         if (!cursor) return;
 
@@ -127,11 +127,22 @@ export class PlaybackEngine {
         gNotes.forEach(gn => {
             // @ts-ignore
             if (gn.setColor) {
-                // Use a distinct color for Wait Mode? Or standard Blue?
-                // Let's use Orange/Yellow if we passed an argument, but for now standard Blue.
-                // Wait, user wants "Wait Mode" highlighting.
+                let color = "#f59e0b"; // Default expected: Amber
+                
+                // Extract MIDI key if structurally present to map to correct/incorrect sets
                 // @ts-ignore
-                gn.setColor("#f59e0b", { applyToNoteheads: true, applyToStem: true, applyToBeams: true }); // Amber/Orange
+                if (gn.sourceNote && gn.sourceNote.Pitch) {
+                    // @ts-ignore
+                    const midi = gn.sourceNote.Pitch.getHalfTone() + 12;
+                    if (correctSet?.has(midi)) {
+                        color = "#10b981"; // Correct: Emerald Green
+                    } else if (incorrectSet?.has(midi)) {
+                        color = "#ef4444"; // Incorrect: Rose Red
+                    }
+                }
+
+                // @ts-ignore
+                gn.setColor(color, { applyToNoteheads: true, applyToStem: true, applyToBeams: true });
                 this.currentStyledNotes.push(gn as unknown as GraphicalNote);
             }
         });

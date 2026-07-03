@@ -24,6 +24,7 @@ export interface Lesson {
     presetId?: string;               // Links to corresponding preset ID in useMusicLibrary.ts
     xpReward: number;
     requiredXp: number; // XP required to unlock this lesson
+    handPosition?: string;           // Hand position key for visual keyboard guide
 }
 
 export interface Course {
@@ -41,8 +42,8 @@ export interface Course {
 const middleC = ["c/4"];
 const trebleStepsD_E = ["c/4", "d/4", "e/4"];
 const bassGuideF = ["e/3", "f/3", "g/3"];
-const trebleHighC = ["b/4", "c/5", "d/5"];
-const bassLowC = ["b/2", "c/3", "d/3"];
+const trebleHighC = ["c/5", "d/5", "e/5"];
+const bassLowC = ["c/3", "d/3", "e/3"];
 
 const cPosTreble = ["c/4", "d/4", "e/4", "f/4", "g/4"];
 const upperTreble = ["f/4", "g/4", "a/4", "b/4", "c/5"];
@@ -71,6 +72,7 @@ export const courses: Course[] = [
                 focus: "Find Middle C in the center of your keyboard. It is directly to the left of the group of two black keys.",
                 instruction: "Sit comfortably, and place your Right Hand Thumb (Finger 1) on Middle C. Play the notes as they appear on the screen.",
                 type: 'exercise', topic: 'treble', xpReward: 50, requiredXp: 0,
+                handPosition: 'RH_MIDDLE_C',
                 constraints: { trebleRange: middleC, bassRange: [], rhythms: ["q", "h"], maxJumps: 0, chordsAllowed: false, numNotes: 10 }
             },
             {
@@ -80,6 +82,7 @@ export const courses: Course[] = [
                 focus: "Keep your knuckles elevated and your fingers naturally curved, as if holding a small ball.",
                 instruction: "With your thumb on Middle C, place your index finger on D and middle finger on E. Play the steps as they ascend and descend.",
                 type: 'exercise', topic: 'treble', xpReward: 50, requiredXp: 50,
+                handPosition: 'RH_C_3FINGER',
                 constraints: { trebleRange: trebleStepsD_E, bassRange: [], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 16 }
             },
             {
@@ -89,6 +92,7 @@ export const courses: Course[] = [
                 focus: "The Treble Clef curl wraps around G4. Focus on identifying it instantly.",
                 instruction: "Place your Right Hand Pinky (Finger 5) on G4. Practice playing steps surrounding this landmark note.",
                 type: 'exercise', topic: 'treble', xpReward: 60, requiredXp: 100,
+                handPosition: 'RH_C_POS',
                 constraints: { trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 16 }
             },
             {
@@ -98,24 +102,27 @@ export const courses: Course[] = [
                 focus: "The Bass Clef's two dots surround F3. Press the keys using your left hand index finger.",
                 instruction: "Place your Left Hand Index Finger (Finger 2) on F3. Play the step-wise notes centered around it.",
                 type: 'exercise', topic: 'bass', xpReward: 60, requiredXp: 160,
+                handPosition: 'LH_BASS_F_3FINGER',
                 constraints: { trebleRange: [], bassRange: bassGuideF, rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 16 }
             },
             {
                 id: "c1-l5", courseId: "keyboard-geography",
-                name: "Landmark Treble C (C5)",
-                description: "Read High C on the third space of the treble staff.",
-                focus: "High C (C5) is an octave above Middle C. Keep your hand relaxed as you play in this upper register.",
-                instruction: "Shift your right hand so that your middle finger plays C5. Read and play the surrounding notes.",
+                name: "Landmark High C (C5)",
+                description: "Read High C on the third space of the treble staff, playing from a High C Anchor.",
+                focus: "High C (C5) is an octave above Middle C. Keep your wrist flexible and relaxed.",
+                instruction: "Place your Right Hand Thumb (Finger 1) on High C (C5). Practice playing the notes stepping up from this landmark.",
                 type: 'exercise', topic: 'treble', xpReward: 70, requiredXp: 220,
+                handPosition: 'RH_HIGH_C_POS',
                 constraints: { trebleRange: trebleHighC, bassRange: [], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 16 }
             },
             {
                 id: "c1-l6", courseId: "keyboard-geography",
                 name: "Landmark Bass C (C3)",
                 description: "Read Low C on the second space of the bass staff.",
-                focus: "Low C (C3) is an octave below Bass C. Use your Left Hand Pinky (Finger 5) to play it.",
-                instruction: "Place your left pinky on Low C (C3) and practice reading notes that step up from this landmark.",
+                focus: "Bass C (C3) is an octave below Middle C. Use your Left Hand Pinky (Finger 5) to play it.",
+                instruction: "Place your Left Hand Pinky (Finger 5) on Bass C (C3). Practice playing notes stepping up from this landmark.",
                 type: 'exercise', topic: 'bass', xpReward: 70, requiredXp: 290,
+                handPosition: 'LH_LOW_C_POS',
                 constraints: { trebleRange: [], bassRange: bassLowC, rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 16 }
             },
             {
@@ -125,6 +132,7 @@ export const courses: Course[] = [
                 focus: "Look ahead at the staff to anticipate jumps between C3, F3, Middle C, G4, and C5.",
                 instruction: "Play notes across both clefs. This exercise checks your ability to jump your eyes and hands between landmarks.",
                 type: 'exercise', topic: 'both', xpReward: 100, requiredXp: 360,
+                handPosition: 'GRAND_C_POS',
                 constraints: { trebleRange: ["c/4", "g/4", "c/5"], bassRange: ["c/3", "f/3", "c/4"], rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 20 }
             }
         ]
@@ -142,6 +150,7 @@ export const courses: Course[] = [
                 focus: "Read adjacent lines and spaces. Play smoothly without lifting your hands between notes.",
                 instruction: "Place your right hand fingers on C4, D4, E4, F4, and G4. Play notes that step up and down.",
                 type: 'exercise', topic: 'treble', xpReward: 80, requiredXp: 460,
+                handPosition: 'RH_C_POS',
                 constraints: { trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 20 }
             },
             {
@@ -151,6 +160,7 @@ export const courses: Course[] = [
                 focus: "A skip moves from line-to-line or space-to-space. Notice the visual gap on the staff.",
                 instruction: "Play the skipping notes in C position. Maintain your hand shape and finger curve.",
                 type: 'exercise', topic: 'treble', xpReward: 80, requiredXp: 540,
+                handPosition: 'RH_C_POS',
                 constraints: { trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 20 }
             },
             {
@@ -160,6 +170,7 @@ export const courses: Course[] = [
                 focus: "Do not tense your fingers during wide leaps. Keep your hand relaxed.",
                 instruction: "Play intervals of 4ths and 5ths, such as jumping directly from C4 up to F4 or G4.",
                 type: 'exercise', topic: 'treble', xpReward: 90, requiredXp: 620,
+                handPosition: 'RH_C_POS',
                 constraints: { trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 24 }
             },
             {
@@ -169,6 +180,7 @@ export const courses: Course[] = [
                 focus: "Count the beats out loud. Pay special attention to the half notes holding for two beats.",
                 instruction: "Apply your C position reading to play this traditional tune with your right hand.",
                 type: 'song', topic: 'treble', xpReward: 120, requiredXp: 710,
+                handPosition: 'RH_C_POS',
                 songUrl: '/scores/Mary_Lamb.musicxml',
                 presetId: 'preset-mary-lamb'
             },
@@ -179,6 +191,7 @@ export const courses: Course[] = [
                 focus: "Transition your eyes to read notes placed higher on the treble staff.",
                 instruction: "Position your right hand so that you can reach F4 up to C5. Read and play this register.",
                 type: 'exercise', topic: 'treble', xpReward: 100, requiredXp: 830,
+                handPosition: 'RH_UPPER_TREBLE',
                 constraints: { trebleRange: upperTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 24 }
             },
             {
@@ -188,6 +201,7 @@ export const courses: Course[] = [
                 focus: "Read the entire treble clef from C4 to C5. Look ahead to prepare for intervals.",
                 instruction: "Play this longer, generative exercise that combines all treble notes and rhythms you've learned.",
                 type: 'exercise', topic: 'treble', xpReward: 150, requiredXp: 930,
+                handPosition: 'RH_C_POS',
                 constraints: { trebleRange: fullTreble, bassRange: [], rhythms: ["q", "h", "w"], maxJumps: 3, chordsAllowed: false, numNotes: 32 }
             },
             {
@@ -197,6 +211,7 @@ export const courses: Course[] = [
                 focus: "Maintain a steady pulse. Notice the stepwise motion followed by skips.",
                 instruction: "Combine your treble reading skills to play this beautiful Beethoven melody.",
                 type: 'song', topic: 'treble', xpReward: 200, requiredXp: 1080,
+                handPosition: 'RH_C_POS',
                 songUrl: '/scores/Ode_to_Joy.musicxml',
                 presetId: 'preset-ode-to-joy'
             }
@@ -215,6 +230,7 @@ export const courses: Course[] = [
                 focus: "Ensure your left hand fingers mirror the shape of your right hand. Play with even key weight.",
                 instruction: "Place your Left Hand Pinky on C3, up to thumb on G3. Play the steps on the bass staff.",
                 type: 'exercise', topic: 'bass', xpReward: 80, requiredXp: 1280,
+                handPosition: 'LH_C_POS',
                 constraints: { trebleRange: [], bassRange: cPosBass, rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 20 }
             },
             {
@@ -224,6 +240,7 @@ export const courses: Course[] = [
                 focus: "Bass clef lines and spaces can be tricky. Look at whether the note jumps to an adjacent line/space.",
                 instruction: "Practice skipping notes in the left hand C position. Take it slowly and ensure accuracy.",
                 type: 'exercise', topic: 'bass', xpReward: 80, requiredXp: 1360,
+                handPosition: 'LH_C_POS',
                 constraints: { trebleRange: [], bassRange: cPosBass, rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 20 }
             },
             {
@@ -233,6 +250,7 @@ export const courses: Course[] = [
                 focus: "Keep your wrist loose. Use arm weight rather than finger tension to play leaps.",
                 instruction: "Play intervals of 4ths and 5ths, leaping from C3 up to F3 or G3.",
                 type: 'exercise', topic: 'bass', xpReward: 90, requiredXp: 1440,
+                handPosition: 'LH_C_POS',
                 constraints: { trebleRange: [], bassRange: cPosBass, rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 24 }
             },
             {
@@ -242,6 +260,7 @@ export const courses: Course[] = [
                 focus: "Let the bass notes ring out strongly. Keep a solid, heavy pulse with your arm.",
                 instruction: "Use your left hand alone to play this famous melody down on the bass clef.",
                 type: 'song', topic: 'bass', xpReward: 150, requiredXp: 1530,
+                handPosition: 'LH_C_POS',
                 songUrl: '/scores/Good_King_Wenceslas.musicxml',
                 presetId: 'preset-good-king-wenceslas'
             },
@@ -252,6 +271,7 @@ export const courses: Course[] = [
                 focus: "Memorize the ledger lines. Low F (F2) sits just below the bottom line of the bass staff.",
                 instruction: "Shift your left hand down so your pinky rests on Low F (F2). Practice reading in this low register.",
                 type: 'exercise', topic: 'bass', xpReward: 100, requiredXp: 1680,
+                handPosition: 'LH_LOWER_BASS',
                 constraints: { trebleRange: [], bassRange: lowerBass, rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 24 }
             },
             {
@@ -261,6 +281,7 @@ export const courses: Course[] = [
                 focus: "Synthesize all left hand intervals and notes. Look ahead to prepare for shifts.",
                 instruction: "A long, comprehensive generative exercise testing your reading across the whole bass staff.",
                 type: 'exercise', topic: 'bass', xpReward: 150, requiredXp: 1780,
+                handPosition: 'LH_C_POS',
                 constraints: { trebleRange: [], bassRange: fullBass, rhythms: ["q", "h", "w"], maxJumps: 3, chordsAllowed: false, numNotes: 32 }
             }
         ]
@@ -278,6 +299,7 @@ export const courses: Course[] = [
                 focus: "Look at the clefs. Keep your non-playing hand resting gently on the keys, ready for its turn.",
                 instruction: "You will see the melody bounce between the treble clef (Right Hand) and bass clef (Left Hand). Trade off smoothly.",
                 type: 'exercise', topic: 'both', xpReward: 100, requiredXp: 1930,
+                handPosition: 'GRAND_C_POS',
                 constraints: { trebleRange: cPosTreble, bassRange: cPosBass, rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 24 }
             },
             {
@@ -287,6 +309,7 @@ export const courses: Course[] = [
                 focus: "Lock the first beat of each measure. Make sure both hands play exactly together on beat one.",
                 instruction: "Your left hand will hold long, stable bass notes (C3 or G3) while your right hand plays a stepwise melody.",
                 type: 'exercise', topic: 'both', xpReward: 110, requiredXp: 2030,
+                handPosition: 'GRAND_C_POS',
                 constraints: { trebleRange: cPosTreble, bassRange: ["c/3", "g/3"], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: true, numNotes: 24 }
             },
             {
@@ -296,25 +319,28 @@ export const courses: Course[] = [
                 focus: "Hold the left-hand half notes and whole notes while the right-hand melody steps forward.",
                 instruction: "Play this beautiful melody using both hands. The left hand provides harmonic support.",
                 type: 'song', topic: 'both', xpReward: 150, requiredXp: 2140,
+                handPosition: 'GRAND_C_POS',
                 songUrl: '/scores/Au_Clair_De_La_Lune.musicxml',
                 presetId: 'preset-au-clair-de-la-lune'
             },
             {
                 id: "c4-l4", courseId: "grand-staff-coordination",
-                name: "Parallel Motion",
-                description: "Play the same notes in both hands an octave apart.",
-                focus: "Lock your rhythm. Both fingers must press the keys at exactly the same microsecond.",
-                instruction: "Play steps in both hands moving in the same direction. Lock your hand movements together.",
-                type: 'exercise', topic: 'both', xpReward: 110, requiredXp: 2290,
+                name: "Contrary Motion",
+                description: "Play notes that move in opposite directions in each hand.",
+                focus: "Contrary motion is anatomically symmetrical, using the same fingers (e.g. both thumbs, both index fingers) at the same time. This is easier for your brain than parallel motion!",
+                instruction: "Play notes moving in opposite directions (e.g. hands moving outwards). Tap into the symmetrical finger movement.",
+                type: 'exercise', topic: 'both', xpReward: 120, requiredXp: 2400,
+                handPosition: 'GRAND_C_POS',
                 constraints: { trebleRange: cPosTreble, bassRange: cPosBass, rhythms: ["q"], maxJumps: 1, chordsAllowed: true, numNotes: 20 }
             },
             {
                 id: "c4-l5", courseId: "grand-staff-coordination",
-                name: "Contrary Motion",
-                description: "Play notes that move in opposite directions in each hand.",
-                focus: "Focus on independence. As your right hand goes up, your left hand goes down.",
-                instruction: "This contrary motion exercise builds finger independence. Take it slow and concentrate.",
-                type: 'exercise', topic: 'both', xpReward: 120, requiredXp: 2400,
+                name: "Parallel Motion",
+                description: "Play the same notes in both hands an octave apart.",
+                focus: "Parallel motion is asymmetrical (e.g. RH Finger 1 plays with LH Finger 5). Align your movements carefully by sound.",
+                instruction: "Play steps in both hands moving in the same direction. Lock your fingers together on the beat.",
+                type: 'exercise', topic: 'both', xpReward: 110, requiredXp: 2290,
+                handPosition: 'GRAND_C_POS',
                 constraints: { trebleRange: cPosTreble, bassRange: cPosBass, rhythms: ["q"], maxJumps: 1, chordsAllowed: true, numNotes: 20 }
             },
             {

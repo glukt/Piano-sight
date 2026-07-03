@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { audio } from '../audio/Synth';
 
 export const useRhythmEngine = (
     bpm: number = 60,
@@ -10,6 +11,7 @@ export const useRhythmEngine = (
     const startTimeRef = useRef<number>(0);
     const elapsedTimeRef = useRef<number>(0);
     const onAnimateRef = useRef(onAnimate);
+    const lastBeatRef = useRef<number>(-1);
 
     // Sync callback ref to avoid effect recreation
     useEffect(() => {
@@ -26,6 +28,15 @@ export const useRhythmEngine = (
         const elapsed = (time - startTimeRef.current) / 1000; // seconds
         elapsedTimeRef.current = elapsed;
 
+        // Click generator
+        const beatDuration = 60 / bpm;
+        const currentBeat = Math.floor(elapsed / beatDuration);
+        if (currentBeat > lastBeatRef.current) {
+            const isDownbeat = (currentBeat % 4 === 0);
+            audio.playMetronomeClick(isDownbeat);
+            lastBeatRef.current = currentBeat;
+        }
+
         // Progress can be negative during lead-in
         const progress = Math.min(elapsed / totalDuration, 1);
 
@@ -37,10 +48,11 @@ export const useRhythmEngine = (
         } else {
             setIsPlaying(false);
         }
-    }, [totalDuration]);
+    }, [totalDuration, bpm]);
 
     const start = useCallback((leadInSeconds: number = 0) => {
         setIsPlaying(true);
+        lastBeatRef.current = -999; // Reset to a low value to ensure clicks trigger during count-in
         // Set start time in the future so elapsed starts negative
         startTimeRef.current = performance.now() + (leadInSeconds * 1000);
         elapsedTimeRef.current = -leadInSeconds;

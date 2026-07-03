@@ -9,6 +9,7 @@ class AudioEngine {
     private polySynth: Tone.PolySynth | null = null;
     private reverb: Tone.Reverb | null = null;
     private synthFilter: Tone.Filter | null = null;
+    private metronomeSynth: Tone.Synth<Tone.SynthOptions> | null = null;
 
     constructor() {
         // Singleton pattern or simple instance
@@ -45,6 +46,18 @@ class AudioEngine {
             }
         }).connect(this.synthFilter);
         this.polySynth.volume.value = -4;
+
+        // Metronome Click Synth: High-transient sine wave
+        this.metronomeSynth = new Tone.Synth({
+            oscillator: { type: "sine" },
+            envelope: {
+                attack: 0.001,
+                decay: 0.04,
+                sustain: 0,
+                release: 0.04
+            }
+        }).toDestination();
+        this.metronomeSynth.volume.value = -6;
 
         return new Promise<void>((resolve, _reject) => {
             const timeout = setTimeout(() => {
@@ -168,6 +181,12 @@ class AudioEngine {
             this.triggerRelease(note);
         });
         this.sustainedNotes.clear();
+    }
+
+    playMetronomeClick(isDownbeat: boolean) {
+        if (!this.isInitialized || !this.metronomeSynth) return;
+        const note = isDownbeat ? "C6" : "C5";
+        this.metronomeSynth.triggerAttackRelease(note, "32n", Tone.now());
     }
 
     releaseAll() {

@@ -64,8 +64,15 @@ export const LevelGenerator = {
 
     generateFromConstraints(constraints: LessonConstraints): LevelData {
         if (constraints.presetMelody) {
-            let treble = constraints.presetMelody.treble;
-            let bass = constraints.presetMelody.bass;
+            // Deep clone to avoid mutating the original presetMelody in CourseData
+            let treble = constraints.presetMelody.treble.map(n => ({
+                keys: [...n.keys],
+                duration: n.duration
+            }));
+            let bass = constraints.presetMelody.bass.map(n => ({
+                keys: [...n.keys],
+                duration: n.duration
+            }));
 
             // If bass is empty, fill it with rests matching the treble note durations
             if (bass.length === 0 && treble.length > 0) {

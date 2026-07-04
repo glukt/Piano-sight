@@ -38,7 +38,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         showNoteLabels, setShowNoteLabels,
         showStaff, setShowStaff,
         showMicPopup, setShowMicPopup,
-        score, difficulty, levelData,
+        score, difficulty, paddedLevelData,
 
         // Actions
         testAudio,
@@ -56,14 +56,14 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         const tIndex = trebleCursorIndex !== undefined ? trebleCursorIndex : cursorIndex;
         const bIndex = bassCursorIndex !== undefined ? bassCursorIndex : cursorIndex;
         
-        const t = levelData.treble[tIndex];
-        const b = levelData.bass[bIndex];
+        const t = paddedLevelData.treble[tIndex];
+        const b = paddedLevelData.bass[bIndex];
 
         // Filter by Game Mode
         if (gameMode !== 'bass' && t) t.keys.forEach(k => targets.push(parseKeyToMidi(k)));
         if (gameMode !== 'treble' && b) b.keys.forEach(k => targets.push(parseKeyToMidi(k)));
         return targets;
-    }, [levelData, cursorIndex, trebleCursorIndex, bassCursorIndex, gameMode, parseKeyToMidi]);
+    }, [paddedLevelData, cursorIndex, trebleCursorIndex, bassCursorIndex, gameMode, parseKeyToMidi]);
 
     return (
         <div className="w-full flex flex-col items-center gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -134,8 +134,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 <div className="bg-white dark:bg-gray-800 p-2 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 relative overflow-hidden" style={{ backgroundColor: isDarkMode ? '' : 'white' }}>
                     <MusicDisplay
                         gameMode={gameMode}
-                        trebleNotes={levelData.treble}
-                        bassNotes={levelData.bass}
+                        trebleNotes={paddedLevelData.treble}
+                        bassNotes={paddedLevelData.bass}
                         width={windowWidth < 800 ? windowWidth - 48 : 800}
                         cursorIndex={cursorIndex}
                         trebleCursorIndex={trebleCursorIndex}

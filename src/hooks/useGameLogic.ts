@@ -108,8 +108,43 @@ const calculateDuration = (notesData: StaveNoteData[]): number => {
     }, 0);
 };
 
+// Helper function to pad notes with rests until target duration is reached
+const padNotes = (notesData: StaveNoteData[], targetDuration: number, clef: string): StaveNoteData[] => {
+    const currentDuration = calculateDuration(notesData);
+    if (Math.abs(currentDuration - targetDuration) < 0.01) {
+        return [...notesData];
+    }
+
+    const paddedNotes = [...notesData];
+    let remaining = targetDuration - currentDuration;
+    const restKey = clef === 'bass' ? "d/3" : "b/4";
+
+    while (remaining >= 4) {
+        paddedNotes.push({ keys: [restKey], duration: "wr" });
+        remaining -= 4;
+    }
+    while (remaining >= 2) {
+        paddedNotes.push({ keys: [restKey], duration: "hr" });
+        remaining -= 2;
+    }
+    while (remaining >= 1) {
+        paddedNotes.push({ keys: [restKey], duration: "qr" });
+        remaining -= 1;
+    }
+    while (remaining >= 0.5) {
+        paddedNotes.push({ keys: [restKey], duration: "8r" });
+        remaining -= 0.5;
+    }
+    while (remaining >= 0.25) {
+        paddedNotes.push({ keys: [restKey], duration: "16r" });
+        remaining -= 0.25;
+    }
+
+    return paddedNotes;
+};
+
 // Pure helper to calculate playhead position at any given timestamp without React state
-const getPlayheadPixelXAt = (elapsed: number, positions: number[]): number => {
+const getPlayheadPixelXAt = (elapsed: number, positions: number[], bpm: number): number => {
     if (positions.length === 0) return 20;
     const RHYTHM_LEAD_IN = 2;
     if (elapsed < 0) {
@@ -118,8 +153,7 @@ const getPlayheadPixelXAt = (elapsed: number, positions: number[]): number => {
         const progress = (elapsed + RHYTHM_LEAD_IN) / RHYTHM_LEAD_IN;
         return startX + (firstNoteX - startX) * progress;
     }
-    const BPM = 60;
-    const noteDuration = 60 / BPM;
+    const noteDuration = 60 / bpm;
     const currentIndex = Math.floor(elapsed / noteDuration);
     const segmentProgress = (elapsed % noteDuration) / noteDuration;
     const currentX = positions[currentIndex];
@@ -384,9 +418,21 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         LevelGenerator.generate(Difficulty.NOVICE, errorStats)
     );
 
-    const alignedSteps = useMemo(() => {
-        return alignNotes(levelData.treble, levelData.bass);
+    // Padding treble and bass staves to match target duration before alignment
+    const paddedLevelData = useMemo(() => {
+        const trebleDuration = calculateDuration(levelData.treble);
+        const bassDuration = calculateDuration(levelData.bass);
+        const targetDuration = Math.max(trebleDuration, bassDuration);
+
+        return {
+            treble: padNotes(levelData.treble, targetDuration, "treble"),
+            bass: padNotes(levelData.bass, targetDuration, "bass")
+        };
     }, [levelData]);
+
+    const alignedSteps = useMemo(() => {
+        return alignNotes(paddedLevelData.treble, paddedLevelData.bass);
+    }, [paddedLevelData]);
 
     const alignedStepsRef = useRef(alignedSteps);
     useEffect(() => {
@@ -394,7 +440,9 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
     }, [alignedSteps]);
 
     // Rhythm Engine with refs for low-latency visual-only DOM playhead updates
-    const BPM = 60;
+    const BPM = currentLesson?.bpm || 80;
+    const bpmRef = useRef(BPM);
+    useEffect(() => { bpmRef.current = BPM; }, [BPM]);
     const RHYTHM_LEAD_IN = 2;
 
     const notePositionsRef = useRef(notePositions);
@@ -412,7 +460,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         // 1. Direct visual DOM playhead update
         const playhead = document.getElementById('rhythm-playhead');
         if (playhead) {
-            const x = getPlayheadPixelXAt(elapsed, notePositionsRef.current);
+            const x = getPlayheadPixelXAt(elapsed, notePositionsRef.current, bpmRef.current);
             playhead.style.left = `${x}px`;
         }
 
@@ -950,7 +998,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         micSensitivity,
         setMicSensitivity,
         midiInputs, // Exposed to SettingsPanel for device name display
-        score, difficulty, levelData,
+        score, difficulty, levelData, paddedLevelData,
         playheadX: 20, // Playhead position is updated directly in visual DOM playhead
         isMutedKeys,
         isLessonComplete,
@@ -980,6 +1028,8 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
             setCurrentLesson(null);
             setIsLessonComplete(false);
             audio.releaseAll();
+            stopDemo();
+            stopRhythm();
         },
 
         // Progression

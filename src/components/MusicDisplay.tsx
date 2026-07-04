@@ -111,6 +111,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
     showFingering = true
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
     const prevPositionsRef = useRef<number[] | null>(null);
 
     useEffect(() => {
@@ -119,9 +120,15 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         // Clear previous SVG
         containerRef.current.innerHTML = '';
 
+        // Calculate rendering width dynamically to prevent note overlapping in long songs
+        const trebleNotesCount = trebleNotes ? trebleNotes.length : 0;
+        const bassNotesCount = bassNotes ? bassNotes.length : 0;
+        const noteCount = Math.max(trebleNotesCount, bassNotesCount);
+        const renderWidth = Math.max(width, noteCount * 55 + 100);
+
         // Create Renderer
         const renderer = new VF.Renderer(containerRef.current, VF.Renderer.Backends.SVG);
-        renderer.resize(width, height);
+        renderer.resize(renderWidth, height);
         const context = renderer.getContext();
 
         // Dark Mode Styling
@@ -134,7 +141,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         // -----------------------------------------------------------------------
         const startX = 20;
         const startY = 40;
-        const staveWidth = width - 40;
+        const staveWidth = renderWidth - 40;
 
         // Treble Stave
 
@@ -465,15 +472,36 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
 
     }, [trebleNotes, bassNotes, width, height, showLabels, cursorIndex, inputStatus, isDarkMode, onLayout, handPosition, showFingering]);
 
+    // Scroll active note into center of the viewport
+    useEffect(() => {
+        if (!scrollContainerRef.current || !prevPositionsRef.current || cursorIndex === undefined) return;
+        const noteX = prevPositionsRef.current[cursorIndex];
+        if (noteX === undefined) return;
+
+        const container = scrollContainerRef.current;
+        const containerWidth = container.clientWidth;
+        const scrollTarget = noteX - containerWidth / 2;
+
+        container.scrollTo({
+            left: Math.max(0, scrollTarget),
+            behavior: 'smooth'
+        });
+    }, [cursorIndex]);
+
     return (
-        <div className="w-full h-full flex justify-center items-center relative overflow-hidden bg-white dark:bg-gray-800 transition-colors duration-300">
+        <div className="w-full h-full relative overflow-hidden bg-white dark:bg-gray-800 transition-colors duration-300">
             {/* Floating Scale Pill Badge */}
-            <div className="absolute top-3 right-3 px-3 py-1 bg-blue-50/90 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-full font-bold text-xs shadow-sm border border-blue-100 dark:border-blue-900/50 flex items-center gap-1.5 pointer-events-none select-none z-10">
+            <div className="absolute top-3 right-3 px-3 py-1 bg-blue-50/90 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-full font-bold text-xs shadow-sm border border-blue-100 dark:border-blue-900/50 flex items-center gap-1.5 pointer-events-none select-none z-20">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
                 <span>🎵 C Major Scale</span>
             </div>
             
-            <div ref={containerRef} className="w-full h-full flex justify-center items-center" />
+            <div 
+                ref={scrollContainerRef} 
+                className="w-full h-full overflow-x-auto overflow-y-hidden scroll-smooth flex items-center"
+            >
+                <div ref={containerRef} className="flex-shrink-0" />
+            </div>
         </div>
     );
 };

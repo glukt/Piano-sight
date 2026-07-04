@@ -17,6 +17,35 @@ Piano Sight is a modern, interactive web application designed to help you practi
     -   **Looping**: Focus on difficult sections by looping specific measures.
     -   **Statistics**: Track your accuracy, perfect hits, and error rates.
 
+## Repository Structure
+
+```
+├── .github/workflows/   # CI/CD deployment pipelines
+├── .agents/             # Persistent agent workspace config
+│   └── AGENTS.md        # Session memory, core rules, and architectural guidelines
+├── public/              # Static assets, soundfonts, and MusicXML library files
+├── scripts/             # Python generators and MIDI-to-XML conversion tools
+├── src/
+│   ├── audio/           # Pitch detection algorithms & synthesizer engines
+│   ├── components/      # UI components (categorized by context)
+│   ├── engine/          # Level generation and VexFlow alignment utils
+│   ├── hooks/           # useGameLogic, useRhythmEngine, usePracticeMode
+│   └── utils/           # Course data, key signatures, and constants
+└── package.json         # Build options and package dependencies
+```
+
+## Utility Scripts
+
+The `scripts/` folder contains Python tools for importing and generating music content:
+- **`convert_midi_to_xml.py`**: Converts standard MIDI files (.mid) into MusicXML files (.mxml) for ingestion into the training library.
+- **`generate_capstones.py`**: Batch generates Capstone lesson presets for course checkpoints.
+- **`generate_library.py`**: Re-indexes the MusicXML files in the public library and updates configuration files.
+
+To run any script:
+```bash
+python scripts/filename.py
+```
+
 ## Getting Started Locally
 
 To run this project on your local machine:

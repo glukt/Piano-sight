@@ -15,6 +15,8 @@ interface MusicDisplayProps {
     cursorIndex?: number;
     trebleCursorIndex?: number;
     bassCursorIndex?: number;
+    isTrebleOnset?: boolean;
+    isBassOnset?: boolean;
     inputStatus?: 'waiting' | 'correct' | 'incorrect' | 'perfect';
     onLayout?: (positions: number[]) => void;
     isDarkMode?: boolean;
@@ -100,6 +102,8 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
     cursorIndex = 0,
     trebleCursorIndex,
     bassCursorIndex,
+    isTrebleOnset,
+    isBassOnset,
     inputStatus = 'waiting',
     onLayout,
     isDarkMode = false,
@@ -213,6 +217,9 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
             const staffCursorIndex = clef === "treble"
                 ? (trebleCursorIndex !== undefined ? trebleCursorIndex : cursorIndex)
                 : (bassCursorIndex !== undefined ? bassCursorIndex : cursorIndex);
+            const isOnset = clef === "treble"
+                ? (isTrebleOnset !== undefined ? isTrebleOnset : true)
+                : (isBassOnset !== undefined ? isBassOnset : true);
 
             const notes = notesData.map((n, i) => {
                 const staveNote = new VF.StaveNote({
@@ -245,16 +252,25 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
 
                 if (staffCursorIndex !== undefined && !isRest) {
                     if (i === staffCursorIndex) {
-                        // Color current note based on input status
-                        let color = "#3b82f6"; // Default Blue (Waiting)
-                        if (inputStatus === 'correct') color = "#22c55e"; // Green
-                        if (inputStatus === 'incorrect') color = "#ef4444"; // Red
-                        if (inputStatus === 'perfect') color = "#FFD700"; // Gold
+                        if (isOnset) {
+                            // Color current note based on input status
+                            let color = "#3b82f6"; // Default Blue (Waiting)
+                            if (inputStatus === 'correct') color = "#22c55e"; // Green
+                            if (inputStatus === 'incorrect') color = "#ef4444"; // Red
+                            if (inputStatus === 'perfect') color = "#FFD700"; // Gold
 
-                        staveNote.setStyle({ fillStyle: color, strokeStyle: color });
-                        n.keys.forEach((_, keyIndex) => {
-                            staveNote.setKeyStyle(keyIndex, { fillStyle: color, strokeStyle: color });
-                        });
+                            staveNote.setStyle({ fillStyle: color, strokeStyle: color });
+                            n.keys.forEach((_, keyIndex) => {
+                                staveNote.setKeyStyle(keyIndex, { fillStyle: color, strokeStyle: color });
+                            });
+                        } else {
+                            // Note is holding from a previous step, color it as past note (gray)
+                            const pastColor = "#9ca3af";
+                            staveNote.setStyle({ fillStyle: pastColor, strokeStyle: pastColor });
+                            n.keys.forEach((_, keyIndex) => {
+                                staveNote.setKeyStyle(keyIndex, { fillStyle: pastColor, strokeStyle: pastColor });
+                            });
+                        }
                     } else if (i < staffCursorIndex) {
                         const pastColor = "#9ca3af";
                         staveNote.setStyle({ fillStyle: pastColor, strokeStyle: pastColor }); // Gray 400

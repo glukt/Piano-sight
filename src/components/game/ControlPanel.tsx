@@ -8,6 +8,9 @@ interface ControlPanelProps {
     onDifficultyChange: (diff: Difficulty) => void;
     isRhythmMode: boolean;
     onToggleRhythmMode: () => void;
+    isDemoPlaying: boolean;
+    onToggleDemo: () => void;
+    onResetLesson: () => void;
     countDown: number | null;
     audioStarted: boolean;
     onTestAudio: () => void;
@@ -24,6 +27,9 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     onDifficultyChange,
     isRhythmMode,
     onToggleRhythmMode,
+    isDemoPlaying,
+    onToggleDemo,
+    onResetLesson,
     countDown,
     audioStarted,
     onTestAudio,
@@ -88,14 +94,32 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                         Head to Settings ⚙️ to start Audio Engine
                     </div>
                 )}
+                <div className="flex gap-2">
+                    <button
+                        onClick={onToggleRhythmMode}
+                        className={`flex-1 py-2 rounded-lg font-bold text-sm shadow-sm transition ${isRhythmMode
+                            ? 'bg-red-500 text-white animate-pulse'
+                            : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600'
+                            }`}
+                    >
+                        {isRhythmMode ? (countDown ? 'Get Ready!' : 'Stop Rhythm') : 'Start Rhythm'}
+                    </button>
+                    <button
+                        onClick={onToggleDemo}
+                        disabled={!audioStarted}
+                        className={`flex-1 py-2 rounded-lg font-bold text-sm shadow-sm transition ${isDemoPlaying
+                            ? 'bg-amber-500 text-white animate-pulse'
+                            : 'bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50'
+                            }`}
+                    >
+                        {isDemoPlaying ? 'Stop Demo' : 'Play Demo (Listen)'}
+                    </button>
+                </div>
                 <button
-                    onClick={onToggleRhythmMode}
-                    className={`w-full py-2 rounded-lg font-bold text-sm shadow-sm transition ${isRhythmMode
-                        ? 'bg-red-500 text-white animate-pulse'
-                        : 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600'
-                        }`}
+                    onClick={onResetLesson}
+                    className="w-full py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg text-xs font-bold transition"
                 >
-                    {isRhythmMode ? (countDown ? 'Get Ready!' : 'Stop Rhythm Mode') : 'Start Rhythm Mode'}
+                    Reset Lesson
                 </button>
                 <div className="flex gap-2 mt-auto">
                     <button onClick={onTestAudio} disabled={!audioStarted} className="flex-1 py-1 text-xs font-semibold bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded hover:bg-gray-200">

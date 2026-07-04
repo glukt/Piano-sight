@@ -461,6 +461,115 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         isRhythmPlayingRef.current = isRhythmPlaying;
     }, [isRhythmPlaying]);
 
+    // Demo Mode States & Handlers
+    const [isDemoPlaying, setIsDemoPlaying] = useState(false);
+    const demoTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const demoActiveNotesRef = useRef<number[]>([]);
+
+    const stopDemo = useCallback(() => {
+        setIsDemoPlaying(false);
+        if (demoTimerRef.current) {
+            clearInterval(demoTimerRef.current);
+            demoTimerRef.current = null;
+        }
+        // Release any playing demo notes
+        demoActiveNotesRef.current.forEach(n => audio.releaseNote(n));
+        demoActiveNotesRef.current = [];
+        setCursorIndex(0);
+        setInputStatus('waiting');
+    }, []);
+
+    const startDemo = useCallback(() => {
+        if (isDemoPlaying) {
+            stopDemo();
+            return;
+        }
+        stopRhythm();
+        setIsRhythmMode(false);
+        setIsDemoPlaying(true);
+        setCursorIndex(0);
+        setInputStatus('waiting');
+
+        let currentStepIdx = 0;
+        
+        // Helper to play step notes
+        const playStep = (idx: number) => {
+            // Release previous step notes
+            demoActiveNotesRef.current.forEach(n => audio.releaseNote(n));
+            demoActiveNotesRef.current = [];
+
+            if (idx >= alignedStepsRef.current.length) {
+                stopDemo();
+                return;
+            }
+
+            const step = alignedStepsRef.current[idx];
+            const notesToPlay: number[] = [];
+
+            if (gameModeRef.current !== 'bass' && step.isTrebleOnset) {
+                step.trebleKeys.forEach(k => notesToPlay.push(parseKeyToMidi(k)));
+            }
+            if (gameModeRef.current !== 'treble' && step.isBassOnset) {
+                step.bassKeys.forEach(k => notesToPlay.push(parseKeyToMidi(k)));
+            }
+
+            notesToPlay.forEach(n => {
+                audio.playNote(n, 100);
+                demoActiveNotesRef.current.push(n);
+            });
+
+            setCursorIndex(idx);
+            setInputStatus('perfect');
+        };
+
+        // Play the first step immediately
+        playStep(0);
+
+        const tickRateMs = 50; // 20Hz tick
+        const startTime = performance.now();
+
+        demoTimerRef.current = setInterval(() => {
+            const now = performance.now();
+            const elapsedSeconds = (now - startTime) / 1000;
+            const elapsedBeats = elapsedSeconds * (BPM / 60);
+
+            // Find the active step at this beat time
+            let activeIdx = 0;
+            for (let i = 0; i < alignedStepsRef.current.length; i++) {
+                if (elapsedBeats >= alignedStepsRef.current[i].time) {
+                    activeIdx = i;
+                } else {
+                    break;
+                }
+            }
+
+            if (activeIdx !== currentStepIdx) {
+                currentStepIdx = activeIdx;
+                playStep(currentStepIdx);
+            }
+
+            // End condition
+            const lastStep = alignedStepsRef.current[alignedStepsRef.current.length - 1];
+            if (lastStep && elapsedBeats >= lastStep.time + lastStep.duration) {
+                stopDemo();
+            }
+        }, tickRateMs);
+
+    }, [isDemoPlaying, stopDemo, stopRhythm]);
+
+    const resetLesson = useCallback(() => {
+        stopDemo();
+        stopRhythm();
+        setIsRhythmMode(false);
+        setCursorIndex(0);
+        setStreak(0);
+        setScore({ correct: 0, incorrect: 0 });
+        setNotesCorrect(0);
+        setNotesMissed(0);
+        setInputStatus('waiting');
+        lastProcessedIndex.current = -1;
+    }, [stopDemo, stopRhythm]);
+
 
     // -------------------------------------------------------------------------
     // 3. Game Logic Handlers
@@ -511,6 +620,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
     }, [difficulty, generateNewLevel]);
 
     const handleStartRhythm = useCallback(() => {
+        stopDemo();
         if (isRhythmPlaying || isRhythmMode) {
             stopRhythm();
             setIsRhythmMode(false);
@@ -533,7 +643,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
                 startRhythm(RHYTHM_LEAD_IN);
             }
         }, 1000);
-    }, [isRhythmMode, isRhythmPlaying, startRhythm, stopRhythm]);
+    }, [isRhythmMode, isRhythmPlaying, startRhythm, stopRhythm, stopDemo]);
 
     const handleAddXp = useCallback((amount: number) => {
         addXp(amount);
@@ -574,6 +684,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
     // Main Validation Loop (strictly event-driven, decoupled from rhythm 60Hz tick)
     useEffect(() => {
         if (!audioStarted) return;
+        if (isDemoPlaying) return;
         if (cursorIndex === lastProcessedIndex.current) return;
 
         // End of Level
@@ -756,7 +867,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
             }
         };
 
-    }, [effectiveActiveNotes, cursorIndex, alignedSteps, audioStarted, difficulty, gameMode, isRhythmMode, inputStatus, preHeld, streak, maxStreak, addXp, handleAddXp, levelUp, generateNewLevel, notesCorrect, notesMissed, saveHighScore, currentLesson, isLessonComplete]);
+    }, [effectiveActiveNotes, cursorIndex, alignedSteps, audioStarted, difficulty, gameMode, isRhythmMode, inputStatus, preHeld, streak, maxStreak, addXp, handleAddXp, levelUp, generateNewLevel, notesCorrect, notesMissed, saveHighScore, currentLesson, isLessonComplete, isDemoPlaying]);
 
 
     const goToNextLesson = useCallback(() => {
@@ -826,6 +937,9 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         cursorIndex, inputStatus, gameMode, setGameMode,
         trebleCursorIndex: alignedSteps[cursorIndex]?.trebleNoteIndex ?? cursorIndex,
         bassCursorIndex: alignedSteps[cursorIndex]?.bassNoteIndex ?? cursorIndex,
+        isTrebleOnset: alignedSteps[cursorIndex]?.isTrebleOnset ?? false,
+        isBassOnset: alignedSteps[cursorIndex]?.isBassOnset ?? false,
+        isDemoPlaying,
         isRhythmMode, countDown, streak, maxStreak, lastHitType,
         notePositions, setNotePositions,
         showNoteLabels, setShowNoteLabels,
@@ -850,6 +964,8 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         startAudio, testAudio,
         generateNewLevel,
         handleStartRhythm,
+        startDemo,
+        resetLesson,
         parseKeyToMidi,
         setIsMutedKeys,
         setIsLessonComplete,

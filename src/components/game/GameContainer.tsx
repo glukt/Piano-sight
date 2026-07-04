@@ -31,6 +31,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         effectiveActiveNotes,
         cursorIndex, inputStatus, gameMode, setGameMode,
         trebleCursorIndex, bassCursorIndex,
+        isTrebleOnset, isBassOnset,
+        isDemoPlaying,
         isRhythmMode, countDown, streak, lastHitType,
         setNotePositions,
         showNoteLabels, setShowNoteLabels,
@@ -42,6 +44,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         testAudio,
         generateNewLevel,
         handleStartRhythm,
+        startDemo,
+        resetLesson,
         parseKeyToMidi,
         startMic
     } = gameLogic;
@@ -136,6 +140,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                         cursorIndex={cursorIndex}
                         trebleCursorIndex={trebleCursorIndex}
                         bassCursorIndex={bassCursorIndex}
+                        isTrebleOnset={isTrebleOnset}
+                        isBassOnset={isBassOnset}
                         inputStatus={inputStatus}
                         onLayout={setNotePositions}
                         isDarkMode={isDarkMode}
@@ -199,6 +205,9 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 onDifficultyChange={generateNewLevel}
                 isRhythmMode={isRhythmMode}
                 onToggleRhythmMode={handleStartRhythm}
+                isDemoPlaying={isDemoPlaying}
+                onToggleDemo={startDemo}
+                onResetLesson={resetLesson}
                 countDown={countDown}
                 audioStarted={audioStarted}
                 onTestAudio={testAudio}

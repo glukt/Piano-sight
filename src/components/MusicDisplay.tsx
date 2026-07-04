@@ -23,6 +23,8 @@ interface MusicDisplayProps {
     gameMode?: 'treble' | 'bass' | 'both';
     handPosition?: string;
     showFingering?: boolean;
+    keySignature?: string;
+    timeSignature?: string;
 }
 
 const VF = Vex.Flow;
@@ -108,7 +110,9 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
     onLayout,
     isDarkMode = false,
     handPosition,
-    showFingering = true
+    showFingering = true,
+    keySignature,
+    timeSignature
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -144,19 +148,25 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         const staveWidth = renderWidth - 40;
 
         // Treble Stave
-
         const trebleStave = new VF.Stave(startX, startY, staveWidth);
         trebleStave.addClef("treble");
-
-        // Ensure stave lines match theme
-        // VexFlow Stave styling is tricky, we can set context prop before drawing
+        if (keySignature) {
+            trebleStave.addKeySignature(keySignature);
+        }
+        if (timeSignature) {
+            trebleStave.addTimeSignature(timeSignature);
+        }
         trebleStave.setContext(context).draw();
 
-
         // Bass Stave
-
         const bassStave = new VF.Stave(startX, startY + 100, staveWidth);
         bassStave.addClef("bass");
+        if (keySignature) {
+            bassStave.addKeySignature(keySignature);
+        }
+        if (timeSignature) {
+            bassStave.addTimeSignature(timeSignature);
+        }
         bassStave.setContext(context).draw();
 
 
@@ -169,13 +179,15 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         const calculateDuration = (notesData: StaveNoteData[]): number => {
             return notesData.reduce((sum, current) => {
                 const durStr = current.duration.replace('r', '');
+                const isDotted = durStr.endsWith('.');
+                const base = isDotted ? durStr.slice(0, -1) : durStr;
                 let beats = 1; // Default to quarter
-                if (durStr === 'w') beats = 4;
-                else if (durStr === 'h') beats = 2;
-                else if (durStr === 'q') beats = 1;
-                else if (durStr === '8') beats = 0.5;
-                else if (durStr === '16') beats = 0.25;
-                return sum + beats;
+                if (base === 'w') beats = 4;
+                else if (base === 'h') beats = 2;
+                else if (base === 'q') beats = 1;
+                else if (base === '8') beats = 0.5;
+                else if (base === '16') beats = 0.25;
+                return sum + (isDotted ? beats * 1.5 : beats);
             }, 0);
         };
 
@@ -291,18 +303,10 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                 return staveNote;
             });
 
-            // Calculate total beats to satisfy VexFlow
-            const totalBeats = notesData.reduce((sum, current) => {
-                const durStr = current.duration.replace('r', '');
-                let beats = 1; // 'q'
-                if (durStr === 'h') beats = 2;
-                if (durStr === 'w') beats = 4;
-                if (durStr === '8') beats = 0.5;
-                if (durStr === '16') beats = 0.25;
-                return sum + beats;
-            }, 0);
+            // Calculate total beats to satisfy VexFlow using the dotted-aware function
+            const totalBeats = calculateDuration(notesData);
 
-            // VexFlow requires exact capacity. We use 4/4 time (beat_value 4), so num_beats is just total quarter notes
+            // We use beat_value 4 (quarter note as unit), so num_beats is the total beats in quarter note units
             const voice = new VF.Voice({ num_beats: Math.ceil(totalBeats), beat_value: 4 });
             voice.setStrict(false); // Allowing some flexibility prevents strict tick crashes when randomly generated
             voice.addTickables(notes);

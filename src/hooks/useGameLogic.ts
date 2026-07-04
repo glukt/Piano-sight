@@ -39,12 +39,15 @@ interface AlignedStep {
 
 const getDurationInBeats = (durationStr: string): number => {
     const clean = durationStr.replace('r', '');
-    if (clean === 'w') return 4;
-    if (clean === 'h') return 2;
-    if (clean === 'q') return 1;
-    if (clean === '8') return 0.5;
-    if (clean === '16') return 0.25;
-    return 1;
+    const isDotted = clean.endsWith('.');
+    const base = isDotted ? clean.slice(0, -1) : clean;
+    let beats = 1;
+    if (base === 'w') beats = 4;
+    else if (base === 'h') beats = 2;
+    else if (base === 'q') beats = 1;
+    else if (base === '8') beats = 0.5;
+    else if (base === '16') beats = 0.25;
+    return isDotted ? beats * 1.5 : beats;
 };
 
 const alignNotes = (treble: StaveNoteData[], bass: StaveNoteData[]): AlignedStep[] => {
@@ -98,13 +101,15 @@ const alignNotes = (treble: StaveNoteData[], bass: StaveNoteData[]): AlignedStep
 const calculateDuration = (notesData: StaveNoteData[]): number => {
     return notesData.reduce((sum, current) => {
         const durStr = current.duration.replace('r', '');
+        const isDotted = durStr.endsWith('.');
+        const base = isDotted ? durStr.slice(0, -1) : durStr;
         let beats = 1;
-        if (durStr === 'w') beats = 4;
-        else if (durStr === 'h') beats = 2;
-        else if (durStr === 'q') beats = 1;
-        else if (durStr === '8') beats = 0.5;
-        else if (durStr === '16') beats = 0.25;
-        return sum + beats;
+        if (base === 'w') beats = 4;
+        else if (base === 'h') beats = 2;
+        else if (base === 'q') beats = 1;
+        else if (base === '8') beats = 0.5;
+        else if (base === '16') beats = 0.25;
+        return sum + (isDotted ? beats * 1.5 : beats);
     }, 0);
 };
 
@@ -540,10 +545,14 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         }
     }, [isRhythmMode]);
 
+    const lessonTimeSignature = currentLesson?.constraints?.timeSignature || "4/4";
+    const lessonBeatsPerMeasure = Number(lessonTimeSignature.split('/')[0]) || 4;
+
     const { isPlaying: isRhythmPlaying, elapsedTimeRef, start: startRhythm, stop: stopRhythm } = useRhythmEngine(
         BPM,
-        Math.ceil(calculateDuration(levelData.treble) / 4),
-        onAnimateRhythm
+        Math.ceil(calculateDuration(levelData.treble) / lessonBeatsPerMeasure),
+        onAnimateRhythm,
+        lessonTimeSignature
     );
 
     useEffect(() => {

@@ -4,7 +4,8 @@ import { audio } from '../audio/Synth';
 export const useRhythmEngine = (
     bpm: number = 60,
     measures: number = 2,
-    onAnimate?: (elapsed: number) => void
+    onAnimate?: (elapsed: number) => void,
+    timeSignature: string = "4/4"
 ) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const requestRef = useRef<number>();
@@ -18,9 +19,14 @@ export const useRhythmEngine = (
         onAnimateRef.current = onAnimate;
     }, [onAnimate]);
 
-    // Duration of entire phrase in seconds
-    // 4 beats per measure * measures * (60/bpm)
-    const totalDuration = (4 * measures * 60) / bpm;
+    // Parse time signature e.g. "3/4", "6/8"
+    const timeSigParts = timeSignature.split('/');
+    const beatsPerMeasure = Number(timeSigParts[0]) || 4;
+    const beatValue = Number(timeSigParts[1]) || 4;
+
+    // Calculate beat duration relative to quarter note beats (4/denominator factor)
+    const beatDuration = (60 / bpm) * (4 / beatValue);
+    const totalDuration = measures * beatsPerMeasure * beatDuration;
 
     const animate = useCallback((time: number) => {
         if (!startTimeRef.current) startTimeRef.current = time;
@@ -29,10 +35,9 @@ export const useRhythmEngine = (
         elapsedTimeRef.current = elapsed;
 
         // Click generator
-        const beatDuration = 60 / bpm;
         const currentBeat = Math.floor(elapsed / beatDuration);
         if (currentBeat > lastBeatRef.current) {
-            const isDownbeat = (currentBeat % 4 === 0);
+            const isDownbeat = (currentBeat % beatsPerMeasure === 0);
             audio.playMetronomeClick(isDownbeat);
             lastBeatRef.current = currentBeat;
         }
@@ -48,7 +53,7 @@ export const useRhythmEngine = (
         } else {
             setIsPlaying(false);
         }
-    }, [totalDuration, bpm]);
+    }, [totalDuration, beatDuration, beatsPerMeasure]);
 
     const start = useCallback((leadInSeconds: number = 0) => {
         setIsPlaying(true);

@@ -293,6 +293,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                         isDarkMode={isDarkMode}
                         showLabels={showNoteLabels}
                         handPosition={gameLogic.currentLesson?.handPosition}
+                        keySignature={gameLogic.currentLesson?.constraints?.keySignature}
+                        timeSignature={gameLogic.currentLesson?.constraints?.timeSignature}
                         showFingering={preferences.showFingering}
                     />
                     {/* Rhythm Playhead */}

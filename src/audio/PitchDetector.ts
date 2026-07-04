@@ -120,13 +120,17 @@ export class PitchDetector {
         if (rms < this.noiseGateThreshold) return -1;
 
         const dsSampleRate = sampleRate / factor;
-        const halfN = Math.floor(n / 2);
+        
+        // Define YIN parameters
+        const W = 512; // Integration window size
+        const minTau = 5; // Corresponding to ~4410Hz (C8 is 4186Hz)
+        const maxTau = Math.min(820, Math.floor(n / 2)); // Capped at A0 (27.5Hz is ~802 samples)
 
         // 1. Difference function d(tau)
-        const d = new Float32Array(halfN);
-        for (let tau = 0; tau < halfN; tau++) {
+        const d = new Float32Array(maxTau);
+        for (let tau = 0; tau < maxTau; tau++) {
             let sum = 0;
-            for (let t = 0; t < halfN; t++) {
+            for (let t = 0; t < W; t++) {
                 const diff = dsBuf[t] - dsBuf[t + tau];
                 sum += diff * diff;
             }
@@ -134,10 +138,10 @@ export class PitchDetector {
         }
 
         // 2. Cumulative Mean Normalized Difference Function
-        const dPrime = new Float32Array(halfN);
+        const dPrime = new Float32Array(maxTau);
         dPrime[0] = 1;
         let runningSum = 0;
-        for (let tau = 1; tau < halfN; tau++) {
+        for (let tau = 1; tau < maxTau; tau++) {
             runningSum += d[tau];
             dPrime[tau] = runningSum > 0.0001 ? d[tau] / (runningSum / tau) : 1;
         }
@@ -145,10 +149,10 @@ export class PitchDetector {
         // 3. Absolute thresholding (YIN threshold is typically 0.10 to 0.15)
         const threshold = 0.15;
         let tauIndex = -1;
-        for (let t = 1; t < halfN; t++) {
+        for (let t = minTau; t < maxTau; t++) {
             if (dPrime[t] < threshold) {
                 // Find local minimum
-                while (t + 1 < halfN && dPrime[t + 1] < dPrime[t]) {
+                while (t + 1 < maxTau && dPrime[t + 1] < dPrime[t]) {
                     t++;
                 }
                 tauIndex = t;
@@ -159,7 +163,7 @@ export class PitchDetector {
         // Fallback to global minimum if nothing falls below threshold
         if (tauIndex === -1) {
             let minVal = 1;
-            for (let t = 1; t < halfN; t++) {
+            for (let t = minTau; t < maxTau; t++) {
                 if (dPrime[t] < minVal) {
                     minVal = dPrime[t];
                     tauIndex = t;
@@ -171,7 +175,7 @@ export class PitchDetector {
 
         // 4. Parabolic interpolation
         let T0 = tauIndex;
-        if (T0 > 0 && T0 < halfN - 1) {
+        if (T0 > 0 && T0 < maxTau - 1) {
             const x1 = dPrime[T0 - 1];
             const x2 = dPrime[T0];
             const x3 = dPrime[T0 + 1];

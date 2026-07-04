@@ -138,6 +138,27 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     </div>
                 </div>
 
+                {/* Developer / Admin Settings */}
+                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-2">🧪 Developer Settings</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                        Unlock all lessons and courses instantly to verify, test, and preview curriculum segments.
+                    </p>
+                    <div className="flex items-center justify-between">
+                        <span className="text-gray-600 dark:text-gray-300 font-medium">Unlock All Lessons (Admin Mode)</span>
+                        <button
+                            onClick={() => {
+                                const current = localStorage.getItem('adminMode') === 'true';
+                                localStorage.setItem('adminMode', !current ? 'true' : 'false');
+                                window.location.reload();
+                            }}
+                            className={`w-14 h-8 rounded-full p-1 transition-colors duration-300 focus:outline-none ${typeof window !== 'undefined' && localStorage.getItem('adminMode') === 'true' ? 'bg-amber-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                        >
+                            <div className={`w-6 h-6 rounded-full bg-white shadow-sm transform transition-transform duration-300 ${typeof window !== 'undefined' && localStorage.getItem('adminMode') === 'true' ? 'translate-x-6' : 'translate-x-0'}`} />
+                        </button>
+                    </div>
+                </div>
+
                 {/* Tutor & Practice Preferences */}
                 <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-700">
                     <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-4">Tutor & Practice Preferences</h3>

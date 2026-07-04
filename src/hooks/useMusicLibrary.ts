@@ -32,33 +32,6 @@ export interface LessonProgress {
 
 const PRESET_SCORES: LibraryScore[] = [
     {
-        id: 'preset-over-the-rainbow-easy',
-        title: 'Somewhere over the Rainbow (Easy)',
-        composer: 'Harold Arlen',
-        dateAdded: 1718000000000,
-        tags: ['Beginner', 'Classic', 'Folk'],
-        fileName: 'over_the_rainbow_easy.musicxml',
-        songUrl: '/scores/over_the_rainbow_easy.musicxml'
-    },
-    {
-        id: 'preset-over-the-rainbow-intermediate',
-        title: 'Somewhere over the Rainbow (Intermediate)',
-        composer: 'Harold Arlen',
-        dateAdded: 1718000000000,
-        tags: ['Intermediate', 'Classic', 'Folk'],
-        fileName: 'over_the_rainbow_intermediate.musicxml',
-        songUrl: '/scores/over_the_rainbow_intermediate.musicxml'
-    },
-    {
-        id: 'preset-interstellar',
-        title: 'Interstellar Theme (Cornfield Chase)',
-        composer: 'Hans Zimmer',
-        dateAdded: 1718000000000,
-        tags: ['Film & TV', 'Epic', 'Advanced'],
-        fileName: 'interstellar.musicxml',
-        songUrl: '/scores/interstellar.musicxml'
-    },
-    {
         id: 'preset-au-clair-de-la-lune',
         title: 'Au Clair de la Lune',
         composer: 'Traditional',
@@ -498,42 +471,6 @@ const PRESET_SCORES: LibraryScore[] = [
         tags: ['Classical', 'Advanced'],
         fileName: 'Schubert_Serenade_-_Standchen_-_By_Lizst.mxl',
         songUrl: '/scores/Schubert_Serenade_-_Standchen_-_By_Lizst.mxl'
-    },
-    {
-        id: 'preset-faulkner-ballade',
-        title: 'Ballade',
-        composer: 'Luke Faulkner',
-        dateAdded: 1718000000037,
-        tags: ['Classical', 'New Age', 'Intermediate'],
-        fileName: 'ballade.musicxml',
-        songUrl: '/scores/ballade.musicxml'
-    },
-    {
-        id: 'preset-einaudi-nuvole-easy',
-        title: 'Nuvole Bianche (Beginner)',
-        composer: 'Ludovico Einaudi',
-        dateAdded: 1718000000038,
-        tags: ['Classical', 'New Age', 'Beginner'],
-        fileName: 'nuvole_bianche_easy.musicxml',
-        songUrl: '/scores/nuvole_bianche_easy.musicxml'
-    },
-    {
-        id: 'preset-einaudi-nuvole-medium',
-        title: 'Nuvole Bianche (Medium)',
-        composer: 'Ludovico Einaudi',
-        dateAdded: 1718000000039,
-        tags: ['Classical', 'New Age', 'Intermediate'],
-        fileName: 'nuvole_bianche_medium.musicxml',
-        songUrl: '/scores/nuvole_bianche_medium.musicxml'
-    },
-    {
-        id: 'preset-einaudi-nuvole-full',
-        title: 'Nuvole Bianche (Full Version)',
-        composer: 'Ludovico Einaudi',
-        dateAdded: 1718000000040,
-        tags: ['Classical', 'New Age', 'Advanced'],
-        fileName: 'nuvole_bianche.musicxml',
-        songUrl: '/scores/nuvole_bianche.musicxml'
     },
     {
         id: 'preset-bach-minuet-g-minor',

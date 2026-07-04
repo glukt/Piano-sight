@@ -1742,49 +1742,49 @@ export const courses: Course[] = [
                 instruction: 'Your right hand plays a constant, mesmerizing two-note motif, while your left hand plays ascending broken chords.',
                 type: 'exercise', topic: 'both', xpReward: 300, requiredXp: 9150,
                 handPosition: 'GRAND_C_POS',
-                constraints: { trebleRange: ["e/5", "a/5", "b/5", "c/6", "d/6"], bassRange: ["g/2", "a/2", "c/3", "d/3", "e/3", "f/3", "g/3"], rhythms: ["8", "h", "qr", "hr"], maxJumps: 8, chordsAllowed: true, numNotes: 70,
+                constraints: { trebleRange: ["e/4", "a/4", "b/4", "c/5", "d/5", "e/5"], bassRange: ["g/2", "a/2", "c/3", "d/3", "e/3", "f/3", "g/3"], rhythms: ["8", "h", "qr", "hr"], maxJumps: 8, chordsAllowed: true, numNotes: 70,
                     presetMelody: {
                         treble: [
                             // Measure 1
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/5"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
                             // Measure 2
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/5"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
                             // Measure 3
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/5"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
                             // Measure 4
-                            { keys: ["e/5"], duration: '8' }, { keys: ["b/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["b/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["b/5"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["b/4"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["b/4"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["b/4"], duration: '8' },
                             // Measure 5
-                            { keys: ["e/5"], duration: '8' }, { keys: ["b/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["b/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["b/5"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["b/4"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["b/4"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["b/4"], duration: '8' },
                             // Measure 6
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/6"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/6"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/6"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' },
                             // Measure 7
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/6"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/6"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/6"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' },
                             // Measure 8
-                            { keys: ["e/5"], duration: '8' }, { keys: ["d/6"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["d/6"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["d/6"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["d/5"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["d/5"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["d/5"], duration: '8' },
                             // Measure 9
-                            { keys: ["e/5"], duration: '8' }, { keys: ["d/6"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["d/6"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["d/6"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["d/5"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["d/5"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["d/5"], duration: '8' },
                             // Measure 10
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/6"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/6"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/6"], duration: '8' }
+                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' },
+                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' }
                         ],
                         bass: [
                             // Measure 1

@@ -246,6 +246,8 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         isCalibrating,
         calibrationProgress,
         calibrateMicrophone,
+        calibrationStep,
+        calibrationTargetNote,
         availableMics,
         selectedMicId,
         activeMicLabel,
@@ -314,32 +316,27 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
 
     // MIDI / Mic Auto-Switching Logic
     useEffect(() => {
-        // 1. If MIDI connects, disable Mic and notify (console for now, UI can reflect via state)
+        // 1. If MIDI connects, disable Mic and notify
         if (isMidiEnabled && midiInputs.length > 0) {
             if (isMicListening) {
                 stopMic();
                 setShowMicPopup(false); // Close if open
-                // Optional: Toast "MIDI Connected: Microphone disabled"
             }
         }
-        // 2. If NO MIDI on startup (simulated by timeout or just effect run), ask for Mic
-        // We need a flag to know if we've already checked/asked this session?
-        // For now, if not enabled and no inputs, show popup.
+        // 2. If NO MIDI, check if mic was previously enabled
         else if (!isMidiEnabled && !isMicListening) {
-            // Wait a bit for MIDI to initialize?
-            // Actually, useMidi might take a moment.
-            // Let's rely on a timeout check or just check if isMidiEnabled is false after mount.
-            const timer = setTimeout(() => {
-                // Check refs or current state inside timeout closure? 
-                // We need to be careful.
-                // Simplification: logic inside existing component render cycle.
-                // We'll set showMicPopup only if we haven't dismissed it? 
-                // Let's add a "checkedMidi" state if needed, or just rely on:
-                setShowMicPopup(true);
-            }, 1000);
-            return () => clearTimeout(timer);
+            const wasMicEnabled = localStorage.getItem('pianopilot_mic_enabled') === 'true';
+            if (wasMicEnabled) {
+                console.log("Auto-enabling microphone: no MIDI device detected.");
+                startMic();
+            } else {
+                const timer = setTimeout(() => {
+                    setShowMicPopup(true);
+                }, 1000);
+                return () => clearTimeout(timer);
+            }
         }
-    }, [isMidiEnabled, midiInputs.length, isMicListening, stopMic]);
+    }, [isMidiEnabled, midiInputs.length, isMicListening, stopMic, startMic]);
 
     // Cleanup Mic interaction when MIDI connects is handled above.
     // Confirm logic:
@@ -1043,6 +1040,8 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         isMicCalibrating: isCalibrating,
         micCalibrationProgress: calibrationProgress,
         calibrateMicrophone,
+        calibrationStep,
+        calibrationTargetNote,
         availableMics,
         selectedMicId,
         activeMicLabel,

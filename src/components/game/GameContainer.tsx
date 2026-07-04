@@ -55,6 +55,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         isMicCalibrating,
         micCalibrationProgress,
         calibrateMicrophone,
+        calibrationStep,
+        calibrationTargetNote,
         availableMics,
         selectedMicId,
         activeMicLabel,
@@ -112,7 +114,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                         <span className="text-9xl font-bold text-[#D4AF37] animate-pulse">{countDown}</span>
                     </div>
                 )}
-
                 {/* Microphone Setup Overlay */}
                 {showMicPopup && (
                     <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/55 backdrop-blur-sm rounded-xl p-4">
@@ -141,11 +142,13 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                             ) : (
                                 <div className="space-y-4 text-left">
                                     {/* Active Mic Indicator */}
-                                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg border border-gray-200/20">
-                                        Active Mic: <span className="text-indigo-600 dark:text-indigo-400 font-bold">{activeMicLabel}</span>
+                                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-2.5 rounded-lg border border-gray-200/20 flex justify-between items-center">
+                                        <span>Active Mic:</span>
+                                        <span className="text-indigo-600 dark:text-indigo-400 font-bold truncate max-w-[200px]">{activeMicLabel}</span>
                                     </div>
+
                                     {/* Mic Dropdown Selector */}
-                                    {availableMics.length > 0 && (
+                                    {availableMics.length > 1 && (
                                         <div>
                                             <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
                                                 Select Input Device
@@ -181,47 +184,83 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                                     {/* Auto-Calibrate */}
                                     <div className="border-t border-gray-200/50 dark:border-gray-750/30 pt-3">
                                         {isMicCalibrating ? (
-                                            <div className="space-y-2">
-                                                <div className="flex justify-between text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                                                    <span className="flex items-center gap-1.5">
-                                                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-ping"></span>
-                                                        Listening to silence...
-                                                    </span>
-                                                    <span>{micCalibrationProgress}%</span>
-                                                </div>
-                                                <div className="w-full h-2 bg-gray-250 dark:bg-gray-700 rounded-full overflow-hidden">
-                                                    <div
-                                                        className="h-full bg-indigo-650 transition-all duration-100"
-                                                        style={{ width: `${micCalibrationProgress}%` }}
-                                                    />
-                                                </div>
+                                            <div className="space-y-2 bg-indigo-50/50 dark:bg-indigo-950/20 p-3 rounded-lg border border-indigo-100/50 dark:border-indigo-900/30">
+                                                {calibrationStep === 'silence' && (
+                                                    <>
+                                                        <div className="flex justify-between text-xs font-semibold text-indigo-650 dark:text-indigo-400">
+                                                            <span className="flex items-center gap-1.5">
+                                                                <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-ping"></span>
+                                                                Measuring Room Silence...
+                                                            </span>
+                                                            <span>{micCalibrationProgress}%</span>
+                                                        </div>
+                                                        <p className="text-[10px] text-gray-500">Please remain completely quiet.</p>
+                                                    </>
+                                                )}
+                                                {calibrationStep === 'strike' && (
+                                                    <>
+                                                        <div className="flex justify-between text-xs font-bold text-amber-600 dark:text-amber-400 animate-pulse">
+                                                            <span className="flex items-center gap-1.5">
+                                                                🎹 Strike {calibrationTargetNote} Now!
+                                                            </span>
+                                                            <span>{micCalibrationProgress}%</span>
+                                                        </div>
+                                                        <p className="text-[10px] text-gray-500">Play Middle C firmly.</p>
+                                                    </>
+                                                )}
+                                                {calibrationStep === 'success' && (
+                                                    <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 justify-center py-1">
+                                                        ✅ Calibration Successful!
+                                                    </div>
+                                                )}
+                                                {calibrationStep === 'failed' && (
+                                                    <div className="text-xs font-bold text-rose-600 dark:text-rose-450 flex items-center gap-1.5 justify-center py-1">
+                                                        ⚠️ C4 not detected. Using fallback.
+                                                    </div>
+                                                )}
+
+                                                {/* Progress Bar */}
+                                                {(calibrationStep === 'silence' || calibrationStep === 'strike') && (
+                                                    <div className="w-full h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="h-full bg-indigo-650 transition-all duration-100"
+                                                            style={{ width: `${micCalibrationProgress}%` }}
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
                                         ) : (
                                             <button
                                                 onClick={() => calibrateMicrophone()}
-                                                className="w-full py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-lg font-bold text-xs transition border border-indigo-100 dark:border-indigo-800/40"
+                                                className="w-full py-2.5 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-lg font-bold text-xs transition border border-indigo-100 dark:border-indigo-800/40 flex items-center justify-center gap-1.5"
                                             >
-                                                🎙️ Calibrate Noise Gate
+                                                🎙️ Interactive Audio Calibration
                                             </button>
                                         )}
-                                        <div className="flex justify-between text-[10px] text-gray-450 mt-1">
-                                            <span>Current Gate: <span className="font-mono">{micSensitivity.toFixed(3)}</span></span>
-                                            <span>Keep room quiet during calibration</span>
-                                        </div>
+                                        {!isMicCalibrating && (
+                                            <div className="flex justify-between text-[10px] text-gray-450 mt-1.5">
+                                                <span>Noise Gate: <span className="font-mono">{micSensitivity.toFixed(4)}</span></span>
+                                                <span>Middle C strike required for best results</span>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="pt-2 flex gap-3">
                                         <button
                                             onClick={() => {
                                                 stopMic();
+                                                localStorage.removeItem('pianopilot_mic_enabled');
                                                 setShowMicPopup(false);
                                             }}
-                                            className="flex-1 py-2 text-gray-500 font-bold hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition text-xs"
+                                            className="flex-1 py-2 text-gray-500 font-bold hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition text-xs border border-transparent hover:border-gray-200"
                                         >
                                             Disable Mic
                                         </button>
                                         <button
-                                            onClick={() => setShowMicPopup(false)}
+                                            onClick={() => {
+                                                localStorage.setItem('pianopilot_mic_enabled', 'true');
+                                                setShowMicPopup(false);
+                                            }}
                                             className="flex-1 py-2 bg-indigo-650 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md transition text-xs"
                                         >
                                             Confirm & Start

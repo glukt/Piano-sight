@@ -293,6 +293,8 @@ function App() {
                             selectedMicId={gameLogic.selectedMicId}
                             activeMicLabel={gameLogic.activeMicLabel}
                             onChangeMicrophone={gameLogic.changeMicrophone}
+                            calibrationStep={gameLogic.calibrationStep}
+                            calibrationTargetNote={gameLogic.calibrationTargetNote}
                             onResetProgress={() => {
                                 localStorage.removeItem('piano_gamification');
                                 localStorage.removeItem('pianopilot_stats');

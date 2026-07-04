@@ -69,7 +69,7 @@ export class PitchDetector {
 
     public getPitch(expectedMidiNotes?: number[]): number | null {
         this.analyser.getFloatTimeDomainData(this.buffer as any);
-        let pitch = this.autoCorrelateMPM(this.buffer as any, this.audioContext.sampleRate);
+        let pitch = this.autoCorrelateYIN(this.buffer as any, this.audioContext.sampleRate);
 
         if (pitch === -1) {
             return null;
@@ -100,9 +100,9 @@ export class PitchDetector {
         return pitch;
     }
 
-    // McLeod Pitch Method (MPM) with 4x decimation
-    private autoCorrelateMPM(buf: Float32Array, sampleRate: number): number {
-        const factor = 4;
+    // YIN Fundamental Frequency Estimator with 2x decimation
+    private autoCorrelateYIN(buf: Float32Array, sampleRate: number): number {
+        const factor = 2;
         const n = Math.floor(buf.length / factor);
         const dsBuf = new Float32Array(n);
         let rms = 0;
@@ -120,58 +120,61 @@ export class PitchDetector {
         if (rms < this.noiseGateThreshold) return -1;
 
         const dsSampleRate = sampleRate / factor;
+        const halfN = Math.floor(n / 2);
 
-        // Calculate Normalized Square Difference Function (NSDF)
-        const nsdf = new Float32Array(n / 2);
-        for (let tau = 0; tau < n / 2; tau++) {
-            let acf = 0;
-            let sq1 = 0;
-            let sq2 = 0;
-            for (let t = 0; t < n / 2; t++) {
-                acf += dsBuf[t] * dsBuf[t + tau];
-                sq1 += dsBuf[t] * dsBuf[t];
-                sq2 += dsBuf[t + tau] * dsBuf[t + tau];
+        // 1. Difference function d(tau)
+        const d = new Float32Array(halfN);
+        for (let tau = 0; tau < halfN; tau++) {
+            let sum = 0;
+            for (let t = 0; t < halfN; t++) {
+                const diff = dsBuf[t] - dsBuf[t + tau];
+                sum += diff * diff;
             }
-            const denom = sq1 + sq2;
-            nsdf[tau] = denom > 0.0001 ? (2 * acf) / denom : 0;
+            d[tau] = sum;
         }
 
-        // Peak picking: find local maxima of NSDF above threshold
-        const peaks: { pos: number; val: number }[] = [];
-        for (let i = 1; i < nsdf.length - 1; i++) {
-            if (nsdf[i] > nsdf[i - 1] && nsdf[i] > nsdf[i + 1]) {
-                if (nsdf[i] > 0.45) {
-                    peaks.push({ pos: i, val: nsdf[i] });
+        // 2. Cumulative Mean Normalized Difference Function
+        const dPrime = new Float32Array(halfN);
+        dPrime[0] = 1;
+        let runningSum = 0;
+        for (let tau = 1; tau < halfN; tau++) {
+            runningSum += d[tau];
+            dPrime[tau] = d[tau] / (runningSum / tau);
+        }
+
+        // 3. Absolute thresholding (YIN threshold is typically 0.10 to 0.15)
+        const threshold = 0.15;
+        let tauIndex = -1;
+        for (let t = 1; t < halfN; t++) {
+            if (dPrime[t] < threshold) {
+                // Find local minimum
+                while (t + 1 < halfN && dPrime[t + 1] < dPrime[t]) {
+                    t++;
                 }
-            }
-        }
-
-        if (peaks.length === 0) return -1;
-
-        // Find the absolute highest peak value
-        let highestPeakVal = 0;
-        for (const p of peaks) {
-            if (p.val > highestPeakVal) highestPeakVal = p.val;
-        }
-
-        // Choose the first peak within 90% of the highest peak to avoid octave-halving
-        const peakThreshold = highestPeakVal * 0.9;
-        let chosenPeriod = -1;
-        for (const p of peaks) {
-            if (p.val >= peakThreshold) {
-                chosenPeriod = p.pos;
+                tauIndex = t;
                 break;
             }
         }
 
-        if (chosenPeriod === -1) return -1;
+        // Fallback to global minimum if nothing falls below threshold
+        if (tauIndex === -1) {
+            let minVal = 1;
+            for (let t = 1; t < halfN; t++) {
+                if (dPrime[t] < minVal) {
+                    minVal = dPrime[t];
+                    tauIndex = t;
+                }
+            }
+        }
 
-        // Parabolic interpolation for sub-sample accuracy
-        let T0 = chosenPeriod;
-        if (T0 > 0 && T0 < nsdf.length - 1) {
-            const x1 = nsdf[T0 - 1];
-            const x2 = nsdf[T0];
-            const x3 = nsdf[T0 + 1];
+        if (tauIndex === -1 || tauIndex === 0) return -1;
+
+        // 4. Parabolic interpolation
+        let T0 = tauIndex;
+        if (T0 > 0 && T0 < halfN - 1) {
+            const x1 = dPrime[T0 - 1];
+            const x2 = dPrime[T0];
+            const x3 = dPrime[T0 + 1];
             const a = (x1 + x3 - 2 * x2) / 2;
             const b = (x3 - x1) / 2;
             if (Math.abs(a) > 0.00001) {

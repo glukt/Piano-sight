@@ -15,6 +15,8 @@ interface SettingsPanelProps {
     isMicCalibrating?: boolean;
     micCalibrationProgress?: number;
     onCalibrateMic?: () => void;
+    calibrationStep?: 'idle' | 'silence' | 'strike' | 'success' | 'failed';
+    calibrationTargetNote?: string;
     availableMics?: MediaDeviceInfo[];
     selectedMicId?: string;
     activeMicLabel?: string;
@@ -35,6 +37,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     isMicCalibrating = false,
     micCalibrationProgress = 0,
     onCalibrateMic,
+    calibrationStep = 'idle',
+    calibrationTargetNote = 'C4',
     availableMics = [],
     selectedMicId = '',
     activeMicLabel = 'Default Microphone',
@@ -142,30 +146,57 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     {/* Auto-Calibration Routine UI */}
                     <div className="mb-4 pt-2 border-t border-gray-200/50 dark:border-gray-700/30">
                         {isMicCalibrating ? (
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                                    <span className="flex items-center gap-1.5">
-                                        <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
-                                        Listening to ambient room noise...
-                                    </span>
-                                    <span>{micCalibrationProgress}%</span>
-                                </div>
-                                <div className="w-full h-2 bg-gray-250 dark:bg-gray-700 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-indigo-650 transition-all duration-100"
-                                        style={{ width: `${micCalibrationProgress}%` }}
-                                    />
-                                </div>
-                                <p className="text-[10px] text-gray-450 italic">
-                                    Please remain completely quiet while calibration is in progress.
-                                </p>
+                            <div className="space-y-2 bg-indigo-50/50 dark:bg-indigo-950/20 p-3 rounded-lg border border-indigo-100/50 dark:border-indigo-800/30">
+                                {calibrationStep === 'silence' && (
+                                    <>
+                                        <div className="flex justify-between text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                                            <span className="flex items-center gap-1.5">
+                                                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+                                                Measuring Room Silence...
+                                            </span>
+                                            <span>{micCalibrationProgress}%</span>
+                                        </div>
+                                        <p className="text-[10px] text-gray-500 italic">Please remain completely quiet.</p>
+                                    </>
+                                )}
+                                {calibrationStep === 'strike' && (
+                                    <>
+                                        <div className="flex justify-between text-xs font-bold text-amber-600 dark:text-amber-400 animate-pulse">
+                                            <span className="flex items-center gap-1.5">
+                                                🎹 Strike {calibrationTargetNote} Now!
+                                            </span>
+                                            <span>{micCalibrationProgress}%</span>
+                                        </div>
+                                        <p className="text-[10px] text-gray-500 italic">Play Middle C firmly.</p>
+                                    </>
+                                )}
+                                {calibrationStep === 'success' && (
+                                    <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 justify-center py-1">
+                                        ✅ Calibration Successful!
+                                    </div>
+                                )}
+                                {calibrationStep === 'failed' && (
+                                    <div className="text-xs font-bold text-rose-600 dark:text-rose-455 flex items-center gap-1.5 justify-center py-1">
+                                        ⚠️ C4 not detected. Using fallback.
+                                    </div>
+                                )}
+
+                                {/* Progress Bar */}
+                                {(calibrationStep === 'silence' || calibrationStep === 'strike') && (
+                                    <div className="w-full h-2 bg-gray-250 dark:bg-gray-700 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-indigo-650 transition-all duration-100"
+                                            style={{ width: `${micCalibrationProgress}%` }}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         ) : (
                             <button
                                 onClick={onCalibrateMic}
                                 className="w-full py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-lg font-bold text-sm transition border border-indigo-100 dark:border-indigo-800/40 flex items-center justify-center gap-2"
                             >
-                                🎙️ Auto-Calibrate Microphone
+                                🎙️ Interactive Calibration
                             </button>
                         )}
                     </div>

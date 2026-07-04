@@ -34,7 +34,7 @@ const PRESET_SCORES: LibraryScore[] = [
     {
         id: 'preset-interstellar-easy',
         title: 'Interstellar Theme (Easy)',
-        composer: 'Hans Zimmer (Arr. Matteo248)',
+        composer: 'Hans Zimmer',
         dateAdded: 1718000000000,
         tags: ['Beginner', 'Classic', 'Film & TV'],
         fileName: 'interstellar_easy.musicxml',

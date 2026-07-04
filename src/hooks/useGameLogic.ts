@@ -234,6 +234,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         onNoteOn: (n, v) => onNoteOn.current(n, v),
         onNoteOff: (n) => onNoteOff.current(n)
     });
+    const currentExpectedNotesRef = useRef<number[]>([]);
     const {
         detectedNote: micNote,
         isListening: isMicListening,
@@ -241,8 +242,35 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         stopListening: stopMic,
         volume: micVolume,
         sensitivity: micSensitivity,
-        setSensitivity: setMicSensitivity
-    } = useAudioInput();
+        setSensitivity: setMicSensitivity,
+        isCalibrating,
+        calibrationProgress,
+        calibrateMicrophone,
+        availableMics,
+        selectedMicId,
+        activeMicLabel,
+        changeMicrophone
+    } = useAudioInput(currentExpectedNotesRef);
+
+    // Audio Auto-Start on first user interaction (bypass browser autoplay limits)
+    useEffect(() => {
+        const handleInteraction = () => {
+            if (!audioStarted && !isAudioLoading) {
+                console.log("User interaction detected! Automatically starting audio engine...");
+                startAudio();
+            }
+            cleanup();
+        };
+        const cleanup = () => {
+            window.removeEventListener('click', handleInteraction);
+            window.removeEventListener('keydown', handleInteraction);
+            window.removeEventListener('touchstart', handleInteraction);
+        };
+        window.addEventListener('click', handleInteraction);
+        window.addEventListener('keydown', handleInteraction);
+        window.addEventListener('touchstart', handleInteraction);
+        return cleanup;
+    }, [audioStarted, isAudioLoading]);
 
     // Simulated active notes state for touch/screen piano interactions
     const [simulatedActiveNotes, setSimulatedActiveNotes] = useState<Set<number>>(new Set());
@@ -438,6 +466,21 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
     useEffect(() => {
         alignedStepsRef.current = alignedSteps;
     }, [alignedSteps]);
+
+    // Sync expected notes to mic detector ref
+    useEffect(() => {
+        const step = alignedSteps[cursorIndex];
+        const notes: number[] = [];
+        if (step) {
+            if (gameMode !== 'bass' && step.isTrebleOnset) {
+                step.trebleKeys.forEach(k => notes.push(parseKeyToMidi(k)));
+            }
+            if (gameMode !== 'treble' && step.isBassOnset) {
+                step.bassKeys.forEach(k => notes.push(parseKeyToMidi(k)));
+            }
+        }
+        currentExpectedNotesRef.current = notes;
+    }, [alignedSteps, cursorIndex, gameMode]);
 
     // Rhythm Engine with refs for low-latency visual-only DOM playhead updates
     const BPM = currentLesson?.bpm || 80;
@@ -997,6 +1040,13 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         micVolume,
         micSensitivity,
         setMicSensitivity,
+        isMicCalibrating: isCalibrating,
+        micCalibrationProgress: calibrationProgress,
+        calibrateMicrophone,
+        availableMics,
+        selectedMicId,
+        activeMicLabel,
+        changeMicrophone,
         midiInputs, // Exposed to SettingsPanel for device name display
         score, difficulty, levelData, paddedLevelData,
         playheadX: 20, // Playhead position is updated directly in visual DOM playhead

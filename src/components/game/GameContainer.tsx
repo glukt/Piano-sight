@@ -47,7 +47,18 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         startDemo,
         resetLesson,
         parseKeyToMidi,
-        startMic
+        startMic,
+        stopMic,
+        isMicListening,
+        micVolume,
+        micSensitivity,
+        isMicCalibrating,
+        micCalibrationProgress,
+        calibrateMicrophone,
+        availableMics,
+        selectedMicId,
+        activeMicLabel,
+        changeMicrophone
     } = gameLogic;
 
     // Calculate expected notes for Virtual Keyboard visualization
@@ -102,32 +113,122 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                     </div>
                 )}
 
-                {/* Microphone Popup Overlay */}
+                {/* Microphone Setup Overlay */}
                 {showMicPopup && (
-                    <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-xl">
-                        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-2xl max-w-md text-center border-2 border-indigo-500 animate-in zoom-in-95 duration-200">
-                            <div className="text-4xl mb-4">🎤</div>
-                            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Enable Microphone?</h3>
-                            <p className="text-gray-600 dark:text-gray-300 mb-6">
-                                No MIDI device detected. Would you like to use your microphone to play with an acoustic piano?
+                    <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/55 backdrop-blur-sm rounded-xl p-4">
+                        <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-2xl max-w-md w-full text-center border-2 border-indigo-500 animate-in zoom-in-95 duration-200">
+                            <div className="text-4xl mb-3">🎙️</div>
+                            <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Microphone Input Setup</h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                                No MIDI keyboard detected. Let's calibrate your microphone to detect your acoustic piano strikes.
                             </p>
-                            <div className="flex gap-3 justify-center">
-                                <button
-                                    onClick={() => setShowMicPopup(false)}
-                                    className="px-4 py-2 text-gray-500 font-bold hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
-                                >
-                                    No, thanks
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        startMic();
-                                        setShowMicPopup(false);
-                                    }}
-                                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-lg transition transform hover:scale-105"
-                                >
-                                    Enable Microphone
-                                </button>
-                            </div>
+
+                            {!isMicListening ? (
+                                <div className="space-y-4">
+                                    <button
+                                        onClick={() => startMic()}
+                                        className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-lg transition"
+                                    >
+                                        Allow Microphone Access
+                                    </button>
+                                    <button
+                                        onClick={() => setShowMicPopup(false)}
+                                        className="w-full py-2 text-gray-500 font-bold hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition text-xs"
+                                    >
+                                        No, thanks (Use Free Play)
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-4 text-left">
+                                    {/* Active Mic Indicator */}
+                                    <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 p-2 rounded-lg border border-gray-200/20">
+                                        Active Mic: <span className="text-indigo-600 dark:text-indigo-400 font-bold">{activeMicLabel}</span>
+                                    </div>
+                                    {/* Mic Dropdown Selector */}
+                                    {availableMics.length > 0 && (
+                                        <div>
+                                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                                                Select Input Device
+                                            </label>
+                                            <select
+                                                value={selectedMicId}
+                                                onChange={(e) => changeMicrophone(e.target.value)}
+                                                className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm font-bold text-gray-700 dark:text-gray-200 outline-none focus:border-indigo-500"
+                                            >
+                                                {availableMics.map((mic) => (
+                                                    <option key={mic.deviceId} value={mic.deviceId}>
+                                                        {mic.label || `Microphone (${mic.deviceId.slice(0, 8)})`}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    {/* Live Input Meter */}
+                                    <div>
+                                        <div className="flex justify-between text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                                            <span>Input Level</span>
+                                            <span>{Math.min(100, Math.round((micVolume / 0.1) * 100))}%</span>
+                                        </div>
+                                        <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-gradient-to-r from-emerald-400 to-green-500 transition-all duration-75"
+                                                style={{ width: `${Math.min(100, Math.round((micVolume / 0.1) * 100))}%` }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Auto-Calibrate */}
+                                    <div className="border-t border-gray-200/50 dark:border-gray-750/30 pt-3">
+                                        {isMicCalibrating ? (
+                                            <div className="space-y-2">
+                                                <div className="flex justify-between text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                                                    <span className="flex items-center gap-1.5">
+                                                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-ping"></span>
+                                                        Listening to silence...
+                                                    </span>
+                                                    <span>{micCalibrationProgress}%</span>
+                                                </div>
+                                                <div className="w-full h-2 bg-gray-250 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-indigo-650 transition-all duration-100"
+                                                        style={{ width: `${micCalibrationProgress}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => calibrateMicrophone()}
+                                                className="w-full py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-lg font-bold text-xs transition border border-indigo-100 dark:border-indigo-800/40"
+                                            >
+                                                🎙️ Calibrate Noise Gate
+                                            </button>
+                                        )}
+                                        <div className="flex justify-between text-[10px] text-gray-450 mt-1">
+                                            <span>Current Gate: <span className="font-mono">{micSensitivity.toFixed(3)}</span></span>
+                                            <span>Keep room quiet during calibration</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-2 flex gap-3">
+                                        <button
+                                            onClick={() => {
+                                                stopMic();
+                                                setShowMicPopup(false);
+                                            }}
+                                            className="flex-1 py-2 text-gray-500 font-bold hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition text-xs"
+                                        >
+                                            Disable Mic
+                                        </button>
+                                        <button
+                                            onClick={() => setShowMicPopup(false)}
+                                            className="flex-1 py-2 bg-indigo-650 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md transition text-xs"
+                                        >
+                                            Confirm & Start
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

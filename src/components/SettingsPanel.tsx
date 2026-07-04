@@ -12,6 +12,13 @@ interface SettingsPanelProps {
     micSensitivity?: number;
     onMicSensitivityChange?: (val: number) => void;
     midiInputs?: any[];
+    isMicCalibrating?: boolean;
+    micCalibrationProgress?: number;
+    onCalibrateMic?: () => void;
+    availableMics?: MediaDeviceInfo[];
+    selectedMicId?: string;
+    activeMicLabel?: string;
+    onChangeMicrophone?: (deviceId: string) => void;
 }
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({
@@ -22,9 +29,16 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     onStartAudio,
     onResetProgress,
     micVolume = 0,
-    micSensitivity = 0.01,
+    micSensitivity = 0.015,
     onMicSensitivityChange,
-    midiInputs = []
+    midiInputs = [],
+    isMicCalibrating = false,
+    micCalibrationProgress = 0,
+    onCalibrateMic,
+    availableMics = [],
+    selectedMicId = '',
+    activeMicLabel = 'Default Microphone',
+    onChangeMicrophone
 }) => {
     const { preferences, updatePreference } = usePreferences();
     // Normalize volume for progress bar (RMS ranges roughly 0 to 0.1 for typical input)
@@ -87,6 +101,30 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         Calibrate your microphone sensitivity to filter out room noise and detect key strikes correctly.
                     </p>
 
+                    {/* Microphone Device Selection */}
+                    {availableMics.length > 0 ? (
+                        <div className="mb-4">
+                            <label className="block text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                                Input Microphone Device
+                            </label>
+                            <select
+                                value={selectedMicId}
+                                onChange={(e) => onChangeMicrophone?.(e.target.value)}
+                                className="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm font-bold text-gray-700 dark:text-gray-200 outline-none focus:border-indigo-500"
+                            >
+                                {availableMics.map((mic) => (
+                                    <option key={mic.deviceId} value={mic.deviceId}>
+                                        {mic.label || `Microphone (${mic.deviceId.slice(0, 8)})`}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    ) : (
+                        <div className="mb-4 text-xs font-semibold text-gray-500 dark:text-gray-400">
+                            Active Input: <span className="font-mono text-gray-700 dark:text-gray-300 font-bold">{activeMicLabel}</span>
+                        </div>
+                    )}
+
                     {/* Live Input Meter */}
                     <div className="mb-4">
                         <div className="flex justify-between text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
@@ -99,6 +137,37 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                 style={{ width: `${volumePercentage}%` }}
                             />
                         </div>
+                    </div>
+
+                    {/* Auto-Calibration Routine UI */}
+                    <div className="mb-4 pt-2 border-t border-gray-200/50 dark:border-gray-700/30">
+                        {isMicCalibrating ? (
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                                    <span className="flex items-center gap-1.5">
+                                        <span className="w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+                                        Listening to ambient room noise...
+                                    </span>
+                                    <span>{micCalibrationProgress}%</span>
+                                </div>
+                                <div className="w-full h-2 bg-gray-250 dark:bg-gray-700 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-indigo-650 transition-all duration-100"
+                                        style={{ width: `${micCalibrationProgress}%` }}
+                                    />
+                                </div>
+                                <p className="text-[10px] text-gray-450 italic">
+                                    Please remain completely quiet while calibration is in progress.
+                                </p>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={onCalibrateMic}
+                                className="w-full py-2 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 rounded-lg font-bold text-sm transition border border-indigo-100 dark:border-indigo-800/40 flex items-center justify-center gap-2"
+                            >
+                                🎙️ Auto-Calibrate Microphone
+                            </button>
+                        )}
                     </div>
 
                     {/* Sensitivity Slider */}
@@ -114,9 +183,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                             step="0.001"
                             value={micSensitivity}
                             onChange={(e) => onMicSensitivityChange?.(Number(e.target.value))}
-                            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-650"
                         />
-                        <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+                        <div className="flex justify-between text-[10px] text-gray-450 mt-1">
                             <span>High Sensitivity (Quiet room)</span>
                             <span>Low Sensitivity (Noisy room)</span>
                         </div>

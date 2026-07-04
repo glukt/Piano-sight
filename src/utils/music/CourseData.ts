@@ -1746,45 +1746,45 @@ export const courses: Course[] = [
                     presetMelody: {
                         treble: [
                             // Measure 1
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
+                            { keys: ["a/4"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["a/4"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["a/4"], duration: '8' }, { keys: ["e/5"], duration: '8' },
                             // Measure 2
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
+                            { keys: ["a/4"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["a/4"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["a/4"], duration: '8' }, { keys: ["e/5"], duration: '8' },
                             // Measure 3
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["a/4"], duration: '8' },
+                            { keys: ["a/4"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["a/4"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["a/4"], duration: '8' }, { keys: ["e/5"], duration: '8' },
                             // Measure 4
-                            { keys: ["e/5"], duration: '8' }, { keys: ["b/4"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["b/4"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["b/4"], duration: '8' },
+                            { keys: ["b/4"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["b/4"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["b/4"], duration: '8' }, { keys: ["e/5"], duration: '8' },
                             // Measure 5
-                            { keys: ["e/5"], duration: '8' }, { keys: ["b/4"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["b/4"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["b/4"], duration: '8' },
+                            { keys: ["b/4"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["b/4"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["b/4"], duration: '8' }, { keys: ["e/5"], duration: '8' },
                             // Measure 6
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' },
+                            { keys: ["c/5"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["c/5"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["c/5"], duration: '8' }, { keys: ["e/5"], duration: '8' },
                             // Measure 7
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' },
+                            { keys: ["c/5"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["c/5"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["c/5"], duration: '8' }, { keys: ["e/5"], duration: '8' },
                             // Measure 8
-                            { keys: ["e/5"], duration: '8' }, { keys: ["d/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["d/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["d/5"], duration: '8' },
+                            { keys: ["d/5"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["d/5"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["d/5"], duration: '8' }, { keys: ["e/5"], duration: '8' },
                             // Measure 9
-                            { keys: ["e/5"], duration: '8' }, { keys: ["d/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["d/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["d/5"], duration: '8' },
+                            { keys: ["d/5"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["d/5"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["d/5"], duration: '8' }, { keys: ["e/5"], duration: '8' },
                             // Measure 10
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' }, { keys: ["c/5"], duration: '8' }
+                            { keys: ["c/5"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["c/5"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["c/5"], duration: '8' }, { keys: ["e/5"], duration: '8' }
                         ],
                         bass: [
                             // Measure 1

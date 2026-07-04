@@ -32,6 +32,15 @@ export interface LessonProgress {
 
 const PRESET_SCORES: LibraryScore[] = [
     {
+        id: 'preset-interstellar-easy',
+        title: 'Interstellar Theme (Easy)',
+        composer: 'Hans Zimmer (Arr. Matteo248)',
+        dateAdded: 1718000000000,
+        tags: ['Beginner', 'Classic', 'Film & TV'],
+        fileName: 'interstellar_easy.musicxml',
+        songUrl: '/scores/interstellar_easy.musicxml'
+    },
+    {
         id: 'preset-au-clair-de-la-lune',
         title: 'Au Clair de la Lune',
         composer: 'Traditional',

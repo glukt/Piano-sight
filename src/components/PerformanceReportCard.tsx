@@ -15,7 +15,6 @@ interface PerformanceReportCardProps {
     passed?: boolean;
     requiredAccuracy?: number;
     isCapstone?: boolean;
-    userActiveNotes?: Set<number>;
 }
 
 export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
@@ -31,25 +30,11 @@ export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
     isDarkMode,
     passed,
     requiredAccuracy = 80,
-    isCapstone = false,
-    userActiveNotes
+    isCapstone = false
 }) => {
     const hasPassed = passed !== undefined ? passed : true;
 
-    // 1. Listen for piano key strikes to progress
-    useEffect(() => {
-        if (!isOpen || !userActiveNotes || userActiveNotes.size === 0) return;
-
-        // Small debounce to prevent accidental double triggering
-        const timer = setTimeout(() => {
-            if (onNext && hasPassed) {
-                onNext();
-            } else {
-                onClose();
-            }
-        }, 150);
-        return () => clearTimeout(timer);
-    }, [userActiveNotes, isOpen, onNext, hasPassed, onClose]);
+    // 1. Piano key strikes do NOT progress the card (prevents accidental skips while playing trailing notes)
 
     // 2. Listen for computer keyboard shortcuts (Enter/Space) to progress
     useEffect(() => {

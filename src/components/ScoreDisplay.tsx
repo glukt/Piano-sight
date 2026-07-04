@@ -795,7 +795,6 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                 passed={passed}
                 requiredAccuracy={requiredAccuracy}
                 isCapstone={isCapstone}
-                userActiveNotes={userActiveNotes}
             />
         </div>
     );

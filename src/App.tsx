@@ -86,16 +86,8 @@ function App() {
         const nextLesson = gameLogic.goToNextLesson();
         if (nextLesson) {
             setSelectedLesson(nextLesson);
-            if (nextLesson.type === 'song' && nextLesson.songUrl) {
-                setSongUrl(nextLesson.songUrl);
-                setFileName(nextLesson.name);
-                setSelectedSongId(nextLesson.id);
-                setUploadedFile(null);
-                setXmlData(null);
-                setCurrentView('musicxml');
-            } else {
-                setCurrentView('game');
-            }
+            setLessonSourceView('courseSelection');
+            setCurrentView('intro');
         } else {
             setCurrentView('courseSelection');
         }

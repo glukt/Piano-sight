@@ -26,6 +26,88 @@ const parseKeyToMidi = (key: string): number => {
     return midi;
 };
 
+interface AlignedStep {
+    time: number;
+    duration: number;
+    trebleNoteIndex: number | null;
+    bassNoteIndex: number | null;
+    trebleKeys: string[];
+    bassKeys: string[];
+    isTrebleOnset: boolean;
+    isBassOnset: boolean;
+}
+
+const getDurationInBeats = (durationStr: string): number => {
+    const clean = durationStr.replace('r', '');
+    if (clean === 'w') return 4;
+    if (clean === 'h') return 2;
+    if (clean === 'q') return 1;
+    if (clean === '8') return 0.5;
+    if (clean === '16') return 0.25;
+    return 1;
+};
+
+const alignNotes = (treble: StaveNoteData[], bass: StaveNoteData[]): AlignedStep[] => {
+    let tTime = 0;
+    const trebleEvents = treble.map((note, index) => {
+        const onset = tTime;
+        const dur = getDurationInBeats(note.duration);
+        tTime += dur;
+        return { index, onset, dur, keys: note.duration.endsWith('r') ? [] : note.keys };
+    });
+
+    let bTime = 0;
+    const bassEvents = bass.map((note, index) => {
+        const onset = bTime;
+        const dur = getDurationInBeats(note.duration);
+        bTime += dur;
+        return { index, onset, dur, keys: note.duration.endsWith('r') ? [] : note.keys };
+    });
+
+    const onsetsSet = new Set<number>();
+    trebleEvents.forEach(e => onsetsSet.add(e.onset));
+    bassEvents.forEach(e => onsetsSet.add(e.onset));
+    const uniqueOnsets = Array.from(onsetsSet).sort((a, b) => a - b);
+
+    const aligned: AlignedStep[] = [];
+    for (let i = 0; i < uniqueOnsets.length; i++) {
+        const t = uniqueOnsets[i];
+        const nextT = i < uniqueOnsets.length - 1 ? uniqueOnsets[i + 1] : t + 1;
+        const duration = nextT - t;
+
+        const tEvent = trebleEvents.find(e => t >= e.onset && t < e.onset + e.dur);
+        const bEvent = bassEvents.find(e => t >= e.onset && t < e.onset + e.dur);
+
+        const isTrebleOnset = tEvent ? Math.abs(t - tEvent.onset) < 0.01 : false;
+        const isBassOnset = bEvent ? Math.abs(t - bEvent.onset) < 0.01 : false;
+
+        aligned.push({
+            time: t,
+            duration: duration,
+            trebleNoteIndex: tEvent ? tEvent.index : null,
+            bassNoteIndex: bEvent ? bEvent.index : null,
+            trebleKeys: (isTrebleOnset && tEvent) ? tEvent.keys : [],
+            bassKeys: (isBassOnset && bEvent) ? bEvent.keys : [],
+            isTrebleOnset,
+            isBassOnset
+        });
+    }
+    return aligned;
+};
+
+const calculateDuration = (notesData: StaveNoteData[]): number => {
+    return notesData.reduce((sum, current) => {
+        const durStr = current.duration.replace('r', '');
+        let beats = 1;
+        if (durStr === 'w') beats = 4;
+        else if (durStr === 'h') beats = 2;
+        else if (durStr === 'q') beats = 1;
+        else if (durStr === '8') beats = 0.5;
+        else if (durStr === '16') beats = 0.25;
+        return sum + beats;
+    }, 0);
+};
+
 // Pure helper to calculate playhead position at any given timestamp without React state
 const getPlayheadPixelXAt = (elapsed: number, positions: number[]): number => {
     if (positions.length === 0) return 20;
@@ -302,12 +384,18 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         LevelGenerator.generate(Difficulty.NOVICE, errorStats)
     );
 
+    const alignedSteps = useMemo(() => {
+        return alignNotes(levelData.treble, levelData.bass);
+    }, [levelData]);
+
+    const alignedStepsRef = useRef(alignedSteps);
+    useEffect(() => {
+        alignedStepsRef.current = alignedSteps;
+    }, [alignedSteps]);
+
     // Rhythm Engine with refs for low-latency visual-only DOM playhead updates
     const BPM = 60;
     const RHYTHM_LEAD_IN = 2;
-
-    const levelDataRef = useRef(levelData);
-    useEffect(() => { levelDataRef.current = levelData; }, [levelData]);
 
     const notePositionsRef = useRef(notePositions);
     useEffect(() => { notePositionsRef.current = notePositions; }, [notePositions]);
@@ -331,24 +419,23 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         // 2. Perform Timing Miss Checks at 60Hz (does not render unless a miss actually occurs)
         if (isRhythmMode && isRhythmPlayingRef.current) {
             const currentIdx = cursorIndexRef.current;
-            const levelLength = levelDataRef.current.treble.length;
+            const levelLength = alignedStepsRef.current.length;
             if (currentIdx >= levelLength) return;
 
             const noteDuration = 60 / BPM;
-            const targetTime = currentIdx * noteDuration;
+            const step = alignedStepsRef.current[currentIdx];
+            const targetTime = step ? step.time * noteDuration : 0;
             const timeWindow = 0.35;
 
             if (elapsed > targetTime + timeWindow) {
-                const targetTreble = levelDataRef.current.treble[currentIdx];
-                const targetBass = levelDataRef.current.bass[currentIdx];
                 const requiredNotes = new Set<number>();
                 const currentGameMode = gameModeRef.current;
                 
-                if (currentGameMode !== 'bass' && targetTreble && !targetTreble.duration.endsWith('r')) {
-                    targetTreble.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+                if (currentGameMode !== 'bass' && step && step.isTrebleOnset) {
+                    step.trebleKeys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
                 }
-                if (currentGameMode !== 'treble' && targetBass && !targetBass.duration.endsWith('r')) {
-                    targetBass.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+                if (currentGameMode !== 'treble' && step && step.isBassOnset) {
+                    step.bassKeys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
                 }
 
                 if (requiredNotes.size === 0) {
@@ -366,7 +453,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
 
     const { isPlaying: isRhythmPlaying, elapsedTimeRef, start: startRhythm, stop: stopRhythm } = useRhythmEngine(
         BPM,
-        Math.ceil(levelData.treble.length / 4),
+        Math.ceil(calculateDuration(levelData.treble) / 4),
         onAnimateRhythm
     );
 
@@ -471,18 +558,17 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
 
     // Pre-Held Logic
     useEffect(() => {
-        const targetTreble = levelData.treble[cursorIndex];
-        const targetBass = levelData.bass[cursorIndex];
+        const step = alignedSteps[cursorIndex];
         const requiredNotes = new Set<number>();
-        if (gameMode !== 'bass' && targetTreble && !targetTreble.duration.endsWith('r')) {
-            targetTreble.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+        if (gameMode !== 'bass' && step && step.isTrebleOnset) {
+            step.trebleKeys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
         }
-        if (gameMode !== 'treble' && targetBass && !targetBass.duration.endsWith('r')) {
-            targetBass.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+        if (gameMode !== 'treble' && step && step.isBassOnset) {
+            step.bassKeys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
         }
         const isHolding = Array.from(requiredNotes).some(n => effectiveActiveNotes.has(n));
         setPreHeld(isHolding);
-    }, [cursorIndex, levelData, gameMode]);
+    }, [cursorIndex, alignedSteps, gameMode, effectiveActiveNotes]);
 
 
     // Main Validation Loop (strictly event-driven, decoupled from rhythm 60Hz tick)
@@ -491,7 +577,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         if (cursorIndex === lastProcessedIndex.current) return;
 
         // End of Level
-        const levelLength = levelData.treble.length;
+        const levelLength = alignedSteps.length;
         if (cursorIndex >= levelLength) {
             if (cursorIndex === levelLength && !isLessonComplete) {
                 setIsLessonComplete(true);
@@ -526,17 +612,16 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         }
 
         const noteDuration = 60 / BPM;
-        const targetTime = cursorIndex * noteDuration;
+        const step = alignedSteps[cursorIndex];
+        const targetTime = step ? step.time * noteDuration : 0;
         const timeWindow = 0.35;
 
-        const targetTreble = levelData.treble[cursorIndex];
-        const targetBass = levelData.bass[cursorIndex];
         const requiredNotes = new Set<number>();
-        if (gameMode !== 'bass' && targetTreble && !targetTreble.duration.endsWith('r')) {
-            targetTreble.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+        if (gameMode !== 'bass' && step && step.isTrebleOnset) {
+            step.trebleKeys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
         }
-        if (gameMode !== 'treble' && targetBass && !targetBass.duration.endsWith('r')) {
-            targetBass.keys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
+        if (gameMode !== 'treble' && step && step.isBassOnset) {
+            step.bassKeys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
         }
 
         // Debounce evaluation window to allow chords to strike and filter transient noise/brushes
@@ -671,7 +756,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
             }
         };
 
-    }, [effectiveActiveNotes, cursorIndex, levelData, audioStarted, difficulty, gameMode, isRhythmMode, inputStatus, preHeld, streak, maxStreak, addXp, handleAddXp, levelUp, generateNewLevel, notesCorrect, notesMissed, saveHighScore, currentLesson, isLessonComplete]);
+    }, [effectiveActiveNotes, cursorIndex, alignedSteps, audioStarted, difficulty, gameMode, isRhythmMode, inputStatus, preHeld, streak, maxStreak, addXp, handleAddXp, levelUp, generateNewLevel, notesCorrect, notesMissed, saveHighScore, currentLesson, isLessonComplete]);
 
 
     const goToNextLesson = useCallback(() => {
@@ -739,6 +824,8 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         isMidiEnabled,
         effectiveActiveNotes,
         cursorIndex, inputStatus, gameMode, setGameMode,
+        trebleCursorIndex: alignedSteps[cursorIndex]?.trebleNoteIndex ?? cursorIndex,
+        bassCursorIndex: alignedSteps[cursorIndex]?.bassNoteIndex ?? cursorIndex,
         isRhythmMode, countDown, streak, maxStreak, lastHitType,
         notePositions, setNotePositions,
         showNoteLabels, setShowNoteLabels,

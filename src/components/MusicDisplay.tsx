@@ -13,6 +13,8 @@ interface MusicDisplayProps {
     height?: number;
     showLabels?: boolean;
     cursorIndex?: number;
+    trebleCursorIndex?: number;
+    bassCursorIndex?: number;
     inputStatus?: 'waiting' | 'correct' | 'incorrect' | 'perfect';
     onLayout?: (positions: number[]) => void;
     isDarkMode?: boolean;
@@ -96,6 +98,8 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
     height = 300,
     showLabels = false,
     cursorIndex = 0,
+    trebleCursorIndex,
+    bassCursorIndex,
     inputStatus = 'waiting',
     onLayout,
     isDarkMode = false,
@@ -206,6 +210,9 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         // -----------------------------------------------------------------------
         const createVoice = (notesData: StaveNoteData[], clef: string) => {
             const highlights = handPosition ? POSITION_MAPS[handPosition] : null;
+            const staffCursorIndex = clef === "treble"
+                ? (trebleCursorIndex !== undefined ? trebleCursorIndex : cursorIndex)
+                : (bassCursorIndex !== undefined ? bassCursorIndex : cursorIndex);
 
             const notes = notesData.map((n, i) => {
                 const staveNote = new VF.StaveNote({
@@ -236,8 +243,8 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
 
                 const isRest = n.duration.endsWith('r');
 
-                if (cursorIndex !== undefined && !isRest) {
-                    if (i === cursorIndex) {
+                if (staffCursorIndex !== undefined && !isRest) {
+                    if (i === staffCursorIndex) {
                         // Color current note based on input status
                         let color = "#3b82f6"; // Default Blue (Waiting)
                         if (inputStatus === 'correct') color = "#22c55e"; // Green
@@ -248,7 +255,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                         n.keys.forEach((_, keyIndex) => {
                             staveNote.setKeyStyle(keyIndex, { fillStyle: color, strokeStyle: color });
                         });
-                    } else if (i < cursorIndex) {
+                    } else if (i < staffCursorIndex) {
                         const pastColor = "#9ca3af";
                         staveNote.setStyle({ fillStyle: pastColor, strokeStyle: pastColor }); // Gray 400
                         n.keys.forEach((_, keyIndex) => {

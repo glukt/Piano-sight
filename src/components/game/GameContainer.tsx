@@ -30,6 +30,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         isMidiEnabled,
         effectiveActiveNotes,
         cursorIndex, inputStatus, gameMode, setGameMode,
+        trebleCursorIndex, bassCursorIndex,
         isRhythmMode, countDown, streak, lastHitType,
         setNotePositions,
         showNoteLabels, setShowNoteLabels,
@@ -48,14 +49,17 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     // Calculate expected notes for Virtual Keyboard visualization
     const expectedNotes = React.useMemo(() => {
         const targets: number[] = [];
-        const t = levelData.treble[cursorIndex];
-        const b = levelData.bass[cursorIndex];
+        const tIndex = trebleCursorIndex !== undefined ? trebleCursorIndex : cursorIndex;
+        const bIndex = bassCursorIndex !== undefined ? bassCursorIndex : cursorIndex;
+        
+        const t = levelData.treble[tIndex];
+        const b = levelData.bass[bIndex];
 
         // Filter by Game Mode
         if (gameMode !== 'bass' && t) t.keys.forEach(k => targets.push(parseKeyToMidi(k)));
         if (gameMode !== 'treble' && b) b.keys.forEach(k => targets.push(parseKeyToMidi(k)));
         return targets;
-    }, [levelData, cursorIndex, gameMode, parseKeyToMidi]);
+    }, [levelData, cursorIndex, trebleCursorIndex, bassCursorIndex, gameMode, parseKeyToMidi]);
 
     return (
         <div className="w-full flex flex-col items-center gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -130,6 +134,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                         bassNotes={levelData.bass}
                         width={windowWidth < 800 ? windowWidth - 48 : 800}
                         cursorIndex={cursorIndex}
+                        trebleCursorIndex={trebleCursorIndex}
+                        bassCursorIndex={bassCursorIndex}
                         inputStatus={inputStatus}
                         onLayout={setNotePositions}
                         isDarkMode={isDarkMode}

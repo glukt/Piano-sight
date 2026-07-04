@@ -16,7 +16,7 @@ Piano Sight is a modern, interactive web application designed to help you practi
     -   **Wait Mode**: The score waits for you to play the correct note.
     -   **Looping**: Focus on difficult sections by looping specific measures.
     -   **Statistics**: Track your accuracy, perfect hits, and error rates.
-
+.
 ## Repository Structure
 
 ```

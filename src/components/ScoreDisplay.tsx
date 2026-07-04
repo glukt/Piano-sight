@@ -641,8 +641,10 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         setActiveNotes(new Set());
     };
 
+    const bottomPaddingClass = effectiveShowKeyboard ? 'pb-44' : '';
+
     return (
-        <div className={`flex flex-col items-center w-full h-full p-4 rounded-xl shadow-xl overflow-auto min-h-[500px] transition-colors duration-300 ${isDarkMode ? 'bg-gray-800 border border-gray-700 text-gray-100' : 'bg-white border border-gray-100 text-gray-900'}`}>
+        <div className={`flex flex-col items-center w-full h-full p-4 rounded-xl shadow-xl overflow-auto min-h-[500px] transition-colors duration-300 ${bottomPaddingClass} ${isDarkMode ? 'bg-gray-800 border border-gray-700 text-gray-100' : 'bg-white border border-gray-100 text-gray-900'}`}>
             {loading && <div className="text-blue-500 font-bold animate-pulse mb-2">Loading Score...</div>}
             {error && <div className="text-red-500 font-bold mb-2">Error: {error}</div>}
 
@@ -707,18 +709,28 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             )}
 
             {effectiveShowKeyboard && (
-                <div className={`w-full max-w-4xl mb-4 transition-all duration-500 ${isPracticeActive && showHint ? 'shadow-2xl ring-4 ring-yellow-400 rounded-xl' : ''}`}>
-                    <VirtualKeyboard
-                        activeNotes={activeNotes}
-                        userActiveNotes={userActiveNotes}
-                        expectedNotes={isPracticeActive && (practiceMode === 'wait' || practiceMode === 'play') ? expectedNotes : []}
-                        showLabels={showPianoLabels}
-                    />
-                    {isPracticeActive && showHint && (
-                        <div className="text-center text-sm font-bold text-yellow-600 animate-pulse">
-                            👇 Hint: Play these notes!
-                        </div>
-                    )}
+                <div className={`fixed bottom-0 left-0 right-0 z-40 bg-gray-900 dark:bg-gray-950 p-2 border-t border-gray-700 dark:border-gray-800 shadow-[0_-8px_30px_rgb(0,0,0,0.4)] transition-all duration-500 group ${isPracticeActive && showHint ? 'ring-4 ring-yellow-400' : ''}`}>
+                    <div className="max-w-7xl mx-auto flex flex-col items-center relative">
+                        {/* Close button - visible on hover or tap */}
+                        <button
+                            onClick={() => setShowKeyboard(false)}
+                            title="Hide Keyboard"
+                            className="absolute top-1 right-2 p-1.5 rounded-full bg-gray-800/80 hover:bg-gray-700 text-gray-400 hover:text-white transition-opacity duration-200 opacity-0 group-hover:opacity-100 z-50 shadow-md flex items-center justify-center w-7 h-7"
+                        >
+                            ✕
+                        </button>
+                        <VirtualKeyboard
+                            activeNotes={activeNotes}
+                            userActiveNotes={userActiveNotes}
+                            expectedNotes={isPracticeActive && (practiceMode === 'wait' || practiceMode === 'play') ? expectedNotes : []}
+                            showLabels={showPianoLabels}
+                        />
+                        {isPracticeActive && showHint && (
+                            <div className="text-center text-xs font-bold text-yellow-500 mt-1 animate-pulse select-none">
+                                👇 Hint: Play these notes!
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
 

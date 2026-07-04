@@ -23,7 +23,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
     onNextLesson,
     onExitLesson
 }) => {
-    const { preferences } = usePreferences();
+    const { preferences, updatePreference } = usePreferences();
     const {
         // State
         audioStarted,
@@ -65,8 +65,10 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         return targets;
     }, [paddedLevelData, cursorIndex, trebleCursorIndex, bassCursorIndex, gameMode, parseKeyToMidi]);
 
+    const bottomPaddingClass = preferences.showKeyboard ? 'pb-44' : 'pb-10';
+
     return (
-        <div className="w-full flex flex-col items-center gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className={`w-full flex flex-col items-center gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 ${bottomPaddingClass}`}>
             {/* Header / Stats Bar wrapper */}
             <div className="w-full max-w-5xl flex flex-col sm:flex-row justify-between items-center gap-4 px-4">
                 {onExitLesson ? (
@@ -159,21 +161,6 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                     )}
                 </div>
 
-                {/* Virtual Keyboard */}
-                {/* Note: In previous App.tsx there was a toggle 'showGameKeyboard' state. 
-                    I missed adding this to useGameLogic or GameContainer state.
-                    For now, I'll default it to visible or add local state here.
-                */}
-                <div className="mt-4 w-full bg-white dark:bg-gray-800 p-2 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
-                    <VirtualKeyboard
-                        activeNotes={new Set()}
-                        userActiveNotes={effectiveActiveNotes}
-                        expectedNotes={expectedNotes}
-                        showLabels={showNoteLabels}
-                        showStaff={showStaff}
-                    />
-                </div>
-
                 {/* Feedback Popups */}
                 {streak >= 5 && (
                     <div className="absolute top-[-40px] right-0 animate-bounce text-yellow-500 font-bold text-xl drop-shadow-md">
@@ -215,6 +202,9 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 setShowNoteLabels={setShowNoteLabels}
                 showStaff={showStaff}
                 setShowStaff={setShowStaff}
+                currentLesson={gameLogic.currentLesson}
+                showKeyboard={preferences.showKeyboard}
+                onToggleKeyboard={(show) => updatePreference('showKeyboard', show)}
             />
 
             {/* Performance Report Card Modal */}
@@ -242,6 +232,29 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 isCapstone={gameLogic.isCapstone}
                 userActiveNotes={effectiveActiveNotes}
             />
+
+            {/* Sticky Bottom Keyboard Overlay */}
+            {preferences.showKeyboard && (
+                <div className="fixed bottom-0 left-0 right-0 z-40 bg-gray-900 dark:bg-gray-950 p-2 border-t border-gray-700 dark:border-gray-800 shadow-[0_-8px_30px_rgb(0,0,0,0.4)] transition-all duration-500 group">
+                    <div className="max-w-7xl mx-auto flex flex-col items-center relative">
+                        {/* Close button - visible on hover or tap */}
+                        <button
+                            onClick={() => updatePreference('showKeyboard', false)}
+                            title="Hide Keyboard"
+                            className="absolute top-1 right-2 p-1.5 rounded-full bg-gray-800/80 hover:bg-gray-700 text-gray-400 hover:text-white transition-opacity duration-200 opacity-0 group-hover:opacity-100 z-50 shadow-md flex items-center justify-center w-7 h-7"
+                        >
+                            ✕
+                        </button>
+                        <VirtualKeyboard
+                            activeNotes={new Set()}
+                            userActiveNotes={effectiveActiveNotes}
+                            expectedNotes={expectedNotes}
+                            showLabels={showNoteLabels}
+                            showStaff={showStaff}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

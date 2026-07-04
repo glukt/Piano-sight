@@ -207,6 +207,7 @@ function App() {
                                     isMutedKeys={gameLogic.isMutedKeys}
                                     onToggleMutedKeys={gameLogic.setIsMutedKeys}
                                     onNextLesson={gameLogic.currentLesson ? handleNextLesson : undefined}
+                                    isLessonMode={!!gameLogic.currentLesson}
                                     onCloseScore={() => {
                                         // Remove this measure from weak measures upon completion!
                                         if (workoutReview) {

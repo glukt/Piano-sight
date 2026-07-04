@@ -22,6 +22,7 @@ interface ScoreControlsProps {
     onChangeLayoutMode: (mode: 'standard' | 'scrolling') => void;
     onToggleMutedPlayback: (val: boolean) => void;
     onToggleMutedKeys: (val: boolean) => void;
+    isLessonMode?: boolean; // NEW
 }
 
 export const ScoreControls: React.FC<ScoreControlsProps> = ({
@@ -45,43 +46,46 @@ export const ScoreControls: React.FC<ScoreControlsProps> = ({
     onTogglePractice,
     onChangeLayoutMode,
     onToggleMutedPlayback,
-    onToggleMutedKeys
+    onToggleMutedKeys,
+    isLessonMode = false // NEW
 }) => {
     return (
         <div className={`w-full max-w-4xl p-4 rounded-xl shadow-lg border flex flex-col gap-4 mb-6 transition-colors duration-500
              ${isDarkMode ? 'bg-gray-800 border-gray-700 text-gray-200' : 'bg-white border-gray-200 text-gray-800'}
         `}>
             {/* Top Row: Playback & File Info */}
-            <div className="flex justify-between items-center">
-                <div className="flex gap-2">
-                    <button
-                        onClick={onTogglePlayback}
-                        disabled={loading}
-                        className={`px-6 py-2 rounded-full font-bold uppercase text-sm tracking-wider transition-all
-                            ${isPlaying
-                                ? 'bg-red-500 text-white shadow-red-500/50 hover:bg-red-600'
-                                : (isDarkMode ? 'bg-emerald-600 text-white hover:bg-emerald-500' : 'bg-emerald-500 text-white shadow-emerald-500/50 hover:bg-emerald-600')}
-                            ${loading ? 'opacity-50 cursor-not-allowed' : 'shadow-lg hover:scale-105 active:scale-95'}
-                        `}
-                    >
-                        {loading ? 'Loading...' : isPlaying ? 'Stop' : 'Play'}
-                    </button>
-                    <button
-                        onClick={onReset}
-                        disabled={loading}
-                        className={`px-6 py-2 rounded-full font-bold uppercase text-sm tracking-wider transition-all
-                            ${isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}
-                            ${loading ? 'opacity-50 cursor-not-allowed' : 'shadow-lg hover:scale-105 active:scale-95'}
-                        `}
-                    >
-                        Reset
-                    </button>
+            {!isLessonMode && (
+                <div className="flex justify-between items-center">
+                    <div className="flex gap-2">
+                        <button
+                            onClick={onTogglePlayback}
+                            disabled={loading}
+                            className={`px-6 py-2 rounded-full font-bold uppercase text-sm tracking-wider transition-all
+                                ${isPlaying
+                                    ? 'bg-red-500 text-white shadow-red-500/50 hover:bg-red-600'
+                                    : (isDarkMode ? 'bg-emerald-600 text-white hover:bg-emerald-500' : 'bg-emerald-500 text-white shadow-emerald-500/50 hover:bg-emerald-600')}
+                                ${loading ? 'opacity-50 cursor-not-allowed' : 'shadow-lg hover:scale-105 active:scale-95'}
+                            `}
+                        >
+                            {loading ? 'Loading...' : isPlaying ? 'Stop' : 'Play'}
+                        </button>
+                        <button
+                            onClick={onReset}
+                            disabled={loading}
+                            className={`px-6 py-2 rounded-full font-bold uppercase text-sm tracking-wider transition-all
+                                ${isDarkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}
+                                ${loading ? 'opacity-50 cursor-not-allowed' : 'shadow-lg hover:scale-105 active:scale-95'}
+                            `}
+                        >
+                            Reset
+                        </button>
+                    </div>
+                    {/* Placeholder for file info / title */}
+                    <div className={`text-lg font-semibold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+                        {/* Score Title */}
+                    </div>
                 </div>
-                {/* Placeholder for file info / title */}
-                <div className={`text-lg font-semibold ${isDarkMode ? 'text-gray-100' : 'text-gray-800'}`}>
-                    {/* Score Title */}
-                </div>
-            </div>
+            )}
 
             {/* Bottom Row: Toggles */}
             <div className={`flex flex-wrap items-center justify-center gap-4 p-4 rounded-lg border w-full max-w-4xl mb-4 font-sans text-sm transition-colors duration-500
@@ -173,18 +177,20 @@ export const ScoreControls: React.FC<ScoreControlsProps> = ({
                 </label>
 
                 {/* Practice Mode Toggle */}
-                <button
-                    onClick={onTogglePractice}
-                    disabled={loading}
-                    className={`ml-4 px-4 py-1 rounded-full text-xs font-bold border transition animate-pulse
-                        ${isPracticeActive
-                            ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white border-rose-600 shadow-lg'
-                            : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600 shadow-md hover:scale-105'}
-                        ${loading ? 'opacity-50 cursor-not-allowed' : ''}
-                    `}
-                >
-                    {isPracticeActive ? 'Exit Practice' : '🎓 Learn to Play!'}
-                </button>
+                {!isLessonMode && (
+                    <button
+                        onClick={onTogglePractice}
+                        disabled={loading}
+                        className={`ml-4 px-4 py-1 rounded-full text-xs font-bold border transition animate-pulse
+                            ${isPracticeActive
+                                ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white border-rose-600 shadow-lg'
+                                : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-600 shadow-md hover:scale-105'}
+                            ${loading ? 'opacity-50 cursor-not-allowed' : ''}
+                        `}
+                    >
+                        {isPracticeActive ? 'Exit Practice' : '🎓 Learn to Play!'}
+                    </button>
+                )}
             </div>
         </div>
     );

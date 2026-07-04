@@ -153,7 +153,7 @@ export function usePracticeMode({
     const transitionTimeoutRef = useRef<any>(null);
     const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const startPractice = useCallback((startMeasure?: number) => {
+    const startPractice = useCallback((startMeasure?: number, initialMode?: 'wait' | 'preview') => {
         if (transitionTimeoutRef.current) {
             clearTimeout(transitionTimeoutRef.current);
             transitionTimeoutRef.current = null;
@@ -163,7 +163,8 @@ export function usePracticeMode({
         const start = startMeasure !== undefined ? startMeasure : 0;
         const end = Math.min(start + 2, totalMeasures);
         setCurrentSection({ startMeasure: start, endMeasure: end });
-        setMode(startMeasure !== undefined ? 'wait' : 'preview');
+        const finalMode = initialMode || (startMeasure !== undefined ? 'wait' : 'preview');
+        setMode(finalMode);
         setPreviewLoopCount(0);
         setNotesCorrect(0);
         setNotesMissed(0);
@@ -174,7 +175,7 @@ export function usePracticeMode({
         expectedEventsRef.current = [];
         setLastSuccessfulNotes(new Set());
         heldWrongNotesRef.current.clear();
-        setFeedback(startMeasure !== undefined ? "Review Session! Play these notes." : "Listen to this section...");
+        setFeedback(finalMode === 'wait' ? "Play the notes on the screen..." : "Listen to this section...");
         setErrorMeasures({});
         setIsSongComplete(false);
     }, [totalMeasures]);

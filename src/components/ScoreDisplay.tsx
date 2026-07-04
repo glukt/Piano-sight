@@ -28,6 +28,7 @@ interface ScoreDisplayProps {
     onToggleMutedKeys?: (val: boolean) => void; // NEW: callback to toggle mute keys
     onNextLesson?: () => void; // NEW: callback to transition to next lesson
     songId?: string | null;
+    isLessonMode?: boolean; // NEW: true if launched as a course lesson
 }
 
 export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
@@ -42,7 +43,8 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
     isMutedKeys = false,
     onToggleMutedKeys,
     onNextLesson,
-    songId = null
+    songId = null,
+    isLessonMode = false
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const osmdCanvasRef = useRef<HTMLDivElement>(null);
@@ -535,15 +537,22 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         };
     }, []);
 
-    // Auto-start workout review loops if initialMeasure is passed
+    // Auto-start workout review loops if initial measure is passed, or auto-start wait-mode if in lesson mode
     useEffect(() => {
-        if (!loading && initialMeasure !== undefined && playbackRef.current) {
-            const timer = setTimeout(() => {
-                startPractice(initialMeasure);
-            }, 500);
-            return () => clearTimeout(timer);
+        if (!loading && playbackRef.current) {
+            if (initialMeasure !== undefined) {
+                const timer = setTimeout(() => {
+                    startPractice(initialMeasure);
+                }, 500);
+                return () => clearTimeout(timer);
+            } else if (isLessonMode && !isPracticeActive) {
+                const timer = setTimeout(() => {
+                    startPractice(0, 'wait');
+                }, 500);
+                return () => clearTimeout(timer);
+            }
         }
-    }, [loading, initialMeasure, startPractice]);
+    }, [loading, initialMeasure, isLessonMode, isPracticeActive, startPractice]);
 
     // Save weak measures on song completion
     useEffect(() => {
@@ -660,6 +669,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                 onChangeLayoutMode={setLayoutMode}
                 onToggleMutedPlayback={setIsMutedPlayback}
                 onToggleMutedKeys={onToggleMutedKeys || (() => {})}
+                isLessonMode={isLessonMode}
             />
 
             {/* Practice Mode Overlay - Compact Bottom Bar */}
@@ -679,20 +689,22 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                 />
             )}
 
-            <div className="w-full max-w-4xl mb-4">
-                <LoopingControls
-                    currentTimestamp={currentTimestamp}
-                    totalDuration={totalDuration}
-                    loopStart={loopStart}
-                    loopEnd={loopEnd}
-                    onSeek={handleSeek}
-                    onSetLoopStart={handleSetLoopStart}
-                    onSetLoopEnd={handleSetLoopEnd}
-                    onClearLoop={handleClearLoop}
-                    measureTimestamps={measureTimestamps}
-                    disabled={isPracticeActive && practiceMode === 'play'}
-                />
-            </div>
+            {!isLessonMode && (
+                <div className="w-full max-w-4xl mb-4">
+                    <LoopingControls
+                        currentTimestamp={currentTimestamp}
+                        totalDuration={totalDuration}
+                        loopStart={loopStart}
+                        loopEnd={loopEnd}
+                        onSeek={handleSeek}
+                        onSetLoopStart={handleSetLoopStart}
+                        onSetLoopEnd={handleSetLoopEnd}
+                        onClearLoop={handleClearLoop}
+                        measureTimestamps={measureTimestamps}
+                        disabled={isPracticeActive && practiceMode === 'play'}
+                    />
+                </div>
+            )}
 
             {effectiveShowKeyboard && (
                 <div className={`w-full max-w-4xl mb-4 transition-all duration-500 ${isPracticeActive && showHint ? 'animate-bounce shadow-2xl ring-4 ring-yellow-400 rounded-xl' : ''}`}>

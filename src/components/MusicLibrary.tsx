@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useMusicLibrary } from '../hooks/useMusicLibrary';
 
 interface MusicLibraryProps {
@@ -9,9 +9,18 @@ interface MusicLibraryProps {
 export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, library }) => {
     const { scores, loading, error, addScore, deleteScore, updateScoreMetadata, bookmarkedIds, toggleBookmark } = library;
     const [searchTerm, setSearchTerm] = useState('');
+    const [localSearchTerm, setLocalSearchTerm] = useState('');
     const [isUploading, setIsUploading] = useState(false);
     const [activeTab, setActiveTab] = useState<'all' | 'bookmarks' | 'fundamentals' | 'classical' | 'modern' | 'custom'>('all');
     const [difficultyFilter, setDifficultyFilter] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('all');
+
+    // Debounce search input
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setSearchTerm(localSearchTerm);
+        }, 150);
+        return () => clearTimeout(handler);
+    }, [localSearchTerm]);
 
     const filteredScores = useMemo(() => {
         return scores.filter(score => {
@@ -54,6 +63,46 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
             return true;
         });
     }, [scores, searchTerm, activeTab, difficultyFilter, bookmarkedIds]);
+
+    const tabCounts = useMemo(() => {
+        const counts = { all: 0, bookmarks: 0, fundamentals: 0, classical: 0, modern: 0, custom: 0 };
+        scores.forEach(score => {
+            // Apply search filter (relative to searchTerm)
+            const matchesSearch = 
+                score.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                score.composer?.toLowerCase().includes(searchTerm.toLowerCase());
+            if (!matchesSearch) return;
+
+            // Apply difficulty filter
+            if (difficultyFilter !== 'all') {
+                const tags = score.tags || [];
+                const hasAnyDiffTag = tags.some(t => ['beginner', 'intermediate', 'advanced'].includes(t.toLowerCase()));
+                if (hasAnyDiffTag) {
+                    if (!tags.some(t => t.toLowerCase() === difficultyFilter)) return;
+                } else {
+                    if (difficultyFilter !== 'beginner') return;
+                }
+            }
+
+            counts.all++;
+            if (bookmarkedIds.has(score.id)) counts.bookmarks++;
+            if (!score.id.startsWith('preset-')) counts.custom++;
+            
+            const tags = score.tags || [];
+            if (tags.includes('Fundamentals')) counts.fundamentals++;
+            if (tags.includes('Classical') || tags.includes('Ragtime')) counts.classical++;
+            const modernGenres = ['Pop', 'Film & TV', 'Game', 'K-Pop', 'New Age', 'Holiday'];
+            if (tags.some(t => modernGenres.includes(t))) counts.modern++;
+        });
+        return counts;
+    }, [scores, searchTerm, difficultyFilter, bookmarkedIds]);
+
+    const [visibleCount, setVisibleCount] = useState(12);
+
+    // Reset pagination when search, tab, or difficulty changes
+    useEffect(() => {
+        setVisibleCount(12);
+    }, [searchTerm, activeTab, difficultyFilter]);
 
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -116,8 +165,8 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
                         <input
                             type="text"
                             placeholder="Search scores..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            value={localSearchTerm}
+                            onChange={(e) => setLocalSearchTerm(e.target.value)}
                             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/40 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 focus:outline-none font-semibold transition duration-200"
                         />
                     </div>
@@ -156,36 +205,7 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
                         { id: 'custom', label: 'My Uploads' }
                     ].map(tab => {
                         const isActive = activeTab === tab.id;
-                        const count = scores.filter(score => {
-                            // Apply search filter
-                            const matchesSearch = 
-                                score.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                score.composer?.toLowerCase().includes(searchTerm.toLowerCase());
-                            if (!matchesSearch) return false;
-
-                            // Apply difficulty filter
-                            if (difficultyFilter !== 'all') {
-                                const tags = score.tags || [];
-                                const hasAnyDiffTag = tags.some(t => ['beginner', 'intermediate', 'advanced'].includes(t.toLowerCase()));
-                                if (hasAnyDiffTag) {
-                                    if (!tags.some(t => t.toLowerCase() === difficultyFilter)) return false;
-                                } else {
-                                    if (difficultyFilter !== 'beginner') return false;
-                                }
-                            }
-
-                            if (tab.id === 'all') return true;
-                            if (tab.id === 'bookmarks') return bookmarkedIds.has(score.id);
-                            if (tab.id === 'custom') return !score.id.startsWith('preset-');
-                            const tags = score.tags || [];
-                            if (tab.id === 'fundamentals') return tags.includes('Fundamentals');
-                            if (tab.id === 'classical') return tags.includes('Classical') || tags.includes('Ragtime');
-                            if (tab.id === 'modern') {
-                                const modernGenres = ['Pop', 'Film & TV', 'Game', 'K-Pop', 'New Age', 'Holiday'];
-                                return tags.some(t => modernGenres.includes(t));
-                            }
-                            return true;
-                        }).length;
+                        const count = tabCounts[tab.id as keyof typeof tabCounts] || 0;
 
                         return (
                             <button
@@ -244,7 +264,7 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
 
             {/* Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {filteredScores.map(score => (
+                {filteredScores.slice(0, visibleCount).map(score => (
                     <div
                         key={score.id}
                         onClick={() => {
@@ -275,7 +295,7 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
                                     className={`p-2 rounded-xl transition-all duration-200 border ${
                                         bookmarkedIds.has(score.id)
                                             ? 'bg-amber-500/10 border-amber-500/30 text-amber-500 shadow-sm'
-                                            : 'bg-slate-100 border-slate-200 text-slate-400 hover:bg-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500 dark:hover:bg-slate-700 hover:text-amber-500 opacity-70 md:opacity-0 md:group-hover:opacity-100'
+                                             : 'bg-slate-100 border-slate-200 text-slate-400 hover:bg-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-500 dark:hover:bg-slate-700 hover:text-amber-500 opacity-70 md:opacity-0 md:group-hover:opacity-100'
                                     }`}
                                     title={bookmarkedIds.has(score.id) ? "Remove from Favorites" : "Add to Favorites"}
                                 >
@@ -377,6 +397,18 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
                         <span className="text-sm font-semibold select-none">
                             {searchTerm ? 'No scores found matching your search.' : 'Your library is empty. Upload a MusicXML file to get started!'}
                         </span>
+                    </div>
+                )}
+
+                {/* Load More Button */}
+                {filteredScores.length > visibleCount && (
+                    <div className="col-span-full flex justify-center mt-6">
+                        <button
+                            onClick={() => setVisibleCount(prev => prev + 12)}
+                            className="px-6 py-3 bg-white/70 dark:bg-slate-900/50 text-sky-500 dark:text-sky-400 font-bold border border-slate-200 dark:border-slate-800 rounded-2xl shadow-md transition hover:-translate-y-0.5 active:scale-98 hover:bg-sky-50 dark:hover:bg-slate-850/60 backdrop-blur"
+                        >
+                            Load More Pieces ({filteredScores.length - visibleCount} remaining)
+                        </button>
                     </div>
                 )}
             </div>

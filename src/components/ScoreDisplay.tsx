@@ -707,7 +707,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             )}
 
             {effectiveShowKeyboard && (
-                <div className={`w-full max-w-4xl mb-4 transition-all duration-500 ${isPracticeActive && showHint ? 'animate-bounce shadow-2xl ring-4 ring-yellow-400 rounded-xl' : ''}`}>
+                <div className={`w-full max-w-4xl mb-4 transition-all duration-500 ${isPracticeActive && showHint ? 'shadow-2xl ring-4 ring-yellow-400 rounded-xl' : ''}`}>
                     <VirtualKeyboard
                         activeNotes={activeNotes}
                         userActiveNotes={userActiveNotes}

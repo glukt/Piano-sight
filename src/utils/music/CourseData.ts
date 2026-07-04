@@ -65,7 +65,7 @@ export const courses: Course[] = [
     {
         id: "keyboard-geography",
         name: "1. Keyboard Geography & Guide Notes",
-        description: "Begin your journey by orienting yourself on the keyboard and learning the five primary guide notes on the staff.",
+        description: "Begin your journey by orienting yourself on the keyboard and learning the primary guide notes on the staff.",
         order: 1,
         lessons: [
             {
@@ -178,7 +178,7 @@ export const courses: Course[] = [
             {
                 id: "c1-l5", courseId: "keyboard-geography",
                 name: "Landmark High C (C5)",
-                description: "Read High C on the third space of the treble staff, playing from a High C Anchor.",
+                description: "Read High C on the third space of the treble staff.",
                 focus: "High C (C5) is an octave above Middle C. Keep your wrist flexible and relaxed.",
                 instruction: "Place your Right Hand Thumb (Finger 1) on High C (C5). Practice playing the notes stepping up from this landmark.",
                 type: 'exercise', topic: 'treble', xpReward: 70, requiredXp: 420,
@@ -186,82 +186,31 @@ export const courses: Course[] = [
                 constraints: { trebleRange: trebleHighC, bassRange: [], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 16 }
             },
             {
-                id: 'c1-l5-song-popular',
-                courseId: 'keyboard-geography',
+                id: "c1-l5b", courseId: "keyboard-geography",
+                name: "Landmark Treble High G (G5)",
+                description: "Locate and play Treble High G, the top line of the treble staff.",
+                focus: "Treble High G (G5) lies on the very top line of the treble staff. Use your Right Hand Pinky (Finger 5) to play this note.",
+                instruction: "Place your Right Hand Pinky on High G (G5). Practice playing notes stepping down from this landmark.",
+                type: 'exercise', topic: 'treble', xpReward: 70, requiredXp: 490,
+                handPosition: 'RH_HIGH_G_POS',
+                constraints: { trebleRange: ["e/5", "f/5", "g/5"], bassRange: [], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 16 }
+            },
+            {
+                id: 'c1-l5-song-popular', courseId: 'keyboard-geography',
                 name: 'Melody: Star Wars Main Theme',
                 description: 'Play the legendary heroic theme featuring a large leap from G to High C.',
                 focus: 'Focus on the quick leap from G4 to High C (C5). Keep your hand relaxed as you expand your reach.',
-                instruction: 'Place your Right Hand in C Position. Start with your thumb on C, and be ready to stretch your pinky or lift your hand to reach the high C5.',
-                type: 'exercise',
-                topic: 'treble',
-                xpReward: 80,
-                requiredXp: 490,
+                instruction: 'Place your Right Hand in C Position. Start with your thumb on C, and stretch to reach the high C5.',
+                type: 'exercise', topic: 'treble', xpReward: 80, requiredXp: 560,
                 handPosition: 'RH_HIGH_C_POS',
                 constraints: {
-                    trebleRange: ['c/4', 'd/4', 'e/4', 'f/4', 'g/4', 'c/5'],
-                    bassRange: [],
-                    rhythms: ['q', 'h', 'w'],
-                    maxJumps: 4,
-                    chordsAllowed: false,
-                    numNotes: 14,
+                    trebleRange: ['c/4', 'd/4', 'e/4', 'f/4', 'g/4', 'c/5'], bassRange: [], rhythms: ['q', 'h', 'w'], maxJumps: 4, chordsAllowed: false, numNotes: 14,
                     presetMelody: {
                         treble: [
-                            {
-                                keys: ['g/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['g/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['g/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['c/5'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['g/4'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['f/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['c/5'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['g/4'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['f/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['c/5'],
-                                duration: 'w'
-                            }
+                            { keys: ['g/4'], duration: 'q' }, { keys: ['g/4'], duration: 'q' }, { keys: ['g/4'], duration: 'q' }, { keys: ['c/5'], duration: 'h' },
+                            { keys: ['g/4'], duration: 'h' }, { keys: ['f/4'], duration: 'q' }, { keys: ['e/4'], duration: 'q' }, { keys: ['d/4'], duration: 'q' },
+                            { keys: ['c/5'], duration: 'h' }, { keys: ['g/4'], duration: 'h' }, { keys: ['f/4'], duration: 'q' }, { keys: ['e/4'], duration: 'q' },
+                            { keys: ['d/4'], duration: 'q' }, { keys: ['c/5'], duration: 'w' }
                         ],
                         bass: []
                     }
@@ -273,7 +222,7 @@ export const courses: Course[] = [
                 description: "Practice the famous octave leap from Middle C to High C.",
                 focus: "Look at the high note first, then move your hand. Accurate jumps require look-before-you-leap!",
                 instruction: "Follow the notation to play the iconic opening jump of Somewhere Over the Rainbow.",
-                type: 'exercise', topic: 'treble', xpReward: 80, requiredXp: 570,
+                type: 'exercise', topic: 'treble', xpReward: 80, requiredXp: 640,
                 handPosition: 'GRAND_C_POS',
                 constraints: {
                     trebleRange: ["c/4", "c/5", "b/4", "g/4", "a/4"], bassRange: [], rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 7,
@@ -293,9 +242,29 @@ export const courses: Course[] = [
                 description: "Read Low C on the second space of the bass staff.",
                 focus: "Bass C (C3) is an octave below Middle C. Use your Left Hand Pinky (Finger 5) to play it.",
                 instruction: "Place your Left Hand Pinky (Finger 5) on Bass C (C3). Practice playing notes stepping up from this landmark.",
-                type: 'exercise', topic: 'bass', xpReward: 70, requiredXp: 650,
+                type: 'exercise', topic: 'bass', xpReward: 70, requiredXp: 720,
                 handPosition: 'LH_LOW_C_POS',
                 constraints: { trebleRange: [], bassRange: bassLowC, rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 16 }
+            },
+            {
+                id: "c1-l6b", courseId: "keyboard-geography",
+                name: "Landmark Bass Low F (F2)",
+                description: "Learn Low F, the lowest line of the bass staff.",
+                focus: "Bass Low F (F2) is the bottom line of the bass staff. Play it with your Left Hand Pinky (Finger 5).",
+                instruction: "Place your Left Hand Pinky on Bass Low F (F2). Practice playing stepwise notes ascending from Low F.",
+                type: 'exercise', topic: 'bass', xpReward: 70, requiredXp: 790,
+                handPosition: 'LH_LOW_F_POS',
+                constraints: { trebleRange: [], bassRange: ["f/2", "g/2", "a/2"], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 16 }
+            },
+            {
+                id: "c1-l6c", courseId: "keyboard-geography",
+                name: "Landmark Note Speedrun",
+                description: "Test your instant recognition of all five primary guide notes.",
+                focus: "Do not look at your hands! Identify Bass C3, Bass F3, Middle C4, Treble G4, and Treble C5 instantly.",
+                instruction: "Play the guide notes as they appear. The notes will jump directly between landmarks, so focus on reading the lines and spaces.",
+                type: 'exercise', topic: 'both', xpReward: 90, requiredXp: 860,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["c/4", "g/4", "c/5"], bassRange: ["c/3", "f/3", "c/4"], rhythms: ["q", "h"], maxJumps: 5, chordsAllowed: false, numNotes: 20 }
             },
             {
                 id: "c1-l7", courseId: "keyboard-geography",
@@ -303,7 +272,7 @@ export const courses: Course[] = [
                 description: "Test your skills with a gentle stepwise capstone combining both hands in Middle C position.",
                 focus: "Keep your hands anchored. Share the Middle C key or take turns playing it between hands.",
                 instruction: "Play stepwise notes alternating between your left hand (A3-C4) and right hand (C4-E4). Focus on seamless transitions.",
-                type: 'exercise', topic: 'both', xpReward: 100, requiredXp: 720,
+                type: 'exercise', topic: 'both', xpReward: 100, requiredXp: 950,
                 handPosition: 'GRAND_C_POS',
                 constraints: { trebleRange: ["c/4", "d/4", "e/4"], bassRange: ["c/4", "b/3", "a/3"], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 12 }
             }
@@ -321,151 +290,30 @@ export const courses: Course[] = [
                 description: "Read stepwise intervals (seconds) in Treble C Position (C4 to G4).",
                 focus: "Read adjacent lines and spaces. Play smoothly without lifting your hands between notes.",
                 instruction: "Place your right hand fingers on C4, D4, E4, F4, and G4. Play notes that step up and down.",
-                type: 'exercise', topic: 'treble', xpReward: 80, requiredXp: 820,
+                type: 'exercise', topic: 'treble', xpReward: 80, requiredXp: 1050,
                 handPosition: 'RH_C_POS',
                 constraints: { trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 20 }
             },
             {
-                id: 'c2-l1-song-popular',
-                courseId: 'treble-clef-mastery',
+                id: 'c2-l1-song-popular', courseId: 'treble-clef-mastery',
                 name: 'Melody: Baby Shark Theme',
                 description: 'Play the famous catchy hook using simple steps and repeated notes.',
                 focus: 'Keep a steady pulse on the repeated E4 notes, making sure each tap is distinct and light.',
                 instruction: 'Place your Right Hand in C Position. This melody uses only C4, D4, and E4, focusing on repeated note coordination.',
-                type: 'exercise',
-                topic: 'treble',
-                xpReward: 80,
-                requiredXp: 900,
+                type: 'exercise', topic: 'treble', xpReward: 80, requiredXp: 1130,
                 handPosition: 'RH_C_POS',
                 constraints: {
-                    trebleRange: ['c/4', 'd/4', 'e/4'],
-                    bassRange: [],
-                    rhythms: ['q', 'h', 'w'],
-                    maxJumps: 1,
-                    chordsAllowed: false,
-                    numNotes: 30,
+                    trebleRange: ['c/4', 'd/4', 'e/4'], bassRange: [], rhythms: ['q', 'h', 'w'], maxJumps: 1, chordsAllowed: false, numNotes: 30,
                     presetMelody: {
                         treble: [
-                            {
-                                keys: ['c/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['c/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['c/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/4'],
-                                duration: 'w'
-                            }
+                            { keys: ['c/4'], duration: 'q' }, { keys: ['d/4'], duration: 'q' }, { keys: ['e/4'], duration: 'q' }, { keys: ['e/4'], duration: 'q' },
+                            { keys: ['e/4'], duration: 'q' }, { keys: ['e/4'], duration: 'q' }, { keys: ['e/4'], duration: 'q' }, { keys: ['e/4'], duration: 'q' },
+                            { keys: ['e/4'], duration: 'h' }, { keys: ['c/4'], duration: 'q' }, { keys: ['d/4'], duration: 'q' }, { keys: ['e/4'], duration: 'q' },
+                            { keys: ['e/4'], duration: 'q' }, { keys: ['e/4'], duration: 'q' }, { keys: ['e/4'], duration: 'q' }, { keys: ['e/4'], duration: 'q' },
+                            { keys: ['e/4'], duration: 'q' }, { keys: ['e/4'], duration: 'h' }, { keys: ['c/4'], duration: 'q' }, { keys: ['d/4'], duration: 'q' },
+                            { keys: ['e/4'], duration: 'q' }, { keys: ['e/4'], duration: 'q' }, { keys: ['e/4'], duration: 'q' }, { keys: ['e/4'], duration: 'q' },
+                            { keys: ['e/4'], duration: 'q' }, { keys: ['e/4'], duration: 'q' }, { keys: ['e/4'], duration: 'h' }, { keys: ['e/4'], duration: 'q' },
+                            { keys: ['e/4'], duration: 'q' }, { keys: ['d/4'], duration: 'w' }
                         ],
                         bass: []
                     }
@@ -477,7 +325,7 @@ export const courses: Course[] = [
                 description: "Play a classic step-and-skip melody in Right Hand C Position.",
                 focus: "Recognize thirds (skips). Skip over fingers smoothly without pausing.",
                 instruction: "Keep your hand in C Position. Follow the steps and skips of Lightly Row.",
-                type: 'exercise', topic: 'treble', xpReward: 80, requiredXp: 980,
+                type: 'exercise', topic: 'treble', xpReward: 80, requiredXp: 1210,
                 handPosition: 'RH_C_POS',
                 constraints: {
                     trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 14,
@@ -493,12 +341,22 @@ export const courses: Course[] = [
                 }
             },
             {
+                id: "c2-l2b", courseId: "treble-clef-mastery",
+                name: "Jumping Fourths in Treble",
+                description: "Identify and play the interval of a fourth (line to space or space to line).",
+                focus: "A fourth skips two adjacent notes (e.g. C to F, or D to G). Visually, it always goes from a line to a space, or a space to a line.",
+                instruction: "Play the stepwise melodies combined with leaps of a fourth. Keep your hand relaxed as you skip fingers.",
+                type: 'exercise', topic: 'treble', xpReward: 80, requiredXp: 1290,
+                handPosition: 'RH_C_POS',
+                constraints: { trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4"], bassRange: [], rhythms: ["q", "h"], maxJumps: 3, chordsAllowed: false, numNotes: 20 }
+            },
+            {
                 id: "c2-l3", courseId: "treble-clef-mastery",
                 name: "Melody: Twinkle Twinkle",
                 description: "Play a beautiful melody featuring 5th leaps.",
                 focus: "Leap directly from Middle C to G4. Do not tense your hand.",
                 instruction: "Keep your hand in C Position. Play the opening of Twinkle Twinkle.",
-                type: 'exercise', topic: 'treble', xpReward: 90, requiredXp: 1060,
+                type: 'exercise', topic: 'treble', xpReward: 90, requiredXp: 1370,
                 handPosition: 'RH_C_POS',
                 constraints: {
                     trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 14,
@@ -514,12 +372,22 @@ export const courses: Course[] = [
                 }
             },
             {
+                id: "c2-l3b", courseId: "treble-clef-mastery",
+                name: "Jumping Fifths in Treble",
+                description: "Master the wide interval of a fifth (line to line or space to space).",
+                focus: "A fifth skips three notes (e.g. C to G, or D to A). It always goes from line to line, or space to space. Your thumb and pinky will play these notes.",
+                instruction: "Play the fifth-interval jumps. Stretch your hand to feel the outer borders of the C Position.",
+                type: 'exercise', topic: 'treble', xpReward: 80, requiredXp: 1460,
+                handPosition: 'RH_C_POS',
+                constraints: { trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4"], bassRange: [], rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 20 }
+            },
+            {
                 id: "c2-l4", courseId: "treble-clef-mastery",
                 name: "Song: Mary Had a Little Lamb",
                 description: "Play your first real song, using the C position.",
                 focus: "Count the beats out loud. Pay special attention to the half notes holding for two beats.",
                 instruction: "Apply your C position reading to play this traditional tune with your right hand.",
-                type: 'song', topic: 'treble', xpReward: 120, requiredXp: 1150,
+                type: 'song', topic: 'treble', xpReward: 120, requiredXp: 1540,
                 handPosition: 'RH_C_POS',
                 songUrl: '/scores/Mary_Lamb.musicxml',
                 presetId: 'preset-mary-lamb'
@@ -530,7 +398,7 @@ export const courses: Course[] = [
                 description: "Play Jingle Bells in the upper treble register (up to C5).",
                 focus: "Play repeated notes with a steady, bouncy touch.",
                 instruction: "Prepare your hand in C Position. Follow the rhythm to play Jingle Bells.",
-                type: 'exercise', topic: 'treble', xpReward: 100, requiredXp: 1270,
+                type: 'exercise', topic: 'treble', xpReward: 100, requiredXp: 1660,
                 handPosition: 'RH_C_POS',
                 constraints: {
                     trebleRange: upperTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 3, chordsAllowed: false, numNotes: 25,
@@ -550,78 +418,34 @@ export const courses: Course[] = [
                 }
             },
             {
-                id: 'c2-l5-song-popular',
-                courseId: 'treble-clef-mastery',
+                id: 'c2-l5-song-popular', courseId: 'treble-clef-mastery',
                 name: 'Melody: Yesterday (The Beatles)',
                 description: 'Play the famous opening melody of Yesterday, focusing on steps in the upper register.',
                 focus: 'Read the stepwise ascent into the upper register smoothly up to High C (C5).',
                 instruction: 'Place your Right Hand in C Position. You will need to stretch or transition your hand to play the stepwise line up to High C.',
-                type: 'exercise',
-                topic: 'treble',
-                xpReward: 100,
-                requiredXp: 1370,
+                type: 'exercise', topic: 'treble', xpReward: 100, requiredXp: 1760,
                 handPosition: 'RH_HIGH_C_POS',
                 constraints: {
-                    trebleRange: ['c/4', 'd/4', 'e/4', 'f/4', 'g/4', 'a/4', 'b/4', 'c/5'],
-                    bassRange: [],
-                    rhythms: ['q', 'h'],
-                    maxJumps: 2,
-                    chordsAllowed: false,
-                    numNotes: 12,
+                    trebleRange: ['c/4', 'd/4', 'e/4', 'f/4', 'g/4', 'a/4', 'b/4', 'c/5'], bassRange: [], rhythms: ['q', 'h'], maxJumps: 2, chordsAllowed: false, numNotes: 12,
                     presetMelody: {
                         treble: [
-                            {
-                                keys: ['d/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['c/4'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['c/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['f/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['g/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['b/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['c/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['b/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/4'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['a/4'],
-                                duration: 'q'
-                            }
+                            { keys: ['d/4'], duration: 'q' }, { keys: ['c/4'], duration: 'h' }, { keys: ['c/4'], duration: 'q' }, { keys: ['e/4'], duration: 'q' },
+                            { keys: ['f/4'], duration: 'q' }, { keys: ['g/4'], duration: 'q' }, { keys: ['a/4'], duration: 'q' }, { keys: ['b/4'], duration: 'q' },
+                            { keys: ['c/5'], duration: 'q' }, { keys: ['b/4'], duration: 'q' }, { keys: ['a/4'], duration: 'h' }, { keys: ['a/4'], duration: 'q' }
                         ],
                         bass: []
                     }
                 }
+            },
+            {
+                id: "c2-l5b", courseId: "treble-clef-mastery",
+                name: "Ledger Lines: B3 & A3 in Treble",
+                description: "Read notes that sit below the treble staff on ledger lines.",
+                focus: "B3 sits right below the first ledger line (Middle C). A3 sits directly on the first ledger line below Middle C. Practice reading these lower tones in the Right Hand.",
+                instruction: "Shift your Right Hand down slightly or stretch your thumb to reach B3 and A3. Read carefully below the staff lines.",
+                type: 'exercise', topic: 'treble', xpReward: 90, requiredXp: 1860,
+                handPosition: 'RH_LOWER_C_POS',
+                constraints: { trebleRange: ["a/3", "b/3", "c/4", "d/4", "e/4"], bassRange: [], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 20 }
             },
             {
                 id: "c2-l6", courseId: "treble-clef-mastery",
@@ -629,7 +453,7 @@ export const courses: Course[] = [
                 description: "Synthesize steps, skips, and leaps across the full treble range.",
                 focus: "Read the entire treble clef from C4 to C5. Look ahead to prepare for intervals.",
                 instruction: "Play this longer, generative exercise that combines all treble notes and rhythms you've learned.",
-                type: 'exercise', topic: 'treble', xpReward: 150, requiredXp: 1470,
+                type: 'exercise', topic: 'treble', xpReward: 150, requiredXp: 1950,
                 handPosition: 'RH_C_POS',
                 constraints: { trebleRange: fullTreble, bassRange: [], rhythms: ["q", "h", "w"], maxJumps: 3, chordsAllowed: false, numNotes: 32 }
             },
@@ -639,7 +463,7 @@ export const courses: Course[] = [
                 description: "Play Beethoven's classic masterpiece with your right hand.",
                 focus: "Maintain a steady pulse. Notice the stepwise motion followed by skips.",
                 instruction: "Combine your treble reading skills to play this beautiful Beethoven melody.",
-                type: 'song', topic: 'treble', xpReward: 200, requiredXp: 1620,
+                type: 'song', topic: 'treble', xpReward: 200, requiredXp: 2100,
                 handPosition: 'RH_C_POS',
                 songUrl: '/scores/Ode_to_Joy.musicxml',
                 presetId: 'preset-ode-to-joy'
@@ -658,7 +482,7 @@ export const courses: Course[] = [
                 description: "Read stepwise intervals (seconds) in Left Hand C Position (C3 to G3).",
                 focus: "Ensure your left hand fingers mirror the shape of your right hand. Play with even key weight.",
                 instruction: "Place your Left Hand Pinky on C3, up to thumb on G3. Play the steps on the bass staff.",
-                type: 'exercise', topic: 'bass', xpReward: 80, requiredXp: 1820,
+                type: 'exercise', topic: 'bass', xpReward: 80, requiredXp: 2300,
                 handPosition: 'LH_C_POS',
                 constraints: { trebleRange: [], bassRange: cPosBass, rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 20 }
             },
@@ -668,7 +492,7 @@ export const courses: Course[] = [
                 description: "Practice skips in Left Hand C Position.",
                 focus: "Recognize thirds in the bass staff. Guide notes C3, E3, G3.",
                 instruction: "Place your Left Hand fingers in C Position. Play the melody of Lightly Row.",
-                type: 'exercise', topic: 'bass', xpReward: 80, requiredXp: 1900,
+                type: 'exercise', topic: 'bass', xpReward: 80, requiredXp: 2380,
                 handPosition: 'LH_C_POS',
                 constraints: {
                     trebleRange: [], bassRange: cPosBass, rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 13,
@@ -689,7 +513,7 @@ export const courses: Course[] = [
                 description: "Read left hand leaps in the bass clef.",
                 focus: "Play leaps cleanly. Lift your fingers only slightly to transition.",
                 instruction: "Place your Left Hand in Bass C position. Play the tune of London Bridge.",
-                type: 'exercise', topic: 'bass', xpReward: 90, requiredXp: 1980,
+                type: 'exercise', topic: 'bass', xpReward: 90, requiredXp: 2460,
                 handPosition: 'LH_C_POS',
                 constraints: {
                     trebleRange: [], bassRange: cPosBass, rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 14,
@@ -705,55 +529,30 @@ export const courses: Course[] = [
                 }
             },
             {
-                id: 'c3-l3-song-popular',
-                courseId: 'bass-clef-mastery',
+                id: "c3-l3b", courseId: "bass-clef-mastery",
+                name: "Fourths and Fifths in Bass",
+                description: "Practice jumping leaps of 4ths and 5ths in your left hand.",
+                focus: "Identify lines to lines (fifths) and lines to spaces (fourths) in the bass staff. Keep your wrist flexible to absorb the leaps.",
+                instruction: "Play the leaps as they appear. Focus on maintaining a steady weight in your Left Hand thumb and pinky.",
+                type: 'exercise', topic: 'bass', xpReward: 80, requiredXp: 2550,
+                handPosition: 'LH_C_POS',
+                constraints: { trebleRange: [], bassRange: ["c/3", "d/3", "e/3", "f/3", "g/3"], rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 20 }
+            },
+            {
+                id: 'c3-l3-song-popular', courseId: 'bass-clef-mastery',
                 name: 'Melody: Seven Nation Army Bassline',
                 description: 'Play the world-famous rock riff in the bass clef.',
                 focus: 'Master skips and leaps on the bass clef. Feel the steady driving rhythm.',
                 instruction: 'Place your Left Hand in Bass C position. Move your fingers down to play B2 on the second line.',
-                type: 'exercise',
-                topic: 'bass',
-                xpReward: 90,
-                requiredXp: 2070,
+                type: 'exercise', topic: 'bass', xpReward: 90, requiredXp: 2630,
                 handPosition: 'LH_LOW_C_POS',
                 constraints: {
-                    trebleRange: [],
-                    bassRange: ['b/2', 'c/3', 'd/3', 'e/3', 'g/3'],
-                    rhythms: ['q', 'h'],
-                    maxJumps: 3,
-                    chordsAllowed: false,
-                    numNotes: 7,
+                    trebleRange: [], bassRange: ['b/2', 'c/3', 'd/3', 'e/3', 'g/3'], rhythms: ['q', 'h'], maxJumps: 3, chordsAllowed: false, numNotes: 7,
                     presetMelody: {
                         treble: [],
                         bass: [
-                            {
-                                keys: ['e/3'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['e/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['g/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['c/3'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['b/2'],
-                                duration: 'h'
-                            }
+                            { keys: ['e/3'], duration: 'h' }, { keys: ['e/3'], duration: 'q' }, { keys: ['g/3'], duration: 'q' }, { keys: ['e/3'], duration: 'q' },
+                            { keys: ['d/3'], duration: 'q' }, { keys: ['c/3'], duration: 'h' }, { keys: ['b/2'], duration: 'h' }
                         ]
                     }
                 }
@@ -764,7 +563,7 @@ export const courses: Course[] = [
                 description: "Play a classic holiday tune using your left hand.",
                 focus: "Let the bass notes ring out strongly. Keep a solid, heavy pulse with your arm.",
                 instruction: "Use your left hand alone to play this famous melody down on the bass clef.",
-                type: 'song', topic: 'bass', xpReward: 150, requiredXp: 2160,
+                type: 'song', topic: 'bass', xpReward: 150, requiredXp: 2720,
                 handPosition: 'LH_C_POS',
                 songUrl: '/scores/Good_King_Wenceslas.musicxml',
                 presetId: 'preset-good-king-wenceslas'
@@ -775,7 +574,7 @@ export const courses: Course[] = [
                 description: "Explore the lower register of the bass clef down to C3.",
                 focus: "Coordinate low guide notes C3 and G2.",
                 instruction: "Shift your Left Hand to the Low C Position. Play the lower bass melody of Old MacDonald.",
-                type: 'exercise', topic: 'bass', xpReward: 100, requiredXp: 2310,
+                type: 'exercise', topic: 'bass', xpReward: 100, requiredXp: 2870,
                 handPosition: 'LH_LOW_C_POS',
                 constraints: {
                     trebleRange: [], bassRange: bassLowC, rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 14,
@@ -791,114 +590,37 @@ export const courses: Course[] = [
                 }
             },
             {
-                id: 'c3-l5-song-popular',
-                courseId: 'bass-clef-mastery',
+                id: 'c3-l5-song-popular', courseId: 'bass-clef-mastery',
                 name: 'Melody: Bad Guy Bassline',
                 description: 'Play Billie Eilish\'s dark, groovy minor bassline in the bass clef.',
                 focus: 'Maintain a solid, steady pulse while navigating the minor third leaps.',
                 instruction: 'Position your Left Hand to reach G2 on the bottom line. Follow the rhythm carefully.',
-                type: 'exercise',
-                topic: 'bass',
-                xpReward: 100,
-                requiredXp: 2410,
+                type: 'exercise', topic: 'bass', xpReward: 100, requiredXp: 2970,
                 handPosition: 'LH_LOW_C_POS',
                 constraints: {
-                    trebleRange: [],
-                    bassRange: ['g/2', 'a/2', 'c/3', 'd/3', 'e/3', 'f/3'],
-                    rhythms: ['q', 'h'],
-                    maxJumps: 3,
-                    chordsAllowed: false,
-                    numNotes: 21,
+                    trebleRange: [], bassRange: ['g/2', 'a/2', 'c/3', 'd/3', 'e/3', 'f/3'], rhythms: ['q', 'h'], maxJumps: 3, chordsAllowed: false, numNotes: 21,
                     presetMelody: {
                         treble: [],
                         bass: [
-                            {
-                                keys: ['a/2'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/2'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/2'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/2'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/2'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/2'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['c/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/2'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['f/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['c/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/2'],
-                                duration: 'h'
-                            }
+                            { keys: ['a/2'], duration: 'q' }, { keys: ['a/2'], duration: 'q' }, { keys: ['a/2'], duration: 'q' }, { keys: ['a/2'], duration: 'q' },
+                            { keys: ['a/2'], duration: 'q' }, { keys: ['a/2'], duration: 'q' }, { keys: ['c/3'], duration: 'q' }, { keys: ['a/2'], duration: 'q' },
+                            { keys: ['d/3'], duration: 'q' }, { keys: ['d/3'], duration: 'q' }, { keys: ['d/3'], duration: 'q' }, { keys: ['d/3'], duration: 'q' },
+                            { keys: ['d/3'], duration: 'q' }, { keys: ['d/3'], duration: 'q' }, { keys: ['f/3'], duration: 'q' }, { keys: ['d/3'], duration: 'q' },
+                            { keys: ['e/3'], duration: 'q' }, { keys: ['e/3'], duration: 'q' }, { keys: ['d/3'], duration: 'q' }, { keys: ['c/3'], duration: 'q' },
+                            { keys: ['a/2'], duration: 'h' }
                         ]
                     }
                 }
+            },
+            {
+                id: "c3-l5b", courseId: "bass-clef-mastery",
+                name: "Ledger Lines: Middle C & D4 in Bass",
+                description: "Read notes sitting above the bass staff using ledger lines.",
+                focus: "Middle C (C4) sits on the ledger line above the bass staff. D4 sits above that ledger line. Train your Left Hand to read these high notes.",
+                instruction: "Position your Left Hand thumb to reach up to Middle C and D4. Read these ledger line notes in the bass clef.",
+                type: 'exercise', topic: 'bass', xpReward: 90, requiredXp: 3070,
+                handPosition: 'LH_HIGH_C_POS',
+                constraints: { trebleRange: [], bassRange: ["g/3", "a/3", "b/3", "c/4", "d/4"], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 20 }
             },
             {
                 id: "c3-l6", courseId: "bass-clef-mastery",
@@ -906,7 +628,7 @@ export const courses: Course[] = [
                 description: "Read across the entire bass clef from Low F (F2) to Middle C (C4).",
                 focus: "Synthesize all left hand intervals and notes. Look ahead to prepare for shifts.",
                 instruction: "A long, comprehensive generative exercise testing your reading across the whole bass staff.",
-                type: 'exercise', topic: 'bass', xpReward: 150, requiredXp: 2510,
+                type: 'exercise', topic: 'bass', xpReward: 150, requiredXp: 3160,
                 handPosition: 'LH_C_POS',
                 constraints: { trebleRange: [], bassRange: fullBass, rhythms: ["q", "h", "w"], maxJumps: 3, chordsAllowed: false, numNotes: 32 }
             }
@@ -924,93 +646,28 @@ export const courses: Course[] = [
                 description: "Alternate playing between your right and left hands.",
                 focus: "Look at the clefs. Keep your non-playing hand resting gently on the keys, ready for its turn.",
                 instruction: "You will see the melody bounce between the treble clef (Right Hand) and bass clef (Left Hand). Trade off smoothly.",
-                type: 'exercise', topic: 'both', xpReward: 100, requiredXp: 2660,
+                type: 'exercise', topic: 'both', xpReward: 100, requiredXp: 3310,
                 handPosition: 'GRAND_C_POS',
                 constraints: { trebleRange: cPosTreble, bassRange: cPosBass, rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 24 }
             },
             {
-                id: 'c4-l1-song-popular',
-                courseId: 'grand-staff-coordination',
+                id: 'c4-l1-song-popular', courseId: 'grand-staff-coordination',
                 name: 'Melody: Let It Go Chorus (Frozen)',
                 description: 'Play the iconic Frozen chorus, coordinating both hands together.',
                 focus: 'Align the left-hand whole notes with the first beat of the right-hand melody in each measure.',
                 instruction: 'Your left hand plays solid bass notes while the right hand plays the iconic ascending and descending melody.',
-                type: 'exercise',
-                topic: 'both',
-                xpReward: 110,
-                requiredXp: 2760,
+                type: 'exercise', topic: 'both', xpReward: 110, requiredXp: 3410,
                 handPosition: 'GRAND_C_POS',
                 constraints: {
-                    trebleRange: ['c/4', 'd/4', 'e/4', 'f/4', 'g/4'],
-                    bassRange: ['f/2', 'g/2', 'a/2', 'c/3'],
-                    rhythms: ['q', 'h', 'w'],
-                    maxJumps: 2,
-                    chordsAllowed: false,
-                    numNotes: 14,
+                    trebleRange: ['c/4', 'd/4', 'e/4', 'f/4', 'g/4'], bassRange: ['f/2', 'g/2', 'a/2', 'c/3'], rhythms: ['q', 'h', 'w'], maxJumps: 2, chordsAllowed: false, numNotes: 14,
                     presetMelody: {
                         treble: [
-                            {
-                                keys: ['g/4'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['g/4'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['d/4'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['d/4'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['c/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['f/4'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/4'],
-                                duration: 'q'
-                            }
+                            { keys: ['g/4'], duration: 'h' }, { keys: ['g/4'], duration: 'h' }, { keys: ['d/4'], duration: 'h' }, { keys: ['d/4'], duration: 'h' },
+                            { keys: ['e/4'], duration: 'q' }, { keys: ['e/4'], duration: 'q' }, { keys: ['d/4'], duration: 'q' }, { keys: ['c/4'], duration: 'q' },
+                            { keys: ['f/4'], duration: 'h' }, { keys: ['e/4'], duration: 'q' }, { keys: ['d/4'], duration: 'q' }
                         ],
                         bass: [
-                            {
-                                keys: ['c/3'],
-                                duration: 'w'
-                            },
-                            {
-                                keys: ['g/2'],
-                                duration: 'w'
-                            },
-                            {
-                                keys: ['a/2'],
-                                duration: 'w'
-                            },
-                            {
-                                keys: ['f/2'],
-                                duration: 'w'
-                            }
+                            { keys: ['c/3'], duration: 'w' }, { keys: ['g/2'], duration: 'w' }, { keys: ['a/2'], duration: 'w' }, { keys: ['f/2'], duration: 'w' }
                         ]
                     }
                 }
@@ -1021,7 +678,7 @@ export const courses: Course[] = [
                 description: "Play the iconic pop duet combining right-hand melody and left-hand root chord drones.",
                 focus: "Play chords exactly together. Align the first beat of each measure.",
                 instruction: "RH plays the C position melody. LH plays drone root chords C, A, F, G. Play them together.",
-                type: 'exercise', topic: 'both', xpReward: 110, requiredXp: 2870,
+                type: 'exercise', topic: 'both', xpReward: 110, requiredXp: 3520,
                 handPosition: 'GRAND_C_POS',
                 constraints: {
                     trebleRange: cPosTreble, bassRange: cPosBass, rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: true, numNotes: 17,
@@ -1034,14 +691,31 @@ export const courses: Course[] = [
                             { keys: ["e/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["g/4"], duration: "h" }
                         ],
                         bass: [
-                            { keys: ["c/3"], duration: "w" },
-                            { keys: ["a/2"], duration: "w" },
-                            { keys: ["f/2"], duration: "w" },
-                            { keys: ["g/2"], duration: "w" },
+                            { keys: ["c/3"], duration: "w" }, { keys: ["a/2"], duration: "w" }, { keys: ["f/2"], duration: "w" }, { keys: ["g/2"], duration: "w" },
                             { keys: ["c/3"], duration: "w" }
                         ]
                     }
                 }
+            },
+            {
+                id: "c4-l2b", courseId: "grand-staff-coordination",
+                name: "Melody and Countermelody",
+                description: "Coordinate independent stepping movements in both hands at the same time.",
+                focus: "Your Left Hand will play slow stepping notes (half notes) while your Right Hand plays faster steps (quarters). Keep your hands relaxed and listen to the alignment.",
+                instruction: "Play both hands together. Concentrate on the slower, steady countermelody in your left hand.",
+                type: 'exercise', topic: 'both', xpReward: 110, requiredXp: 3630,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4"], bassRange: ["c/3", "d/3", "e/3", "f/3", "g/3"], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 24 }
+            },
+            {
+                id: "c4-l2c", courseId: "grand-staff-coordination",
+                name: "Sharing Middle C",
+                description: "Navigate both hands playing in the same central register.",
+                focus: "Middle C (C4) is shared by both treble and bass clefs. Watch which hand is designated to play it by looking at the stem direction or clef.",
+                instruction: "Play Middle C with your Right Hand thumb when in the treble staff, and with your Left Hand thumb when in the bass staff.",
+                type: 'exercise', topic: 'both', xpReward: 100, requiredXp: 3740,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["c/4", "d/4", "e/4"], bassRange: ["a/3", "b/3", "c/4"], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 20 }
             },
             {
                 id: "c4-l3", courseId: "grand-staff-coordination",
@@ -1049,7 +723,7 @@ export const courses: Course[] = [
                 description: "Practice hand coordination with a simple French folk melody.",
                 focus: "Hold the left-hand half notes and whole notes while the right-hand melody steps forward.",
                 instruction: "Play this beautiful melody using both hands. The left hand provides harmonic support.",
-                type: 'song', topic: 'both', xpReward: 150, requiredXp: 2980,
+                type: 'song', topic: 'both', xpReward: 150, requiredXp: 3840,
                 handPosition: 'GRAND_C_POS',
                 songUrl: '/scores/Au_Clair_De_La_Lune.musicxml',
                 presetId: 'preset-au-clair-de-la-lune'
@@ -1060,7 +734,7 @@ export const courses: Course[] = [
                 description: "Play notes that move in opposite directions in each hand.",
                 focus: "Contrary motion is anatomically symmetrical, using the same fingers (e.g. both thumbs, both index fingers) at the same time. This is easier for your brain than parallel motion!",
                 instruction: "Play notes moving in opposite directions (e.g. hands moving outwards). Tap into the symmetrical finger movement.",
-                type: 'exercise', topic: 'both', xpReward: 120, requiredXp: 3130,
+                type: 'exercise', topic: 'both', xpReward: 120, requiredXp: 3990,
                 handPosition: 'GRAND_C_POS',
                 constraints: { trebleRange: cPosTreble, bassRange: cPosBass, rhythms: ["q"], maxJumps: 1, chordsAllowed: true, numNotes: 20 }
             },
@@ -1070,9 +744,19 @@ export const courses: Course[] = [
                 description: "Play the same notes in both hands an octave apart.",
                 focus: "Parallel motion is asymmetrical (e.g. RH Finger 1 plays with LH Finger 5). Align your movements carefully by sound.",
                 instruction: "Play steps in both hands moving in the same direction. Lock your fingers together on the beat.",
-                type: 'exercise', topic: 'both', xpReward: 110, requiredXp: 3250,
+                type: 'exercise', topic: 'both', xpReward: 110, requiredXp: 4110,
                 handPosition: 'GRAND_C_POS',
                 constraints: { trebleRange: cPosTreble, bassRange: cPosBass, rhythms: ["q"], maxJumps: 1, chordsAllowed: true, numNotes: 20 }
+            },
+            {
+                id: "c4-l5b", courseId: "grand-staff-coordination",
+                name: "Alternating Bass Accompaniment",
+                description: "Play a rocking left-hand bass pattern against a right-hand melody.",
+                focus: "LH plays alternating fifths (C3 then G3) in a rocking pattern. RH plays a simple melody. This builds independence of touch.",
+                instruction: "Maintain a steady rocking motion in your left hand. Do not let it speed up or slow down when the right hand plays.",
+                type: 'exercise', topic: 'both', xpReward: 120, requiredXp: 4220,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4"], bassRange: ["c/3", "g/3"], rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 24 }
             },
             {
                 id: "c4-l6", courseId: "grand-staff-coordination",
@@ -1080,7 +764,7 @@ export const courses: Course[] = [
                 description: "Master hand independence with the chorus of Jingle Bells.",
                 focus: "Listen to the melody's rhythm against the long, steady whole notes in the left hand.",
                 instruction: "Use both hands together to play this festive song. Keep the beat steady and strong.",
-                type: 'song', topic: 'both', xpReward: 200, requiredXp: 3360,
+                type: 'song', topic: 'both', xpReward: 200, requiredXp: 4340,
                 songUrl: '/scores/Jingle_Bells.musicxml',
                 presetId: 'preset-jingle-bells'
             }
@@ -1098,7 +782,7 @@ export const courses: Course[] = [
                 description: "Practice brisk eighth notes in 4/4 time.",
                 focus: "Count the eighth notes evenly. Feel the division of the beat.",
                 instruction: "Keep your hand in C position. Play the eighth note runs of Yankee Doodle.",
-                type: 'exercise', topic: 'treble', xpReward: 120, requiredXp: 3560,
+                type: 'exercise', topic: 'treble', xpReward: 120, requiredXp: 4540,
                 handPosition: 'RH_C_POS',
                 constraints: {
                     trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "8"], maxJumps: 1, chordsAllowed: false, numNotes: 14,
@@ -1119,7 +803,7 @@ export const courses: Course[] = [
                 description: "Learn 3/4 waltz time using dotted half notes.",
                 focus: "Hold dotted half notes for exactly 3 beats. Feel the triple meter.",
                 instruction: "Place your Right Hand in C Position. Follow the waltz rhythm to play Amazing Grace.",
-                type: 'exercise', topic: 'treble', xpReward: 120, requiredXp: 3680,
+                type: 'exercise', topic: 'treble', xpReward: 120, requiredXp: 4660,
                 handPosition: 'RH_C_POS',
                 constraints: {
                     trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 9,
@@ -1136,13 +820,43 @@ export const courses: Course[] = [
                 }
             },
             {
+                id: "c5-l2b", courseId: "rhythm-mastery",
+                name: "Tied Notes & Syncopation",
+                description: "Learn to hold notes across beats and bar lines using ties.",
+                focus: "A tie connects two notes of the same pitch. Play the first note and hold it for the duration of both notes. Do not restrike the second note!",
+                instruction: "Play the exercises focusing on holding the tied notes. Notice how it shifts the accent to the off-beat.",
+                type: 'exercise', topic: 'both', xpReward: 120, requiredXp: 4780,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4"], bassRange: ["c/3", "g/3"], rhythms: ["q", "h", "w"], maxJumps: 1, chordsAllowed: false, numNotes: 24 }
+            },
+            {
+                id: "c5-l2c", courseId: "rhythm-mastery",
+                name: "Upbeats & Pickups (Anacrusis)",
+                description: "Start playing before the first downbeat of the piece.",
+                focus: "A pickup measure is an incomplete measure at the start of a song. Count the silent beats first, then start playing on the upbeat.",
+                instruction: "Listen to the metronome count-in. Start playing precisely on the pickup beat (e.g. beat 4 in a 4/4 meter).",
+                type: 'exercise', topic: 'treble', xpReward: 110, requiredXp: 4900,
+                handPosition: 'RH_C_POS',
+                constraints: { trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4"], bassRange: [], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 16 }
+            },
+            {
                 id: "c5-l3", courseId: "rhythm-mastery",
                 name: "Dotted Quarter Notes",
                 description: "Read the syncopated 'dotted-quarter followed by an eighth' rhythm.",
                 focus: "The dotted quarter holds for 1.5 beats. Feel the slight push into the next note.",
                 instruction: "Focus on the syncopated rhythm. Count carefully to capture the uneven pulse.",
-                type: 'exercise', topic: 'both', xpReward: 130, requiredXp: 3800,
+                type: 'exercise', topic: 'both', xpReward: 130, requiredXp: 5010,
                 constraints: { trebleRange: cPosTreble, bassRange: ["c/3", "g/3"], rhythms: ["q", "8", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 32 }
+            },
+            {
+                id: "c5-l3b", courseId: "rhythm-mastery",
+                name: "Playing on the Off-Beat",
+                description: "Synchronize your hands with eighth notes that fall between the beats.",
+                focus: "LH plays steady quarter-note pulses on the beats, while RH plays eighth notes on the 'and' of the beat. Keep your hands decoupled.",
+                instruction: "Play slowly. Make sure your right-hand off-beats fall exactly halfway between the left-hand beats.",
+                type: 'exercise', topic: 'both', xpReward: 130, requiredXp: 5140,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4"], bassRange: ["c/3", "g/3"], rhythms: ["q", "8"], maxJumps: 1, chordsAllowed: false, numNotes: 24 }
             },
             {
                 id: "c5-l4", courseId: "rhythm-mastery",
@@ -1150,180 +864,36 @@ export const courses: Course[] = [
                 description: "A comprehensive rhythm challenge combining all note lengths.",
                 focus: "Lock your timing while switching between half, quarter, and eighth notes across both clefs.",
                 instruction: "Combine eighth notes and dotted rhythms in both hands in this rhythm test.",
-                type: 'exercise', topic: 'both', xpReward: 140, requiredXp: 3930,
+                type: 'exercise', topic: 'both', xpReward: 140, requiredXp: 5270,
                 constraints: { trebleRange: fullTreble, bassRange: cPosBass, rhythms: ["q", "8", "h"], maxJumps: 2, chordsAllowed: true, numNotes: 36 }
             },
             {
-                id: 'c5-l5-song-popular',
-                courseId: 'rhythm-mastery',
+                id: 'c5-l5-song-popular', courseId: 'rhythm-mastery',
                 name: 'Song: Clocks',
                 description: 'Practice Coldplay\'s famous syncopated 3+3+2 eighth note pattern.',
                 focus: 'Master the 3+3+2 subdivision. Keep your rhythm steady and your hands synchronized.',
                 instruction: 'Your right hand plays a syncopated three-note pattern in the G4-E5 range, while your left hand holds steady bass notes in the G2-D3 range.',
-                type: 'exercise',
-                topic: 'both',
-                xpReward: 150,
-                requiredXp: 4070,
+                type: 'exercise', topic: 'both', xpReward: 150, requiredXp: 5410,
                 handPosition: 'GRAND_C_POS',
                 constraints: {
-                    trebleRange: ['g/4', 'a/4', 'b/4', 'c/5', 'd/5', 'e/5'],
-                    bassRange: ['g/2', 'a/2', 'b/2', 'c/3', 'd/3'],
-                    rhythms: ['8', 'q', 'h', 'w'],
-                    maxJumps: 4,
-                    chordsAllowed: false,
-                    numNotes: 36,
+                    trebleRange: ['g/4', 'a/4', 'b/4', 'c/5', 'd/5', 'e/5'], bassRange: ['g/2', 'a/2', 'b/2', 'c/3', 'd/3'], rhythms: ['8', 'q', 'h', 'w'], maxJumps: 4, chordsAllowed: false, numNotes: 36,
                     presetMelody: {
                         treble: [
-                            {
-                                keys: ['d/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['b/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['g/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['d/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['b/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['g/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['d/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['b/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['e/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['c/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['g/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['e/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['c/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['g/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['e/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['c/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['e/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['c/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['a/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['e/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['c/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['a/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['e/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['c/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['d/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['a/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['g/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['d/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['a/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['g/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['d/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['a/4'],
-                                duration: '8'
-                            }
+                            { keys: ['d/5'], duration: '8' }, { keys: ['b/4'], duration: '8' }, { keys: ['g/4'], duration: '8' }, { keys: ['d/5'], duration: '8' },
+                            { keys: ['b/4'], duration: '8' }, { keys: ['g/4'], duration: '8' }, { keys: ['d/5'], duration: '8' }, { keys: ['b/4'], duration: '8' },
+                            { keys: ['e/5'], duration: '8' }, { keys: ['c/5'], duration: '8' }, { keys: ['g/4'], duration: '8' }, { keys: ['e/5'], duration: '8' },
+                            { keys: ['c/5'], duration: '8' }, { keys: ['g/4'], duration: '8' }, { keys: ['e/5'], duration: '8' }, { keys: ['c/5'], duration: '8' },
+                            { keys: ['e/5'], duration: '8' }, { keys: ['c/5'], duration: '8' }, { keys: ['a/4'], duration: '8' }, { keys: ['e/5'], duration: '8' },
+                            { keys: ['c/5'], duration: '8' }, { keys: ['a/4'], duration: '8' }, { keys: ['e/5'], duration: '8' }, { keys: ['c/5'], duration: '8' },
+                            { keys: ['d/5'], duration: '8' }, { keys: ['a/4'], duration: '8' }, { keys: ['g/4'], duration: '8' }, { keys: ['d/5'], duration: '8' },
+                            { keys: ['a/4'], duration: '8' }, { keys: ['g/4'], duration: '8' }, { keys: ['d/5'], duration: '8' }, { keys: ['a/4'], duration: '8' }
                         ],
                         bass: [
-                            {
-                                keys: ['g/2'],
-                                duration: 'w'
-                            },
-                            {
-                                keys: ['c/3'],
-                                duration: 'w'
-                            },
-                            {
-                                keys: ['a/2'],
-                                duration: 'w'
-                            },
-                            {
-                                keys: ['d/3'],
-                                duration: 'w'
-                            }
+                            { keys: ['g/2'], duration: 'w' }, { keys: ['c/3'], duration: 'w' }, { keys: ['a/2'], duration: 'w' }, { keys: ['d/3'], duration: 'w' }
                         ]
                     }
                 }
-            },
+            }
         ]
     },
     {
@@ -1338,7 +908,7 @@ export const courses: Course[] = [
                 description: "Stretch your hands to play thirds and sixths simultaneously.",
                 focus: "Keep your hand expanded. Move both hands together.",
                 instruction: "Play the classic Chopsticks theme using expanded intervals.",
-                type: 'exercise', topic: 'both', xpReward: 120, requiredXp: 4220,
+                type: 'exercise', topic: 'both', xpReward: 120, requiredXp: 5560,
                 handPosition: 'GRAND_C_POS',
                 constraints: {
                     trebleRange: ["f/4", "g/4"], bassRange: ["f/3", "g/3"], rhythms: ["q"], maxJumps: 1, chordsAllowed: true, numNotes: 10,
@@ -1359,29 +929,43 @@ export const courses: Course[] = [
                 }
             },
             {
+                id: "c6-l1b", courseId: "expanding-positions",
+                name: "Stretching for Sixths",
+                description: "Extend your hand range to play sixths without shifting positions.",
+                focus: "A sixth spans six notes (e.g. C to A). Open your thumb and pinky slightly wider than C Position. Avoid tensing your hand.",
+                instruction: "Play the exercises requiring you to reach one note beyond the standard 5-finger position. Return to normal C position after.",
+                type: 'exercise', topic: 'treble', xpReward: 120, requiredXp: 5680,
+                handPosition: 'RH_C_POS',
+                constraints: { trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4"], bassRange: [], rhythms: ["q", "h"], maxJumps: 5, chordsAllowed: false, numNotes: 20 }
+            },
+            {
                 id: "c6-l2", courseId: "expanding-positions",
                 name: "Melody: Joy to the World (Scale)",
                 description: "Practice thumb crossing techniques on a descending C major scale.",
                 focus: "Tuck Finger 3 over your thumb smoothly as you play descending notes.",
                 instruction: "Start on High C. Follow the descending scale of Joy to the World.",
-                type: 'exercise', topic: 'treble', xpReward: 130, requiredXp: 4340,
+                type: 'exercise', topic: 'treble', xpReward: 130, requiredXp: 5800,
                 handPosition: 'RH_C_POS',
                 constraints: {
                     trebleRange: fullTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 8,
                     presetMelody: {
                         treble: [
-                            { keys: ["c/5"], duration: "q" },
-                            { keys: ["b/4"], duration: "h" },
-                            { keys: ["a/4"], duration: "q" },
-                            { keys: ["g/4"], duration: "h" },
-                            { keys: ["f/4"], duration: "q" },
-                            { keys: ["e/4"], duration: "q" },
-                            { keys: ["d/4"], duration: "q" },
-                            { keys: ["c/4"], duration: "h" }
+                            { keys: ["c/5"], duration: "q" }, { keys: ["b/4"], duration: "h" }, { keys: ["a/4"], duration: "q" }, { keys: ["g/4"], duration: "h" },
+                            { keys: ["f/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "h" }
                         ],
                         bass: []
                     }
                 }
+            },
+            {
+                id: "c6-l2b", courseId: "expanding-positions",
+                name: "Thumb Under Crossing (RH)",
+                description: "Master tucking your thumb under Finger 3 to play ascending scales.",
+                focus: "Tuck your thumb (Finger 1) under your middle finger (Finger 3) smoothly when moving from E4 to F4. Keep your wrist level.",
+                instruction: "Play the ascending stepwise patterns. Tucking your thumb allows you to play 8 notes in a row without running out of fingers!",
+                type: 'exercise', topic: 'treble', xpReward: 130, requiredXp: 5930,
+                handPosition: 'RH_C_POS',
+                constraints: { trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5"], bassRange: [], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 24 }
             },
             {
                 id: "c6-l3", courseId: "expanding-positions",
@@ -1389,9 +973,19 @@ export const courses: Course[] = [
                 description: "Cross Finger 3 over the thumb to shift positions down.",
                 focus: "Cross your middle finger (Finger 3) over your thumb to play lower notes smoothly.",
                 instruction: "Practice descending crossings in your left hand, expanding your range down to Low F (F2).",
-                type: 'exercise', topic: 'bass', xpReward: 130, requiredXp: 4470,
+                type: 'exercise', topic: 'bass', xpReward: 130, requiredXp: 6060,
                 handPosition: 'LH_C_POS',
                 constraints: { trebleRange: [], bassRange: ["f/2", "g/2", "a/2", "b/2", "c/3", "d/3", "e/3", "f/3", "g/3"], rhythms: ["q"], maxJumps: 1, chordsAllowed: false, numNotes: 24 }
+            },
+            {
+                id: "c6-l3b", courseId: "expanding-positions",
+                name: "Thumb Under Crossing (LH)",
+                description: "Learn the thumb tuck technique in the left hand to shift positions up.",
+                focus: "Tuck your thumb (Finger 1) under Finger 3 or 4 in the Left Hand while moving up the scale. Keep your hand relaxed.",
+                instruction: "Play the ascending exercise in the left hand, crossing your thumb under Finger 3 as you move from G3 to A3.",
+                type: 'exercise', topic: 'bass', xpReward: 130, requiredXp: 6190,
+                handPosition: 'LH_C_POS',
+                constraints: { trebleRange: [], bassRange: ["c/3", "d/3", "e/3", "f/3", "g/3", "a/3", "b/3", "c/4"], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 24 }
             },
             {
                 id: "c6-l4", courseId: "expanding-positions",
@@ -1399,165 +993,36 @@ export const courses: Course[] = [
                 description: "Play broken triad chords sequentially up and down.",
                 focus: "Keep a light, even touch. Feel your arm gliding horizontally across the keyboard.",
                 instruction: "Play chord tones C, E, G, C sequentially. Relax your fingers between notes.",
-                type: 'exercise', topic: 'both', xpReward: 140, requiredXp: 4600,
+                type: 'exercise', topic: 'both', xpReward: 140, requiredXp: 6320,
                 handPosition: 'GRAND_C_POS',
                 constraints: { trebleRange: ["c/4", "e/4", "g/4", "c/5"], bassRange: ["c/3", "e/3", "g/3", "c/4"], rhythms: ["q", "8"], maxJumps: 3, chordsAllowed: false, numNotes: 28 }
             },
             {
-                id: 'c6-l5-song-popular',
-                courseId: 'expanding-positions',
+                id: 'c6-l5-song-popular', courseId: 'expanding-positions',
                 name: 'Song: Perfect',
                 description: 'Play Ed Sheeran\'s romantic ballad with a flowing 6/8 arpeggiated movement.',
                 focus: 'Practice expanding your hand beyond the 5-finger position to sweep across the octave.',
                 instruction: 'Your right hand will play arpeggiated chords spanning an octave in 6/8 meter, while your left hand plays supporting bass notes.',
-                type: 'exercise',
-                topic: 'both',
-                xpReward: 150,
-                requiredXp: 4740,
+                type: 'exercise', topic: 'both', xpReward: 150, requiredXp: 6460,
                 handPosition: 'GRAND_C_POS',
                 constraints: {
-                    trebleRange: ['c/4', 'e/4', 'f/4', 'g/4', 'a/4', 'b/4', 'c/5', 'e/5', 'f/5', 'g/5', 'a/5'],
-                    bassRange: ['f/2', 'g/2', 'a/2', 'c/3'],
-                    rhythms: ['8', 'q', 'h'],
-                    maxJumps: 5,
-                    chordsAllowed: false,
-                    numNotes: 32,
+                    trebleRange: ['c/4', 'e/4', 'f/4', 'g/4', 'a/4', 'b/4', 'c/5', 'e/5', 'f/5', 'g/5', 'a/5'], bassRange: ['f/2', 'g/2', 'a/2', 'c/3'], rhythms: ['8', 'q', 'h'], maxJumps: 5, chordsAllowed: false, numNotes: 32,
                     presetMelody: {
                         treble: [
-                            {
-                                keys: ['c/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['g/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['c/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['g/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['e/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['a/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['c/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['e/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['a/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['e/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['c/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['f/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['a/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['c/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['f/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['c/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['a/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['g/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['b/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['d/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['g/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['d/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['b/4'],
-                                duration: '8'
-                            }
+                            { keys: ['c/4'], duration: '8' }, { keys: ['e/4'], duration: '8' }, { keys: ['g/4'], duration: '8' }, { keys: ['c/5'], duration: '8' },
+                            { keys: ['g/4'], duration: '8' }, { keys: ['e/4'], duration: '8' }, { keys: ['a/4'], duration: '8' }, { keys: ['c/5'], duration: '8' },
+                            { keys: ['e/5'], duration: '8' }, { keys: ['a/5'], duration: '8' }, { keys: ['e/5'], duration: '8' }, { keys: ['c/5'], duration: '8' },
+                            { keys: ['f/4'], duration: '8' }, { keys: ['a/4'], duration: '8' }, { keys: ['c/5'], duration: '8' }, { keys: ['f/5'], duration: '8' },
+                            { keys: ['c/5'], duration: '8' }, { keys: ['a/4'], duration: '8' }, { keys: ['g/4'], duration: '8' }, { keys: ['b/4'], duration: '8' },
+                            { keys: ['d/5'], duration: '8' }, { keys: ['g/5'], duration: '8' }, { keys: ['d/5'], duration: '8' }, { keys: ['b/4'], duration: '8' }
                         ],
                         bass: [
-                            {
-                                keys: ['c/3'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['c/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/2'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['a/2'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['f/2'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['f/2'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['g/2'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['g/2'],
-                                duration: 'q'
-                            }
+                            { keys: ['c/3'], duration: 'h' }, { keys: ['c/3'], duration: 'q' }, { keys: ['a/2'], duration: 'h' }, { keys: ['a/2'], duration: 'q' },
+                            { keys: ['f/2'], duration: 'h' }, { keys: ['f/2'], duration: 'q' }, { keys: ['g/2'], duration: 'h' }, { keys: ['g/2'], duration: 'q' }
                         ]
                     }
                 }
-            },
+            }
         ]
     },
     {
@@ -1572,7 +1037,7 @@ export const courses: Course[] = [
                 description: "Play the chromatic opening theme of Für Elise.",
                 focus: "Navigate the alternating chromatic notes E5 and D#5 smoothly.",
                 instruction: "Place your Right Hand index and middle fingers on E5 and D#5. Follow the classic Beethoven theme.",
-                type: 'exercise', topic: 'treble', xpReward: 130, requiredXp: 4890,
+                type: 'exercise', topic: 'treble', xpReward: 130, requiredXp: 6610,
                 handPosition: 'RH_HIGH_C_POS',
                 constraints: {
                     trebleRange: trebleSharps, bassRange: [], rhythms: ["q"], maxJumps: 4, chordsAllowed: false, numNotes: 9,
@@ -1587,148 +1052,38 @@ export const courses: Course[] = [
                 }
             },
             {
-                id: 'c7-l2-song-popular',
-                courseId: 'accidentals-key-sigs',
+                id: "c7-l1b", courseId: "accidentals-key-sigs",
+                name: "Harmonic Minor & The Raised 7th",
+                description: "Learn the sound of the harmonic minor scale with its signature raised 7th accidental.",
+                focus: "In A minor, the 7th note (G) is often raised to G# using a sharp accidental. This creates a beautiful, exotic step-and-a-half leap.",
+                instruction: "Play the A minor melody. Keep your index finger ready to strike the G# black key.",
+                type: 'exercise', topic: 'treble', xpReward: 130, requiredXp: 6740,
+                handPosition: 'RH_HIGH_C_POS',
+                constraints: { trebleRange: ["a/4", "b/4", "c/5", "d/5", "e/5", "f/5", "g#/5", "a/5"], bassRange: [], rhythms: ["q", "h"], maxJumps: 3, chordsAllowed: false, numNotes: 20 }
+            },
+            {
+                id: 'c7-l2-song-popular', courseId: 'accidentals-key-sigs',
                 name: 'Song: He\'s a Pirate',
                 description: 'Play the driving, syncopated theme from Pirates of the Caribbean in D minor.',
                 focus: 'Navigate the flat accidental (Bb) while maintaining a fast, driving triple pulse.',
                 instruction: 'Play the iconic syncopated D minor melody with the right hand, matched with simple bass changes.',
-                type: 'exercise',
-                topic: 'both',
-                xpReward: 200,
-                requiredXp: 5020,
+                type: 'exercise', topic: 'both', xpReward: 200, requiredXp: 6870,
                 handPosition: 'GRAND_C_POS',
                 constraints: {
-                    trebleRange: ['a/4', 'c/5', 'd/5', 'e/5', 'f/5', 'g/5', 'a/5', 'bb/5'],
-                    bassRange: ['g/2', 'a/2', 'bb/2', 'c/3', 'd/3', 'f/3'],
-                    rhythms: ['8', 'q', 'h'],
-                    maxJumps: 4,
-                    chordsAllowed: false,
-                    numNotes: 26,
+                    trebleRange: ['a/4', 'c/5', 'd/5', 'e/5', 'f/5', 'g/5', 'a/5', 'bb/5'], bassRange: ['g/2', 'a/2', 'bb/2', 'c/3', 'd/3', 'f/3'], rhythms: ['8', 'q', 'h'], maxJumps: 4, chordsAllowed: false, numNotes: 26,
                     presetMelody: {
                         treble: [
-                            {
-                                keys: ['a/4'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['c/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['d/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['d/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['e/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['f/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['f/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['f/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['f/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['g/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['a/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['a/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['bb/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['a/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['g/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['f/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/5'],
-                                duration: '8'
-                            },
-                            {
-                                keys: ['d/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/4'],
-                                duration: '8'
-                            }
+                            { keys: ['a/4'], duration: '8' }, { keys: ['c/5'], duration: '8' }, { keys: ['d/5'], duration: 'q' }, { keys: ['d/5'], duration: '8' },
+                            { keys: ['d/5'], duration: '8' }, { keys: ['e/5'], duration: '8' }, { keys: ['f/5'], duration: '8' }, { keys: ['f/5'], duration: 'q' },
+                            { keys: ['f/5'], duration: '8' }, { keys: ['f/5'], duration: '8' }, { keys: ['g/5'], duration: '8' }, { keys: ['a/5'], duration: '8' },
+                            { keys: ['a/5'], duration: 'q' }, { keys: ['a/5'], duration: '8' }, { keys: ['bb/5'], duration: '8' }, { keys: ['a/5'], duration: '8' },
+                            { keys: ['g/5'], duration: '8' }, { keys: ['f/5'], duration: 'q' }, { keys: ['e/5'], duration: '8' }, { keys: ['d/5'], duration: 'q' },
+                            { keys: ['a/4'], duration: '8' }
                         ],
                         bass: [
-                            {
-                                keys: ['d/3'],
-                                duration: 'qr'
-                            },
-                            {
-                                keys: ['d/3'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['d/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['f/3'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['f/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['g/2'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['g/2'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/3'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['d/3'],
-                                duration: 'q'
-                            }
+                            { keys: ['d/3'], duration: 'qr' }, { keys: ['d/3'], duration: 'h' }, { keys: ['d/3'], duration: 'q' }, { keys: ['f/3'], duration: 'h' },
+                            { keys: ['f/3'], duration: 'q' }, { keys: ['g/2'], duration: 'h' }, { keys: ['g/2'], duration: 'q' }, { keys: ['d/3'], duration: 'h' },
+                            { keys: ['d/3'], duration: 'q' }
                         ]
                     }
                 }
@@ -1739,9 +1094,19 @@ export const courses: Course[] = [
                 description: "Read and play flat accidentals on black keys.",
                 focus: "Locate Bb4 and Eb4. Watch for the flat symbol preceding the notes.",
                 instruction: "Play exercises containing Bb4 and Eb4. Flats lower the pitch by one half-step.",
-                type: 'exercise', topic: 'treble', xpReward: 130, requiredXp: 5220,
+                type: 'exercise', topic: 'treble', xpReward: 130, requiredXp: 7070,
                 handPosition: 'RH_C_POS',
                 constraints: { trebleRange: trebleFlats, bassRange: [], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 24 }
+            },
+            {
+                id: "c7-l2b", courseId: "accidentals-key-sigs",
+                name: "The Natural Sign (♮)",
+                description: "Learn to read natural signs that cancel sharps and flats.",
+                focus: "A natural sign (♮) cancels a sharp or flat that was in the key signature or earlier in the measure. Return to playing the white key!",
+                instruction: "Watch the staff closely. When you see a natural sign, play the white key instead of the flat or sharp.",
+                type: 'exercise', topic: 'treble', xpReward: 130, requiredXp: 7200,
+                handPosition: 'RH_C_POS',
+                constraints: { trebleRange: ["c/4", "d/4", "e/4", "f/4", "f#/4", "g/4"], bassRange: [], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 20 }
             },
             {
                 id: "c7-l3", courseId: "accidentals-key-sigs",
@@ -1749,9 +1114,23 @@ export const courses: Course[] = [
                 description: "Play exercises in G Major, where all Fs are sharps.",
                 focus: "Look at the sharp at the start of the staff. Remember to play all Fs as F# automatically.",
                 instruction: "Practice reading with a G Major key signature. Sharps at the clef apply to the whole piece.",
-                type: 'exercise', topic: 'both', xpReward: 140, requiredXp: 5350,
+                type: 'exercise', topic: 'both', xpReward: 140, requiredXp: 7330,
                 handPosition: 'GRAND_C_POS',
                 constraints: { trebleRange: gMajorTreble, bassRange: ["g/3", "a/3", "b/3", "c/4", "d/4"], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: true, numNotes: 28 }
+            },
+            {
+                id: "c7-l3b", courseId: "accidentals-key-sigs",
+                name: "Key Signature: F Major",
+                description: "Read and play exercises in F Major, where all Bs are flat (Bb).",
+                focus: "Look at the flat symbol on the B line at the start of the staff. Remember to automatically play all Bs as Bb.",
+                instruction: "Position your hands in the F Major scale region. Play Bb with Finger 4 in the right hand.",
+                type: 'exercise', topic: 'both', xpReward: 140, requiredXp: 7470,
+                handPosition: 'GRAND_F_POS',
+                constraints: {
+                    trebleRange: ["f/4", "g/4", "a/4", "bb/4", "c/5", "d/5", "e/5", "f/5"],
+                    bassRange: ["f/2", "g/2", "a/2", "bb/2", "c/3", "d/3", "e/3", "f/3"],
+                    rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 24
+                }
             },
             {
                 id: "c7-l4", courseId: "accidentals-key-sigs",
@@ -1759,7 +1138,7 @@ export const courses: Course[] = [
                 description: "Play Bach's famous theme in G Major.",
                 focus: "Coordinate the right-hand melody with the left-hand chord changes in 3/4 time.",
                 instruction: "Play this beautiful classic. Pay attention to the F# in the key signature.",
-                type: 'song', topic: 'chords', xpReward: 250, requiredXp: 5490,
+                type: 'song', topic: 'chords', xpReward: 250, requiredXp: 7610,
                 handPosition: 'GRAND_C_POS',
                 songUrl: '/scores/bach_minuet_g_major.musicxml',
                 presetId: 'preset-minuet-g'
@@ -1770,7 +1149,7 @@ export const courses: Course[] = [
                 description: "Play Beethoven's classic theme featuring sharps and flats.",
                 focus: "Navigate the chromatic transitions (Eb to D#) smoothly in 3/8 meter.",
                 instruction: "Use both hands to play this famous, expressive Beethoven piece.",
-                type: 'song', topic: 'both', xpReward: 250, requiredXp: 5740,
+                type: 'song', topic: 'both', xpReward: 250, requiredXp: 7860,
                 handPosition: 'GRAND_C_POS',
                 songUrl: '/scores/Fur_Elise_Simplified.musicxml',
                 presetId: 'preset-fur-elise-easy'
@@ -1789,9 +1168,49 @@ export const courses: Course[] = [
                 description: "Play the full C Major scale up and down a complete octave.",
                 focus: "Keep your crossings seamless. Make sure the thumb crossing does not disrupt the rhythm.",
                 instruction: "Play C4 to C5 using finger crossing technique. Keep your tempo perfectly steady.",
-                type: 'exercise', topic: 'treble', xpReward: 150, requiredXp: 5990,
+                type: 'exercise', topic: 'treble', xpReward: 150, requiredXp: 8110,
                 handPosition: 'RH_C_POS',
                 constraints: { trebleRange: fullTreble, bassRange: [], rhythms: ["8", "q"], maxJumps: 1, chordsAllowed: false, numNotes: 32 }
+            },
+            {
+                id: "c8-l1b", courseId: "intermediate-mastery",
+                name: "Block vs Broken Triads",
+                description: "Learn the difference between playing a chord together or broken.",
+                focus: "Block chords require pressing all notes at the exact same instant. Broken chords play them one by one. Keep your fingers resting on the keys before striking.",
+                instruction: "Alternate between playing blocked C major chords and broken C major chords. Keep your hand shape steady.",
+                type: 'exercise', topic: 'both', xpReward: 140, requiredXp: 8260,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["c/4", "e/4", "g/4"], bassRange: ["c/3", "e/3", "g/3"], rhythms: ["q", "h", "w"], maxJumps: 3, chordsAllowed: true, numNotes: 24 }
+            },
+            {
+                id: "c8-l1c", courseId: "intermediate-mastery",
+                name: "Treble Chord Inversions",
+                description: "Play C Major triads in Root, 1st, and 2nd inversions.",
+                focus: "Root position is C-E-G. First inversion is E-G-C (finger 1-2-5). Second inversion is G-C-E (finger 1-3-5). Relax your wrist between shifts.",
+                instruction: "Play the inverted C Major chords. Look at the spacing of the notes on the staff to identify the inversion.",
+                type: 'exercise', topic: 'treble', xpReward: 140, requiredXp: 8400,
+                handPosition: 'RH_C_POS',
+                constraints: { trebleRange: ["c/4", "e/4", "g/4", "c/5", "e/5"], bassRange: [], rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: true, numNotes: 16 }
+            },
+            {
+                id: "c8-l1d", courseId: "intermediate-mastery",
+                name: "G Major Scale (1-Octave)",
+                description: "Play the full G Major scale with its F sharp (F#).",
+                focus: "Ascend from G4 to G5, tucking your thumb under Finger 3. Descend crossing Finger 3 over your thumb. Strike the F# with Finger 4.",
+                instruction: "Play the G Major scale up and down. Focus on the smooth thumb crossing and hitting the black key.",
+                type: 'exercise', topic: 'treble', xpReward: 150, requiredXp: 8540,
+                handPosition: 'RH_G_POS',
+                constraints: { trebleRange: ["g/4", "a/4", "b/4", "c/5", "d/5", "e/5", "f#/5", "g/5"], bassRange: [], rhythms: ["q", "8"], maxJumps: 1, chordsAllowed: false, numNotes: 32 }
+            },
+            {
+                id: "c8-l1e", courseId: "intermediate-mastery",
+                name: "A Natural Minor Scale",
+                description: "Play the natural minor scale starting and ending on A.",
+                focus: "A minor has no sharps or flats, sharing a key signature with C Major. Cross your thumb under Finger 3 on the way up.",
+                instruction: "Play the A minor scale (A4 to A5) up and down. Feel the minor third interval (A to C) which gives it its sad character.",
+                type: 'exercise', topic: 'treble', xpReward: 150, requiredXp: 8690,
+                handPosition: 'RH_A_POS',
+                constraints: { trebleRange: ["a/4", "b/4", "c/5", "d/5", "e/5", "f/5", "g/5", "a/5"], bassRange: [], rhythms: ["q", "8"], maxJumps: 1, chordsAllowed: false, numNotes: 32 }
             },
             {
                 id: "c8-l2", courseId: "intermediate-mastery",
@@ -1799,281 +1218,63 @@ export const courses: Course[] = [
                 description: "Coordinate left hand bass notes with right hand harmony inversions.",
                 focus: "Change chords precisely on the first beat of each measure.",
                 instruction: "Your left hand plays the descending ground bass of Pachelbel's Canon while your right hand supports with triads.",
-                type: 'exercise', topic: 'both', xpReward: 160, requiredXp: 6140,
+                type: 'exercise', topic: 'both', xpReward: 160, requiredXp: 8840,
                 handPosition: 'GRAND_C_POS',
                 constraints: {
                     trebleRange: ["c/4", "e/4", "g/4"], bassRange: ["c/3", "g/3"], rhythms: ["h"], maxJumps: 0, chordsAllowed: true, numNotes: 8,
                     presetMelody: {
                         treble: [
-                            { keys: ["c/4", "e/4", "g/4"], duration: "h" },
-                            { keys: ["g/3", "b/3", "d/4"], duration: "h" },
-                            { keys: ["a/3", "c/4", "e/4"], duration: "h" },
-                            { keys: ["e/3", "g/3", "b/3"], duration: "h" },
-                            { keys: ["f/3", "a/3", "c/4"], duration: "h" },
-                            { keys: ["c/3", "e/3", "g/3"], duration: "h" },
-                            { keys: ["f/3", "a/3", "c/4"], duration: "h" },
-                            { keys: ["g/3", "b/3", "d/4"], duration: "h" }
+                            { keys: ["c/4", "e/4", "g/4"], duration: "h" }, { keys: ["g/3", "b/3", "d/4"], duration: "h" }, { keys: ["a/3", "c/4", "e/4"], duration: "h" },
+                            { keys: ["e/3", "g/3", "b/3"], duration: "h" }, { keys: ["f/3", "a/3", "c/4"], duration: "h" }, { keys: ["c/3", "e/3", "g/3"], duration: "h" },
+                            { keys: ["f/3", "a/3", "c/4"], duration: "h" }, { keys: ["g/3", "b/3", "d/4"], duration: "h" }
                         ],
                         bass: [
-                            { keys: ["c/3"], duration: "h" },
-                            { keys: ["b/2"], duration: "h" },
-                            { keys: ["a/2"], duration: "h" },
-                            { keys: ["g/2"], duration: "h" },
-                            { keys: ["f/2"], duration: "h" },
-                            { keys: ["e/2"], duration: "h" },
-                            { keys: ["f/2"], duration: "h" },
-                            { keys: ["g/2"], duration: "h" }
+                            { keys: ["c/3"], duration: "h" }, { keys: ["b/2"], duration: "h" }, { keys: ["a/2"], duration: "h" }, { keys: ["g/2"], duration: "h" },
+                            { keys: ["f/2"], duration: "h" }, { keys: ["e/2"], duration: "h" }, { keys: ["f/2"], duration: "h" }, { keys: ["g/2"], duration: "h" }
                         ]
                     }
                 }
             },
             {
-                id: 'c8-l2-song-popular',
-                courseId: 'intermediate-mastery',
+                id: "c8-l2b", courseId: "intermediate-mastery",
+                name: "I - IV - V7 Progression",
+                description: "Master the most common chord progression using C, F, and G7 chords.",
+                focus: "LH plays C Major (C-E-G), F Major (C-F-A), and G7 (B-F-G) with minimal hand movement. This is called voice leading.",
+                instruction: "Play the chord progression in your left hand while your right hand holds simple melody notes.",
+                type: 'exercise', topic: 'both', xpReward: 150, requiredXp: 9000,
+                handPosition: 'GRAND_C_POS',
+                constraints: {
+                    trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4"], bassRange: ["b/2", "c/3", "d/3", "e/3", "f/3", "g/3"], rhythms: ["h", "w"], maxJumps: 3, chordsAllowed: true, numNotes: 20
+                }
+            },
+            {
+                id: 'c8-l2-song-popular', courseId: 'intermediate-mastery',
                 name: 'Song: Interstellar Theme',
                 description: 'Play Hans Zimmer\'s atmospheric masterpiece featuring moving arpeggios and coordination.',
                 focus: 'Coordinate the repeating right-hand pattern with the rising left-hand arpeggios.',
                 instruction: 'Your right hand plays a constant, mesmerizing two-note motif, while your left hand plays ascending broken chords.',
-                type: 'exercise',
-                topic: 'both',
-                xpReward: 300,
-                requiredXp: 6300,
+                type: 'exercise', topic: 'both', xpReward: 300, requiredXp: 9150,
                 handPosition: 'GRAND_C_POS',
                 constraints: {
-                    trebleRange: ['d/5', 'e/5', 'f/5', 'g/5', 'a/5'],
-                    bassRange: ['a/2', 'c/3', 'd/3', 'e/3', 'f/3', 'g/3', 'a/3'],
-                    rhythms: ['q', 'h'],
-                    maxJumps: 5,
-                    chordsAllowed: false,
-                    numNotes: 32,
+                    trebleRange: ['d/5', 'e/5', 'f/5', 'g/5', 'a/5'], bassRange: ['a/2', 'c/3', 'd/3', 'e/3', 'f/3', 'g/3', 'a/3'], rhythms: ['q', 'h'], maxJumps: 5, chordsAllowed: false, numNotes: 32,
                     presetMelody: {
                         treble: [
-                            {
-                                keys: ['e/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['f/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['f/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['f/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['f/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['g/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['g/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['g/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['g/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['g/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['g/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['g/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/5'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['g/5'],
-                                duration: 'q'
-                            }
+                            { keys: ['e/5'], duration: 'q' }, { keys: ['a/5'], duration: 'q' }, { keys: ['e/5'], duration: 'q' }, { keys: ['a/5'], duration: 'q' },
+                            { keys: ['e/5'], duration: 'q' }, { keys: ['a/5'], duration: 'q' }, { keys: ['e/5'], duration: 'q' }, { keys: ['a/5'], duration: 'q' },
+                            { keys: ['f/5'], duration: 'q' }, { keys: ['a/5'], duration: 'q' }, { keys: ['f/5'], duration: 'q' }, { keys: ['a/5'], duration: 'q' },
+                            { keys: ['f/5'], duration: 'q' }, { keys: ['a/5'], duration: 'q' }, { keys: ['f/5'], duration: 'q' }, { keys: ['a/5'], duration: 'q' },
+                            { keys: ['d/5'], duration: 'q' }, { keys: ['g/5'], duration: 'q' }, { keys: ['d/5'], duration: 'q' }, { keys: ['g/5'], duration: 'q' },
+                            { keys: ['d/5'], duration: 'q' }, { keys: ['g/5'], duration: 'q' }, { keys: ['d/5'], duration: 'q' }, { keys: ['g/5'], duration: 'q' },
+                            { keys: ['e/5'], duration: 'q' }, { keys: ['g/5'], duration: 'q' }, { keys: ['e/5'], duration: 'q' }, { keys: ['g/5'], duration: 'q' },
+                            { keys: ['e/5'], duration: 'q' }, { keys: ['g/5'], duration: 'q' }, { keys: ['e/5'], duration: 'q' }, { keys: ['g/5'], duration: 'q' }
                         ],
                         bass: [
-                            {
-                                keys: ['a/2'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['c/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/2'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['c/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['e/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['f/2'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['a/2'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['c/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['f/2'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['a/2'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['c/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/3'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['f/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['d/3'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['f/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['a/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['c/3'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['e/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['g/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['c/3'],
-                                duration: 'h'
-                            },
-                            {
-                                keys: ['e/3'],
-                                duration: 'q'
-                            },
-                            {
-                                keys: ['g/3'],
-                                duration: 'q'
-                            }
+                            { keys: ['a/2'], duration: 'h' }, { keys: ['c/3'], duration: 'q' }, { keys: ['e/3'], duration: 'q' }, { keys: ['a/2'], duration: 'h' },
+                            { keys: ['c/3'], duration: 'q' }, { keys: ['e/3'], duration: 'q' }, { keys: ['f/2'], duration: 'h' }, { keys: ['a/2'], duration: 'q' },
+                            { keys: ['c/3'], duration: 'q' }, { keys: ['f/2'], duration: 'h' }, { keys: ['a/2'], duration: 'q' }, { keys: ['c/3'], duration: 'q' },
+                            { keys: ['d/3'], duration: 'h' }, { keys: ['f/3'], duration: 'q' }, { keys: ['a/3'], duration: 'q' }, { keys: ['d/3'], duration: 'h' },
+                            { keys: ['f/3'], duration: 'q' }, { keys: ['a/3'], duration: 'q' }, { keys: ['c/3'], duration: 'h' }, { keys: ['e/3'], duration: 'q' },
+                            { keys: ['g/3'], duration: 'q' }, { keys: ['c/3'], duration: 'h' }, { keys: ['e/3'], duration: 'q' }, { keys: ['g/3'], duration: 'q' }
                         ]
                     }
                 }
@@ -2084,7 +1285,7 @@ export const courses: Course[] = [
                 description: "Play the melody accompanied by full chords in the left hand.",
                 focus: "Coordinate the chord transitions on beat one of each measure with the melody.",
                 instruction: "Your left hand will play full C, F, and G Major chords while your right hand plays the theme.",
-                type: 'song', topic: 'chords', xpReward: 200, requiredXp: 6600,
+                type: 'song', topic: 'chords', xpReward: 200, requiredXp: 9450,
                 handPosition: 'GRAND_C_POS',
                 songUrl: '/scores/Twinkle_Twinkle.musicxml',
                 presetId: 'preset-twinkle-twinkle'
@@ -2095,7 +1296,7 @@ export const courses: Course[] = [
                 description: "Play Satie's slow, expressive masterpiece.",
                 focus: "Play very softly (piano) and smoothly. Take your time with the left-hand bass jumps.",
                 instruction: "Use both hands together to play this atmospheric, beautiful piece by Erik Satie.",
-                type: 'song', topic: 'both', xpReward: 300, requiredXp: 6800,
+                type: 'song', topic: 'both', xpReward: 300, requiredXp: 9650,
                 handPosition: 'GRAND_C_POS',
                 songUrl: '/scores/Gymnopdie_No._1__Satie.mxl',
                 presetId: 'preset-satie'
@@ -2106,7 +1307,7 @@ export const courses: Course[] = [
                 description: "Test your skills with a long, mixed exercise across both staffs.",
                 focus: "Read fluently across both clefs. Handle eighth notes, accidentals, and shifts smoothly.",
                 instruction: "The ultimate generative sight-reading test. Take it slow and focus on rhythmic accuracy.",
-                type: 'exercise', topic: 'both', xpReward: 250, requiredXp: 7100,
+                type: 'exercise', topic: 'both', xpReward: 250, requiredXp: 9950,
                 handPosition: 'GRAND_C_POS',
                 constraints: { trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5", "d/5"], bassRange: ["f/2", "g/2", "a/2", "b/2", "c/3", "d/3", "e/3", "f/3", "g/3"], rhythms: ["q", "8", "h"], maxJumps: 4, chordsAllowed: true, numNotes: 48 }
             },
@@ -2116,7 +1317,7 @@ export const courses: Course[] = [
                 description: "Play Pachelbel's famous theme in a beautiful two-handed arrangement.",
                 focus: "Coordinate independent hand parts as the subdivisions speed up. Keep a rock-steady tempo.",
                 instruction: "Your final capstone song! Use all the coordination, rhythm, and reading skills you've mastered.",
-                type: 'song', topic: 'both', xpReward: 500, requiredXp: 7350,
+                type: 'song', topic: 'both', xpReward: 500, requiredXp: 10200,
                 handPosition: 'GRAND_C_POS',
                 songUrl: '/scores/Canon_in_D.mxl',
                 presetId: 'preset-canon'

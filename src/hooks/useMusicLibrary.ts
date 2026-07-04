@@ -248,6 +248,42 @@ const PRESET_SCORES: LibraryScore[] = [
         songUrl: '/scores/Solitude_of_the_Rain.xml'
     },
     {
+        id: 'preset-runescape-autumn-xml',
+        title: 'Autumn Voyage (XML)',
+        composer: 'RuneScape',
+        dateAdded: 1718000000045,
+        tags: ['Game', 'Intermediate'],
+        fileName: 'Autumn_Voyage_-_Runescape.musicxml',
+        songUrl: '/scores/Autumn_Voyage_-_Runescape.musicxml'
+    },
+    {
+        id: 'preset-minuet-g-traditional',
+        title: 'Minuet in G Major (Traditional)',
+        composer: 'Christian Petzold / J.S. Bach',
+        dateAdded: 1718000000046,
+        tags: ['Classical', 'Beginner'],
+        fileName: 'Minuet_in_G.musicxml',
+        songUrl: '/scores/Minuet_in_G.musicxml'
+    },
+    {
+        id: 'preset-passacaglia-xml',
+        title: 'Passacaglia (XML)',
+        composer: 'Handel / Halvorsen',
+        dateAdded: 1718000000047,
+        tags: ['Classical', 'Advanced'],
+        fileName: 'Passacaglia.musicxml',
+        songUrl: '/scores/Passacaglia.musicxml'
+    },
+    {
+        id: 'preset-bach-prelude-xml',
+        title: 'Prelude No. 1 in C Major (XML)',
+        composer: 'J.S. Bach',
+        dateAdded: 1718000000048,
+        tags: ['Classical', 'Intermediate'],
+        fileName: 'Prelude_No._1_in_C_Major_BWV_846_with_finger_suggestions_-_Johann_Sebastian_Bach.musicxml',
+        songUrl: '/scores/Prelude_No._1_in_C_Major_BWV_846_with_finger_suggestions_-_Johann_Sebastian_Bach.musicxml'
+    },
+    {
         id: 'preset-vanzo',
         title: 'Sunlight',
         composer: 'Andrea Vanzo',

@@ -32,6 +32,24 @@ export interface LessonProgress {
 
 const PRESET_SCORES: LibraryScore[] = [
     {
+        id: 'preset-nuvole-bianche-easy',
+        title: 'Nuvole Bianche (Easy)',
+        composer: 'Ludovico Einaudi',
+        dateAdded: 1718000000000,
+        tags: ['Beginner', 'Classic', 'New Age'],
+        fileName: 'Nuvole_Bianche.mxl',
+        songUrl: '/scores/Nuvole_Bianche.mxl'
+    },
+    {
+        id: 'preset-greensleeves-easy',
+        title: 'Greensleeves (Easy)',
+        composer: 'Traditional',
+        dateAdded: 1718000000000,
+        tags: ['Beginner', 'Classic', 'Folk'],
+        fileName: 'Greensleeves_Easy.mxl',
+        songUrl: '/scores/Greensleeves_Easy.mxl'
+    },
+    {
         id: 'preset-interstellar-easy',
         title: 'Interstellar Theme (Easy)',
         composer: 'Hans Zimmer',

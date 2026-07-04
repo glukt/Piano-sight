@@ -51,6 +51,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         stopMic,
         isMicListening,
         micVolume,
+        micNoteName,
         micSensitivity,
         isMicCalibrating,
         micCalibrationProgress,
@@ -205,7 +206,10 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                                                             </span>
                                                             <span>{micCalibrationProgress}%</span>
                                                         </div>
-                                                        <p className="text-[10px] text-gray-500">Play Middle C firmly.</p>
+                                                        <div className="flex justify-between text-[10px] text-gray-500 mt-0.5">
+                                                            <span>Play Middle C firmly.</span>
+                                                            <span className="font-bold text-indigo-650 dark:text-indigo-400">Hearing: {micNoteName}</span>
+                                                        </div>
                                                     </>
                                                 )}
                                                 {calibrationStep === 'success' && (

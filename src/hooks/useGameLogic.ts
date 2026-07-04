@@ -237,6 +237,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
     const currentExpectedNotesRef = useRef<number[]>([]);
     const {
         detectedNote: micNote,
+        detectedNoteName: micNoteName,
         isListening: isMicListening,
         startListening: startMic,
         stopListening: stopMic,
@@ -1035,6 +1036,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         showMicPopup, setShowMicPopup,
         isMicListening, startMic, stopMic,
         micVolume,
+        micNoteName,
         micSensitivity,
         setMicSensitivity,
         isMicCalibrating: isCalibrating,

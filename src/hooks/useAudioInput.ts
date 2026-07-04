@@ -11,6 +11,14 @@ function getMedian(values: (number | null)[]): number | null {
     return nonNulls[Math.floor(nonNulls.length / 2)];
 }
 
+const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+function getNoteName(midi: number | null): string {
+    if (midi === null) return 'None';
+    const noteIndex = midi % 12;
+    const octave = Math.floor(midi / 12) - 1;
+    return `${NOTE_NAMES[noteIndex]}${octave}`;
+}
+
 export function useAudioInput(expectedNotesRef?: React.RefObject<number[]>) {
     const [isListening, setIsListening] = useState(false);
     const [detectedNote, setDetectedNote] = useState<number | null>(null);
@@ -217,8 +225,8 @@ export function useAudioInput(expectedNotesRef?: React.RefObject<number[]>) {
                     const pitch = detectorRef.current.getPitch();
                     if (pitch && pitch > 0) {
                         const note = detectorRef.current.noteFromPitch(pitch);
-                        // Check if the played note matches Middle C (60)
-                        if (note === calibrationTargetMidi && currentVol > maxAmbient * 1.2) {
+                        // Check if the played note matches Middle C (60) with a 2-semitone tolerance
+                        if (Math.abs(note - calibrationTargetMidi) <= 2 && currentVol > maxAmbient * 1.2) {
                             strikeDetected = true;
                             if (currentVol > peakStrikeVolume) {
                                 peakStrikeVolume = currentVol;
@@ -271,9 +279,12 @@ export function useAudioInput(expectedNotesRef?: React.RefObject<number[]>) {
         };
     }, []);
 
+    const detectedNoteName = getNoteName(detectedNote);
+
     return {
         isListening,
         detectedNote,
+        detectedNoteName,
         volume,
         sensitivity,
         setSensitivity,

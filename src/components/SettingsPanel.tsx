@@ -21,6 +21,7 @@ interface SettingsPanelProps {
     selectedMicId?: string;
     activeMicLabel?: string;
     onChangeMicrophone?: (deviceId: string) => void;
+    micNoteName?: string;
 }
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({
@@ -42,7 +43,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
     availableMics = [],
     selectedMicId = '',
     activeMicLabel = 'Default Microphone',
-    onChangeMicrophone
+    onChangeMicrophone,
+    micNoteName = 'None'
 }) => {
     const { preferences, updatePreference } = usePreferences();
     // Normalize volume for progress bar (RMS ranges roughly 0 to 0.1 for typical input)
@@ -167,7 +169,10 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                                             </span>
                                             <span>{micCalibrationProgress}%</span>
                                         </div>
-                                        <p className="text-[10px] text-gray-500 italic">Play Middle C firmly.</p>
+                                        <div className="flex justify-between text-[10px] text-gray-500 mt-0.5">
+                                            <span>Play Middle C firmly.</span>
+                                            <span className="font-bold text-indigo-650 dark:text-indigo-400">Hearing: {micNoteName}</span>
+                                        </div>
                                     </>
                                 )}
                                 {calibrationStep === 'success' && (

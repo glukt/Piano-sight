@@ -30,9 +30,9 @@ export class PitchDetector {
         try {
             const constraints: MediaStreamConstraints = {
                 audio: {
-                    echoCancellation: true,
-                    noiseSuppression: true,
-                    autoGainControl: false
+                    echoCancellation: false,
+                    noiseSuppression: false,
+                    autoGainControl: true
                 }
             };
             if (deviceId) {
@@ -139,7 +139,7 @@ export class PitchDetector {
         let runningSum = 0;
         for (let tau = 1; tau < halfN; tau++) {
             runningSum += d[tau];
-            dPrime[tau] = d[tau] / (runningSum / tau);
+            dPrime[tau] = runningSum > 0.0001 ? d[tau] / (runningSum / tau) : 1;
         }
 
         // 3. Absolute thresholding (YIN threshold is typically 0.10 to 0.15)

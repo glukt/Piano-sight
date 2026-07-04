@@ -150,6 +150,57 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         new VF.StaveConnector(trebleStave, bassStave).setType(VF.StaveConnector.type.SINGLE_LEFT).setContext(context).draw();
         new VF.StaveConnector(trebleStave, bassStave).setType(VF.StaveConnector.type.SINGLE_RIGHT).setContext(context).draw();
 
+        // Helper function to calculate total beats (duration) of a set of notes/rests
+        const calculateDuration = (notesData: StaveNoteData[]): number => {
+            return notesData.reduce((sum, current) => {
+                const durStr = current.duration.replace('r', '');
+                let beats = 1; // Default to quarter
+                if (durStr === 'w') beats = 4;
+                else if (durStr === 'h') beats = 2;
+                else if (durStr === 'q') beats = 1;
+                else if (durStr === '8') beats = 0.5;
+                else if (durStr === '16') beats = 0.25;
+                return sum + beats;
+            }, 0);
+        };
+
+        // Helper function to pad notes with rests until target duration is reached
+        const padNotes = (notesData: StaveNoteData[], targetDuration: number, clef: string): StaveNoteData[] => {
+            let currentDuration = calculateDuration(notesData);
+            if (Math.abs(currentDuration - targetDuration) < 0.01) {
+                return [...notesData];
+            }
+
+            let paddedNotes = [...notesData];
+            let remaining = targetDuration - currentDuration;
+            const restKey = clef === 'bass' ? "d/3" : "b/4";
+
+            // Greedy breakdown of remaining beats into standard rests
+            while (remaining >= 4) {
+                paddedNotes.push({ keys: [restKey], duration: "wr" });
+                remaining -= 4;
+            }
+            while (remaining >= 2) {
+                paddedNotes.push({ keys: [restKey], duration: "hr" });
+                remaining -= 2;
+            }
+            while (remaining >= 1) {
+                paddedNotes.push({ keys: [restKey], duration: "qr" });
+                remaining -= 1;
+            }
+            while (remaining >= 0.5) {
+                paddedNotes.push({ keys: [restKey], duration: "8r" });
+                remaining -= 0.5;
+            }
+            while (remaining >= 0.25) {
+                paddedNotes.push({ keys: [restKey], duration: "16r" });
+                remaining -= 0.25;
+            }
+
+            return paddedNotes;
+        };
+
+
         // -----------------------------------------------------------------------
         // Create Voices
         // -----------------------------------------------------------------------
@@ -228,8 +279,21 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
             return voice;
         };
 
-        const trebleVoice = createVoice(trebleNotes, "treble");
-        const bassVoice = createVoice(bassNotes, "bass");
+        // --- Padding Logic Start ---
+        const trebleDuration = calculateDuration(trebleNotes);
+        const bassDuration = calculateDuration(bassNotes);
+        
+        // Determine the target duration (the maximum of the two)
+        const targetDuration = Math.max(trebleDuration, bassDuration);
+
+        // Pad both arrays to match the target duration
+        const finalTrebleNotes = padNotes(trebleNotes, targetDuration, "treble");
+        const finalBassNotes = padNotes(bassNotes, targetDuration, "bass");
+        // --- Padding Logic End ---
+
+
+        const trebleVoice = createVoice(finalTrebleNotes, "treble");
+        const bassVoice = createVoice(finalBassNotes, "bass");
 
         // -----------------------------------------------------------------------
         // Format & Draw
@@ -291,7 +355,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
             };
 
             if (showLabels) {
-                trebleNotes.forEach((tNote, i) => {
+                finalTrebleNotes.forEach((tNote, i) => {
                     const x = treblePositions[i];
                     if (x !== undefined && tNote && tNote.keys && tNote.keys[0] !== 'b/4' && !tNote.duration.endsWith('r')) {
                         tNote.keys.forEach(k => {
@@ -326,7 +390,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                     }
                 });
 
-                bassNotes.forEach((bNote, i) => {
+                finalBassNotes.forEach((bNote, i) => {
                     const x = bassPositions[i];
                     if (x !== undefined && bNote && bNote.keys && bNote.keys[0] !== 'd/3' && !bNote.duration.endsWith('r')) {
                         bNote.keys.forEach(k => {

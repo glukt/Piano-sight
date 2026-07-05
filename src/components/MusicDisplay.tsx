@@ -280,10 +280,11 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                 : (isBassOnset !== undefined ? isBassOnset : true);
 
             const notes = notesData.map((n, i) => {
+                const baseDuration = n.duration.replace('.', '');
                 const staveNote = new VF.StaveNote({
                     clef: clef,
                     keys: n.keys,
-                    duration: n.duration,
+                    duration: baseDuration,
                 });
 
                 if (n.duration.includes('.')) {

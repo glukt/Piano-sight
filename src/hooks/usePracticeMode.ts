@@ -98,6 +98,17 @@ interface UsePracticeModeProps {
     onSectionComplete?: () => void;
     songId?: string | null;
     saveHighScore?: (id: string, score: number, rank: string, notesHit: number, maxNotes: number) => Promise<void>;
+    logAttempt?: (
+        songId: string,
+        mode: 'preview' | 'wait' | 'tempo' | 'play',
+        accuracy: number,
+        notesCorrect: number,
+        notesMissed: number,
+        handPracticed: 'both' | 'right' | 'left',
+        tempoPercentage: number,
+        errorMeasures: Record<number, number>,
+        durationSeconds: number
+    ) => Promise<any>;
     practicedHand?: 'both' | 'right' | 'left';
 }
 
@@ -109,6 +120,7 @@ export function usePracticeMode({
     onSectionComplete,
     songId,
     saveHighScore,
+    logAttempt,
     practicedHand = 'both'
 }: UsePracticeModeProps) {
     const { preferences } = usePreferences();
@@ -177,6 +189,7 @@ export function usePracticeMode({
 
     const expectedEventsRef = useRef<ExpectedNoteEvent[]>([]);
     const startTimeRef = useRef<number>(0);
+    const practiceSessionStartTimeRef = useRef<number>(Date.now());
 
     // Track held wrong notes to avoid counting the same press multiple times
     const heldWrongNotesRef = useRef<Set<number>>(new Set());
@@ -197,6 +210,7 @@ export function usePracticeMode({
         }
         isTransitioningRef.current = false;
         setIsActive(true);
+        practiceSessionStartTimeRef.current = Date.now();
         const start = startMeasure !== undefined ? startMeasure : 0;
         const end = Math.min(start + 2, totalMeasures);
         setCurrentSection({ startMeasure: start, endMeasure: end });
@@ -478,6 +492,7 @@ export function usePracticeMode({
         expectedEventsRef.current = [];
         heldWrongNotesRef.current.clear();
         isTransitioningRef.current = false;
+        practiceSessionStartTimeRef.current = Date.now();
 
         const startTs = playbackEngine.getMeasureTimestamp(0) || 0;
         playbackEngine.seek(startTs);
@@ -966,6 +981,21 @@ export function usePracticeMode({
                     saveHighScore(songId, finalAccuracy, finalRank, correct, total);
                 }
 
+                const durationSeconds = Math.round((Date.now() - practiceSessionStartTimeRef.current) / 1000);
+                if (logAttempt && songId) {
+                    logAttempt(
+                        songId,
+                        mode,
+                        finalAccuracy,
+                        correct,
+                        total - correct,
+                        practicedHand,
+                        playbackEngine ? playbackEngine.TempoMultiplier : 1.0,
+                        errorMeasures,
+                        durationSeconds
+                    );
+                }
+
                 setFeedback(`Play Mode Complete! Accuracy: ${finalAccuracy}%.`);
                 setIsSongComplete(true);
             }
@@ -973,7 +1003,7 @@ export function usePracticeMode({
 
         const interval = setInterval(checkMissedAndEnd, 50);
         return () => clearInterval(interval);
-    }, [isActive, mode, playbackEngine, saveHighScore, songId]);
+    }, [isActive, mode, playbackEngine, saveHighScore, logAttempt, songId, practicedHand, errorMeasures]);
 
     return {
         isActive,

@@ -46,7 +46,7 @@ function App() {
 
     // Initialize Game Logic Hook
     // This hook manages the game state, audio, and gamification
-    const gameLogic = useGameLogic(library.saveHighScore);
+    const gameLogic = useGameLogic(library.saveHighScore, library.logAttempt);
 
     // We removed the global auto-start audio hook here. Audio is now explicitly started 
     // when a user clicks 'Start Lesson' or explicitly loads a custom song.
@@ -135,6 +135,20 @@ function App() {
                         onBack={() => {
                             setSelectedLesson(null);
                             setCurrentView(lessonSourceView);
+                        }}
+                        isDemoPlaying={gameLogic.isDemoPlaying}
+                        onToggleDemo={async () => {
+                            if (gameLogic.isDemoPlaying) {
+                                gameLogic.stopDemo();
+                            } else {
+                                // Resume or initialize audio context upon user gesture click
+                                await gameLogic.testAudio();
+                                gameLogic.loadLesson(selectedLesson);
+                                gameLogic.startDemo();
+                            }
+                        }}
+                        onStopDemo={() => {
+                            gameLogic.stopDemo();
                         }}
                         onStart={() => {
                             gameLogic.loadLesson(selectedLesson);

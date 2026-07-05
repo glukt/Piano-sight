@@ -33,6 +33,7 @@ export interface Lesson {
     handPosition?: string;           // Hand position key for visual keyboard guide
     bpm?: number;                    // Target BPM for playback
     prerequisites?: string[];        // Custom prerequisite lesson IDs
+    chords?: string[];               // Custom chord names for chord guide display
 }
 
 export interface Course {
@@ -1352,7 +1353,7 @@ export const courses: Course[] = [
         id: "chords-harmony",
         name: "6. Chords & Harmony",
         description: "Learn to read and play multiple notes simultaneously. Master triads, common chord shapes, inversions, and pop progressions.",
-        order: 9,
+        order: 6,
         lessons: [
             {
                 id: 'c6-chord-l1', bpm: 80, courseId: "chords-harmony",
@@ -1362,6 +1363,7 @@ export const courses: Course[] = [
                 instruction: "RH plays C triad (fingers 1-3-5 on C-E-G) and G triad (fingers 1-3-5 on G-B-D). Keep fingers close to the keys.",
                 type: 'exercise', topic: 'chords', xpReward: 80, requiredXp: 6440,
                 handPosition: 'RH_C_POS',
+                chords: ["C Major", "G Major"],
                 constraints: {
                     trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5"],
                     bassRange: [],
@@ -1379,6 +1381,7 @@ export const courses: Course[] = [
                 instruction: "Play C Major (1-3-5) then F Major inversion (1-4-5 on C-F-A). This minimises hand movement for seamless playing.",
                 type: 'exercise', topic: 'chords', xpReward: 80, requiredXp: 6520,
                 handPosition: 'RH_C_POS',
+                chords: ["C Major", "F Major"],
                 constraints: {
                     trebleRange: ["c/4", "e/4", "f/4", "g/4", "a/4"],
                     bassRange: [],
@@ -1396,6 +1399,7 @@ export const courses: Course[] = [
                 instruction: "Play Am triad (A-C-E) and Dm triad (D-F-A) using fingers 1-3-5. Press all keys with even weight.",
                 type: 'exercise', topic: 'chords', xpReward: 80, requiredXp: 6600,
                 handPosition: 'RH_C_POS',
+                chords: ["A minor (Am)", "D minor (Dm)"],
                 constraints: {
                     trebleRange: ["d/4", "f/4", "a/4", "c/5", "e/5"],
                     bassRange: [],
@@ -1413,6 +1417,7 @@ export const courses: Course[] = [
                 instruction: "RH plays: C Major (C-E-G), G Major (G-B-D), A minor (A-C-E), F Major first inversion (C-F-A).",
                 type: 'exercise', topic: 'chords', xpReward: 100, requiredXp: 6680,
                 handPosition: 'RH_C_POS',
+                chords: ["C Major", "G Major", "A minor (Am)", "F Major"],
                 constraints: {
                     trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5"],
                     bassRange: [],
@@ -1430,6 +1435,7 @@ export const courses: Course[] = [
                 instruction: "Play the progression: C Major, G Major, A minor, F Major, C Major, G Major, F Major, C Major.",
                 type: 'song', topic: 'chords', xpReward: 100, requiredXp: 6780,
                 handPosition: 'RH_C_POS',
+                chords: ["C Major", "G Major", "A minor (Am)", "F Major"],
                 constraints: {
                     trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5"],
                     bassRange: [],
@@ -1461,6 +1467,7 @@ export const courses: Course[] = [
                 instruction: "Play D Major (D-F#-A), A Major (A-C#-E), and E Major (E-G#-B). Watch for the sharp signs.",
                 type: 'exercise', topic: 'chords', xpReward: 80, requiredXp: 6880,
                 handPosition: 'RH_C_POS',
+                chords: ["D Major", "A Major", "E Major"],
                 constraints: {
                     trebleRange: ["d/4", "f#/4", "g#/4", "a/4", "c#/5", "e/5"],
                     bassRange: [],
@@ -1478,6 +1485,7 @@ export const courses: Course[] = [
                 instruction: "RH plays: C Major triad (C-E-G), then F Major first inversion (C-F-A). Maintain a peaceful pulse.",
                 type: 'song', topic: 'chords', xpReward: 80, requiredXp: 6960,
                 handPosition: 'RH_C_POS',
+                chords: ["C Major", "F Major"],
                 constraints: {
                     trebleRange: ["c/4", "e/4", "f/4", "g/4", "a/4"],
                     bassRange: [],
@@ -1509,6 +1517,7 @@ export const courses: Course[] = [
                 instruction: "LH plays root notes C, G, A, F as whole notes. RH plays corresponding chord triads. Focus on coordination.",
                 type: 'exercise', topic: 'both', xpReward: 200, requiredXp: 7040,
                 handPosition: 'GRAND_C_POS',
+                chords: ["C Major", "G Major", "A minor (Am)", "F Major"],
                 constraints: {
                     trebleRange: ["c/4", "e/4", "g/4", "b/4", "c/5", "d/5", "e/5"],
                     bassRange: ["c/3", "g/2", "a/2", "f/2"],
@@ -1524,7 +1533,7 @@ export const courses: Course[] = [
         id: "expanding-positions",
         name: "7. Expanding Hand Positions",
         description: "Move past static 5-finger positions. Learn hand stretching, crossings, and arpeggios.",
-        order: 9,
+        order: 7,
         lessons: [
             {
                 id: 'c6-l1', bpm: 80, courseId: "expanding-positions",
@@ -1810,7 +1819,7 @@ export const courses: Course[] = [
         id: "accidentals-key-sigs",
         name: "8. Accidentals & Key Signatures",
         description: "Explore the black keys, read sharps and flats, and play in new key signatures.",
-        order: 9,
+        order: 8,
         lessons: [
             {
                 id: 'c7-l1', bpm: 80, courseId: "accidentals-key-sigs",
@@ -2313,14 +2322,18 @@ export const isLessonCapstone = (lesson: Lesson): boolean => {
     return idx === course.lessons.length - 1;
 };
 
-export const getLessonUnlockedStatus = (lesson: Lesson, completedIds: Set<string>, _userXp: number): boolean => {
+export const getLessonUnlockedStatus = (lesson: Lesson, completedIds: Set<string>, userXp: number): boolean => {
     // Admin mode bypass
     if (typeof window !== 'undefined' && localStorage.getItem('adminMode') === 'true') return true;
 
-    // Check custom prerequisites if defined
+    // Check custom prerequisites if defined - they MUST be met
     if (lesson.prerequisites && lesson.prerequisites.length > 0) {
-        return lesson.prerequisites.every(prereqId => completedIds.has(prereqId));
+        const prerequisitesMet = lesson.prerequisites.every(prereqId => completedIds.has(prereqId));
+        if (!prerequisitesMet) return false;
     }
+
+    // Hybrid XP Unlock: if user has reached the required XP, they bypass sequential course progression
+    if (userXp >= lesson.requiredXp) return true;
 
     const courseIndex = courses.findIndex(c => c.id === lesson.courseId);
     if (courseIndex === -1) return false;

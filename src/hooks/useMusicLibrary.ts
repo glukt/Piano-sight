@@ -540,7 +540,106 @@ const PRESET_SCORES: LibraryScore[] = [
 const DB_NAME = 'PianoPilotDB';
 const STORE_NAME = 'scores';
 const LESSON_PROGRESS_STORE = 'lesson_progress';
-const VERSION = 2; // Bumped to 2 for lesson progress tracking
+const PERFORMANCE_STORE = 'performance_attempts';
+const VERSION = 3; // Bumped to 3 for performance attempt logs
+
+export interface PerformanceSessionLog {
+    id: string;
+    songId: string;
+    timestamp: number;
+    durationSeconds: number;
+    mode: 'preview' | 'wait' | 'tempo' | 'play';
+    accuracy: number;
+    notesCorrect: number;
+    notesMissed: number;
+    handPracticed: 'both' | 'right' | 'left';
+    tempoPercentage: number;
+    errorMeasures: Record<number, number>;
+}
+
+// Client-side MusicXML parser to auto-detect difficulty rating (1-10)
+const calculateXmlDifficulty = (xmlText: string): { rating: number; tags: string[] } => {
+    try {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+        
+        // 1. Key Signature Complexity (fifths)
+        const fifthsEl = xmlDoc.getElementsByTagName("fifths")[0];
+        const fifths = fifthsEl ? Math.abs(parseInt(fifthsEl.textContent || "0")) : 0;
+        
+        // 2. Note and Measure count
+        const notes = xmlDoc.getElementsByTagName("note");
+        const measures = xmlDoc.getElementsByTagName("measure");
+        const totalNotes = notes.length;
+        const totalMeasures = measures.length || 1;
+        const noteDensity = totalNotes / totalMeasures;
+        
+        // 3. Rhythmic Subdivisions (Sixteenths/Thirtyseconds)
+        let hasSixteenths = false;
+        let hasThirtySeconds = false;
+        let hasTriplets = false;
+        
+        const types = xmlDoc.getElementsByTagName("type");
+        for (let i = 0; i < types.length; i++) {
+            const val = types[i].textContent;
+            if (val === 'sixteenth') hasSixteenths = true;
+            if (val === '32nd') hasThirtySeconds = true;
+        }
+        
+        const timeMods = xmlDoc.getElementsByTagName("time-modification");
+        if (timeMods.length > 0) hasTriplets = true;
+        
+        // 4. Hands separation (Staff 1 vs Staff 2)
+        const staves = xmlDoc.getElementsByTagName("staff");
+        let trebleCount = 0;
+        let bassCount = 0;
+        for (let i = 0; i < staves.length; i++) {
+            if (staves[i].textContent === '1') trebleCount++;
+            if (staves[i].textContent === '2') bassCount++;
+        }
+        const hasBothHands = trebleCount > 0 && bassCount > 0;
+        
+        // Calculate score from 1 to 10
+        let score = 1;
+        
+        // Add for key signature (accidentals)
+        score += Math.min(3, fifths * 0.5);
+        
+        // Add for note density
+        if (noteDensity > 12) score += 3.5;
+        else if (noteDensity > 8) score += 2.5;
+        else if (noteDensity > 5) score += 1.5;
+        else if (noteDensity > 3) score += 0.8;
+        
+        // Add for rhythmic subdivisions
+        if (hasThirtySeconds) score += 1.5;
+        else if (hasSixteenths) score += 1.0;
+        if (hasTriplets) score += 0.5;
+        
+        // Add for hands coordination
+        if (hasBothHands) {
+            score += 1.0;
+            if (bassCount / totalMeasures > 4) {
+                score += 0.5; // active LH bass line increases complexity
+            }
+        }
+        
+        const rating = Math.max(1, Math.min(10, Math.round(score)));
+        
+        // Map to category tag
+        let category = 'Beginner';
+        if (rating >= 7) category = 'Advanced';
+        else if (rating >= 4) category = 'Intermediate';
+        
+        return {
+            rating,
+            tags: [category, `Level ${rating}`]
+        };
+    } catch (e) {
+        console.error("Error parsing MusicXML difficulty:", e);
+        return { rating: 3, tags: ['Beginner', 'Level 3'] };
+    }
+};
 
 export function useMusicLibrary() {
     const [scores, setScores] = useState<LibraryScore[]>([]);
@@ -611,6 +710,10 @@ export function useMusicLibrary() {
                 if (!db.objectStoreNames.contains(LESSON_PROGRESS_STORE)) {
                     db.createObjectStore(LESSON_PROGRESS_STORE, { keyPath: 'lessonId' });
                 }
+                if (!db.objectStoreNames.contains(PERFORMANCE_STORE)) {
+                    const store = db.createObjectStore(PERFORMANCE_STORE, { keyPath: 'id' });
+                    store.createIndex('songId', 'songId', { unique: false });
+                }
             };
         });
     };
@@ -622,7 +725,6 @@ export function useMusicLibrary() {
             const request = store.getAll();
 
             request.onsuccess = () => {
-                // Sort by date added (newest first) by default
                 const result = request.result as LibraryScore[];
                 result.sort((a, b) => b.dateAdded - a.dateAdded);
                 resolve(result);
@@ -641,11 +743,92 @@ export function useMusicLibrary() {
         });
     };
 
+    const logAttempt = useCallback(async (
+        songId: string,
+        mode: 'preview' | 'wait' | 'tempo' | 'play',
+        accuracy: number,
+        notesCorrect: number,
+        notesMissed: number,
+        handPracticed: 'both' | 'right' | 'left',
+        tempoPercentage: number,
+        errorMeasures: Record<number, number>,
+        durationSeconds: number
+    ): Promise<PerformanceSessionLog | null> => {
+        try {
+            const db = await openDB();
+            const transaction = db.transaction(PERFORMANCE_STORE, 'readwrite');
+            const store = transaction.objectStore(PERFORMANCE_STORE);
+
+            const newAttempt: PerformanceSessionLog = {
+                id: generateUUID(),
+                songId,
+                timestamp: Date.now(),
+                durationSeconds,
+                mode,
+                accuracy,
+                notesCorrect,
+                notesMissed,
+                handPracticed,
+                tempoPercentage,
+                errorMeasures
+            };
+
+            await new Promise<void>((resolve, reject) => {
+                const req = store.add(newAttempt);
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject(req.error);
+            });
+
+            return newAttempt;
+        } catch (err: any) {
+            console.error("Failed to log performance attempt:", err);
+            return null;
+        }
+    }, []);
+
+    const getPerformanceAttempts = useCallback(async (songId: string): Promise<PerformanceSessionLog[]> => {
+        try {
+            const db = await openDB();
+            const transaction = db.transaction(PERFORMANCE_STORE, 'readonly');
+            const store = transaction.objectStore(PERFORMANCE_STORE);
+            const index = store.index('songId');
+
+            const attempts = await new Promise<PerformanceSessionLog[]>((resolve, reject) => {
+                const req = index.getAll(IDBKeyRange.only(songId));
+                req.onsuccess = () => resolve(req.result as PerformanceSessionLog[]);
+                req.onerror = () => reject(req.error);
+            });
+
+            attempts.sort((a, b) => b.timestamp - a.timestamp);
+            return attempts;
+        } catch (err: any) {
+            console.error("Failed to get performance attempts:", err);
+            return [];
+        }
+    }, []);
+
     const addScore = useCallback(async (file: File, title?: string, composer?: string, tags: string[] = []) => {
         try {
             const db = await openDB();
+
+            // Client-side MusicXML difficulty auto-grader
+            let autoDifficulty = { rating: 3, tags: ['Beginner', 'Level 3'] };
+            if (file.name.endsWith('.xml') || file.name.endsWith('.musicxml')) {
+                try {
+                    const xmlText = await file.text();
+                    autoDifficulty = calculateXmlDifficulty(xmlText);
+                } catch (e) {
+                    console.error("Error reading file text for auto-grading:", e);
+                }
+            } else if (file.name.endsWith('.mxl')) {
+                // Default fallback for compressed scores
+                autoDifficulty = { rating: 4, tags: ['Intermediate', 'Level 4'] };
+            }
+
             const hasDifficulty = tags.some(t => ['beginner', 'intermediate', 'advanced'].includes(t.toLowerCase()));
-            const finalTags = hasDifficulty ? tags : ['Beginner', ...tags];
+            const finalTags = hasDifficulty 
+                ? tags 
+                : [...autoDifficulty.tags, ...tags];
 
             const newScore: LibraryScore = {
                 id: generateUUID(),
@@ -869,6 +1052,8 @@ export function useMusicLibrary() {
         saveHighScore,
         bookmarkedIds,
         toggleBookmark,
-        lessonProgress
+        lessonProgress,
+        logAttempt,
+        getPerformanceAttempts
     };
 }

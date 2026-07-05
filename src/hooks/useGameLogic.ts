@@ -188,7 +188,22 @@ const getPlayheadPixelXAt = (elapsed: number, positions: number[], bpm: number):
     return 20;
 };
 
-export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: string, notesHit: number, maxNotes: number) => Promise<void>) => {
+export const useGameLogic = (
+    saveHighScore?: (id: string, score: number, rank: string, notesHit: number, maxNotes: number) => Promise<void>,
+    logAttempt?: (
+        songId: string,
+        mode: 'preview' | 'wait' | 'tempo' | 'play',
+        accuracy: number,
+        notesCorrect: number,
+        notesMissed: number,
+        handPracticed: 'both' | 'right' | 'left',
+        tempoPercentage: number,
+        errorMeasures: Record<number, number>,
+        durationSeconds: number
+    ) => Promise<any>
+) => {
+    const startTimeRef = useRef<number>(Date.now());
+
     // -------------------------------------------------------------------------
     // 1. Audio & Input Initialization
     // -------------------------------------------------------------------------
@@ -744,6 +759,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
 
     const loadLesson = useCallback((lesson: Lesson) => {
         setCurrentLesson(lesson);
+        startTimeRef.current = Date.now();
         // Switch hand mode based on topic
         if (lesson.topic === 'treble') setGameMode('treble');
         else if (lesson.topic === 'bass') setGameMode('bass');
@@ -846,6 +862,21 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
                             
                             saveHighScore(currentLesson.id, finalAccuracy, finalRank, notesCorrect, total);
                         }
+                    }
+
+                    const durationSeconds = Math.round((Date.now() - startTimeRef.current) / 1000);
+                    if (logAttempt) {
+                        logAttempt(
+                            currentLesson.id,
+                            isRhythmMode ? 'play' : 'wait',
+                            finalAccuracy,
+                            notesCorrect,
+                            notesMissed,
+                            gameMode === 'treble' ? 'right' : (gameMode === 'bass' ? 'left' : 'both'),
+                            1.0,
+                            {},
+                            durationSeconds
+                        );
                     }
                 } else {
                     handleAddXp(50);
@@ -1121,6 +1152,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         generateNewLevel,
         handleStartRhythm,
         startDemo,
+        stopDemo,
         resetLesson,
         parseKeyToMidi,
         setIsMutedKeys,

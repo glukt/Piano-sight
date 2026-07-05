@@ -155,34 +155,49 @@ const ChordGuideCard: React.FC<{ lesson: Lesson }> = ({ lesson }) => {
 
     const chordList = [
         { name: "C Major Chord", notes: "C4 - E4 - G4", fingers: "Right Hand: 1 - 3 - 5 (Thumb, Middle, Pinky)" },
+        { name: "G Major Chord", notes: "G4 - B4 - D5", fingers: "Right Hand: 1 - 3 - 5 (Thumb, Middle, Pinky)" },
         { name: "G7 Chord", notes: "B3 - F4 - G4", fingers: "Right Hand: 1 - 4 - 5 (Thumb, Ring, Pinky)" },
+        { name: "D Major Chord", notes: "D4 - F#4 - A4", fingers: "Right Hand: 1 - 3 - 5 (Thumb, Middle, Pinky)" },
         { name: "D minor (Dm) Chord", notes: "D4 - F4 - A4", fingers: "Right Hand: 1 - 3 - 5 (Thumb, Middle, Pinky)" },
+        { name: "E Major Chord", notes: "E4 - G#4 - B4", fingers: "Right Hand: 1 - 3 - 5 (Thumb, Middle, Pinky)" },
         { name: "E minor (Em) Chord", notes: "E4 - G4 - B4", fingers: "Right Hand: 1 - 3 - 5 (Thumb, Middle, Pinky)" },
-        { name: "F Major Chord", notes: "F4 - A4 - C5", fingers: "Right Hand: 1 - 3 - 5 (Thumb, Middle, Pinky)" },
+        { name: "F Major Chord", notes: "C4 - F4 - A4", fingers: "Right Hand: 1 - 4 - 5 (Thumb, Ring, Pinky)" },
+        { name: "A Major Chord", notes: "A4 - C#5 - E5", fingers: "Right Hand: 1 - 3 - 5 (Thumb, Middle, Pinky)" },
         { name: "A minor (Am) Chord", notes: "A4 - C5 - E5", fingers: "Right Hand: 1 - 3 - 5 (Thumb, Middle, Pinky)" }
     ];
 
-    const relevantChords = chordList.filter(c => 
-        lesson.name.toLowerCase().includes(c.name.split(' ')[0].toLowerCase()) || 
-        lesson.instruction.toLowerCase().includes(c.name.split(' ')[0].toLowerCase()) ||
-        lesson.description.toLowerCase().includes(c.name.split(' ')[0].toLowerCase()) ||
-        lesson.name.toLowerCase().includes('change') || 
-        lesson.name.toLowerCase().includes('lean on me')
-    );
+    // Try explicit chords from the lesson definition first, then fallback to fuzzy naming matches
+    let relevantChords = chordList.filter(c => {
+        if (lesson.chords && lesson.chords.length > 0) {
+            const cleanName = c.name.replace(' Chord', '');
+            return lesson.chords.includes(cleanName);
+        }
+        return false;
+    });
+
+    if (relevantChords.length === 0) {
+        relevantChords = chordList.filter(c => 
+            lesson.name.toLowerCase().includes(c.name.split(' ')[0].toLowerCase()) || 
+            lesson.instruction.toLowerCase().includes(c.name.split(' ')[0].toLowerCase()) ||
+            lesson.description.toLowerCase().includes(c.name.split(' ')[0].toLowerCase()) ||
+            lesson.name.toLowerCase().includes('change') || 
+            lesson.name.toLowerCase().includes('lean on me')
+        );
+    }
 
     const displayChords = relevantChords.length > 0 ? relevantChords : chordList.slice(0, 2);
 
     return (
-        <div className="p-6 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-xl border border-indigo-100 dark:border-indigo-900/40 text-left w-full flex flex-col gap-2">
+        <div className="p-6 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-xl border border-indigo-100 dark:border-indigo-900/40 text-left w-full flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
             <h4 className="text-xs font-bold text-indigo-950 dark:text-indigo-200 uppercase tracking-wider mb-1">
                 🎹 Chord Fingering & Positioning Guide
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {displayChords.map(c => (
-                    <div key={c.name} className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm">
+                    <div key={c.name} className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm transition hover:shadow-md">
                         <div className="font-bold text-gray-900 dark:text-white text-sm">{c.name}</div>
-                        <div className="text-xs text-gray-505 dark:text-gray-400 mt-1">Notes: <span className="font-mono font-semibold text-gray-700 dark:text-gray-300">{c.notes}</span></div>
-                        <div className="text-xs text-gray-505 dark:text-gray-400 mt-0.5">Fingering: <span className="font-semibold text-indigo-600 dark:text-indigo-400">{c.fingers}</span></div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Notes: <span className="font-mono font-semibold text-gray-700 dark:text-gray-300">{c.notes}</span></div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Fingering: <span className="font-semibold text-indigo-600 dark:text-indigo-400">{c.fingers}</span></div>
                     </div>
                 ))}
             </div>
@@ -194,16 +209,27 @@ interface LessonIntroProps {
     lesson: Lesson;
     onStart: () => void;
     onBack: () => void;
+    isDemoPlaying: boolean;
+    onToggleDemo: () => void;
+    onStopDemo: () => void;
 }
 
-export const LessonIntro: React.FC<LessonIntroProps> = ({ lesson, onStart, onBack }) => {
+export const LessonIntro: React.FC<LessonIntroProps> = ({ lesson, onStart, onBack, isDemoPlaying, onToggleDemo, onStopDemo }) => {
+    React.useEffect(() => {
+        // Stop any active demo playing when we exit this page
+        return () => {
+            onStopDemo();
+        };
+    }, [onStopDemo]);
+
     return (
         <div className="w-full max-w-3xl mx-auto flex flex-col items-center justify-center p-8 animate-in fade-in zoom-in-95 duration-500">
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 w-full overflow-hidden">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white text-center">
-                    <h2 className="text-3xl font-black tracking-tight mb-2">{lesson.name}</h2>
-                    <p className="text-blue-100 font-medium">{lesson.description}</p>
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white text-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent)] pointer-events-none" />
+                    <h2 className="text-3xl font-black tracking-tight mb-2 relative z-10">{lesson.name}</h2>
+                    <p className="text-blue-100 font-medium relative z-10">{lesson.description}</p>
                 </div>
 
                 {/* Content */}
@@ -256,12 +282,22 @@ export const LessonIntro: React.FC<LessonIntroProps> = ({ lesson, onStart, onBac
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-4 pt-4">
+                    <div className="flex flex-col sm:flex-row gap-4 pt-4 w-full">
                         <button
                             onClick={onBack}
                             className="flex-1 py-4 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold rounded-xl transition-all"
                         >
                             Back to Courses
+                        </button>
+                        <button
+                            onClick={onToggleDemo}
+                            className={`flex-1 py-4 font-bold rounded-xl transition-all flex items-center justify-center gap-2 border select-none ${
+                                isDemoPlaying 
+                                    ? 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100 dark:bg-red-950/20 dark:border-red-900/40 dark:text-red-400' 
+                                    : 'bg-indigo-50 border-indigo-200 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950/20 dark:border-indigo-900/40 dark:text-indigo-400'
+                            }`}
+                        >
+                            {isDemoPlaying ? '⏹ Stop Demo' : '🔊 Preview Lesson'}
                         </button>
                         <button
                             onClick={onStart}

@@ -1,5 +1,37 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useMusicLibrary } from '../hooks/useMusicLibrary';
+import { courses } from '../utils/music/CourseData';
+
+const SONG_COURSE_LOCKS: Record<string, { courseId: string; courseName: string }> = {
+    'preset-ladygaga': { courseId: 'chords-harmony', courseName: 'Course 6: Chords & Harmony' },
+    'preset-satie-reloaded': { courseId: 'expanding-positions', courseName: 'Course 7: Expanding Positions' },
+    'preset-runescape-autumn': { courseId: 'expanding-positions', courseName: 'Course 7: Expanding Positions' },
+    'preset-yiruma': { courseId: 'expanding-positions', courseName: 'Course 7: Expanding Positions' },
+    'preset-passenger': { courseId: 'expanding-positions', courseName: 'Course 7: Expanding Positions' },
+    'preset-bach-fugue': { courseId: 'accidentals-key-sigs', courseName: 'Course 8: Accidentals & Key Signatures' },
+    'preset-kpop': { courseId: 'accidentals-key-sigs', courseName: 'Course 8: Accidentals & Key Signatures' }
+};
+
+const getNumericDifficulty = (score: any): number => {
+    const lvlTag = score.tags?.find((t: string) => t.toLowerCase().startsWith('level '));
+    if (lvlTag) {
+        const num = parseInt(lvlTag.replace(/level\s+/i, ''));
+        if (!isNaN(num)) return num;
+    }
+    const diffTag = score.tags?.find((t: string) => ['beginner', 'intermediate', 'advanced'].includes(t.toLowerCase()));
+    if (diffTag) {
+        if (diffTag.toLowerCase() === 'beginner') return 2;
+        if (diffTag.toLowerCase() === 'intermediate') return 5;
+        if (diffTag.toLowerCase() === 'advanced') return 8;
+    }
+    return 3; // default
+};
+
+const isCourseCompleted = (courseId: string, completedIds: Set<string>): boolean => {
+    const course = courses.find(c => c.id === courseId);
+    if (!course) return true;
+    return course.lessons.every(l => completedIds.has(l.id));
+};
 
 interface MusicLibraryProps {
     onSelectScore: (file: File | null, url?: string, title?: string, id?: string) => void;
@@ -13,6 +45,8 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
     const [isUploading, setIsUploading] = useState(false);
     const [activeTab, setActiveTab] = useState<'all' | 'bookmarks' | 'fundamentals' | 'classical' | 'modern' | 'custom'>('all');
     const [difficultyFilter, setDifficultyFilter] = useState<'all' | 'beginner' | 'intermediate' | 'advanced'>('all');
+    const [sortBy, setSortBy] = useState<'date-added' | 'title-asc' | 'title-desc' | 'diff-asc' | 'diff-desc' | 'score-desc'>('date-added');
+    const completedIds = useMemo(() => new Set(Object.keys(library.lessonProgress)), [library.lessonProgress]);
 
     // Debounce search input
     useEffect(() => {
@@ -23,7 +57,7 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
     }, [localSearchTerm]);
 
     const filteredScores = useMemo(() => {
-        return scores.filter(score => {
+        const results = scores.filter(score => {
             // Search filter
             const matchesSearch = 
                 score.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -62,7 +96,25 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
 
             return true;
         });
-    }, [scores, searchTerm, activeTab, difficultyFilter, bookmarkedIds]);
+
+        // Apply Sorting
+        const sorted = [...results];
+        if (sortBy === 'title-asc') {
+            sorted.sort((a, b) => a.title.localeCompare(b.title));
+        } else if (sortBy === 'title-desc') {
+            sorted.sort((a, b) => b.title.localeCompare(a.title));
+        } else if (sortBy === 'diff-asc') {
+            sorted.sort((a, b) => getNumericDifficulty(a) - getNumericDifficulty(b));
+        } else if (sortBy === 'diff-desc') {
+            sorted.sort((a, b) => getNumericDifficulty(b) - getNumericDifficulty(a));
+        } else if (sortBy === 'score-desc') {
+            sorted.sort((a, b) => (b.highScore || 0) - (a.highScore || 0));
+        } else {
+            // Default: newest first by dateAdded
+            sorted.sort((a, b) => b.dateAdded - a.dateAdded);
+        }
+        return sorted;
+    }, [scores, searchTerm, activeTab, difficultyFilter, sortBy, bookmarkedIds]);
 
     const tabCounts = useMemo(() => {
         const counts = { all: 0, bookmarks: 0, fundamentals: 0, classical: 0, modern: 0, custom: 0 };
@@ -99,10 +151,10 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
 
     const [visibleCount, setVisibleCount] = useState(12);
 
-    // Reset pagination when search, tab, or difficulty changes
+    // Reset pagination when search, tab, difficulty, or sort changes
     useEffect(() => {
         setVisibleCount(12);
-    }, [searchTerm, activeTab, difficultyFilter]);
+    }, [searchTerm, activeTab, difficultyFilter, sortBy]);
 
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -169,6 +221,27 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
                             onChange={(e) => setLocalSearchTerm(e.target.value)}
                             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/40 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 focus:outline-none font-semibold transition duration-200"
                         />
+                    </div>
+
+                    {/* Sort Selector */}
+                    <div className="relative">
+                        <select
+                            value={sortBy}
+                            onChange={(e: any) => setSortBy(e.target.value)}
+                            className="appearance-none bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 pl-4 pr-10 py-2.5 rounded-xl text-xs font-bold text-slate-750 dark:text-slate-200 focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 focus:outline-none cursor-pointer transition duration-200 select-none"
+                        >
+                            <option value="date-added">📅 Newest First</option>
+                            <option value="title-asc">🔤 Title (A-Z)</option>
+                            <option value="title-desc">🔤 Title (Z-A)</option>
+                            <option value="diff-asc">🎹 Easiest First</option>
+                            <option value="diff-desc">🎹 Hardest First</option>
+                            <option value="score-desc">🏆 Highest Score</option>
+                        </select>
+                        <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400 dark:text-slate-500">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </span>
                     </div>
 
                     {/* Upload New Button */}
@@ -264,20 +337,45 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
 
             {/* Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {filteredScores.slice(0, visibleCount).map(score => (
-                    <div
-                        key={score.id}
-                        onClick={() => {
-                            if (score.songUrl) {
-                                onSelectScore(null, score.songUrl, score.title, score.id);
-                            } else if (score.fileData) {
-                                onSelectScore(new File([score.fileData], score.fileName), undefined, undefined, score.id);
-                            }
-                        }}
-                        className="group relative bg-white/70 dark:bg-slate-900/50 p-6 rounded-3xl shadow-md shadow-slate-100/10 dark:shadow-none border border-slate-200/60 dark:border-slate-800/80 hover:border-sky-400 dark:hover:border-sky-500/40 hover:shadow-2xl hover:shadow-sky-500/5 hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col gap-4 backdrop-blur"
-                    >
-                        {/* Card Header (Icon + Actions) */}
-                        <div className="flex justify-between items-start">
+                {filteredScores.slice(0, visibleCount).map(score => {
+                    const songLock = SONG_COURSE_LOCKS[score.id];
+                    const isLocked = songLock ? !isCourseCompleted(songLock.courseId, completedIds) : false;
+
+                    return (
+                        <div
+                            key={score.id}
+                            onClick={() => {
+                                if (isLocked) {
+                                    alert(`To play "${score.title}", please complete "${songLock.courseName}" first! 🎹`);
+                                    return;
+                                }
+                                if (score.songUrl) {
+                                    onSelectScore(null, score.songUrl, score.title, score.id);
+                                } else if (score.fileData) {
+                                    onSelectScore(new File([score.fileData], score.fileName), undefined, undefined, score.id);
+                                }
+                            }}
+                            className={`group relative bg-white/70 dark:bg-slate-900/50 p-6 rounded-3xl shadow-md shadow-slate-100/10 dark:shadow-none border border-slate-200/60 dark:border-slate-800/80 transition-all duration-300 flex flex-col gap-4 backdrop-blur ${
+                                isLocked 
+                                    ? 'opacity-85 select-none cursor-not-allowed' 
+                                    : 'hover:border-sky-400 dark:hover:border-sky-500/40 hover:shadow-2xl hover:shadow-sky-500/5 hover:-translate-y-1 cursor-pointer'
+                            }`}
+                        >
+                            {/* Lock Overlay */}
+                            {isLocked && (
+                                <div className="absolute inset-0 bg-slate-100/70 dark:bg-slate-950/75 rounded-3xl z-20 flex flex-col items-center justify-center p-4 text-center backdrop-blur-[1px]">
+                                    <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm text-slate-500 mb-2">
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-xs font-black text-slate-700 dark:text-slate-300">Requires Completion of</span>
+                                    <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 max-w-[80%] truncate mt-0.5">{songLock.courseName}</span>
+                                </div>
+                            )}
+
+                            {/* Card Header (Icon + Actions) */}
+                            <div className="flex justify-between items-start">
                             {/* Instrument Disk */}
                             <div className="bg-gradient-to-tr from-sky-500 to-indigo-600 text-white p-3 rounded-2xl shadow-md shadow-sky-500/20 w-fit">
                                 <svg className="w-5 h-5 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
@@ -385,7 +483,8 @@ export const MusicLibrary: React.FC<MusicLibraryProps> = ({ onSelectScore, libra
                             <span>Added: {new Date(score.dateAdded).toLocaleDateString()}</span>
                         </div>
                     </div>
-                ))}
+                    );
+                })}
 
                 {/* Empty State */}
                 {filteredScores.length === 0 && (

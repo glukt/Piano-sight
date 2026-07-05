@@ -68,7 +68,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         }
     }, [isMutedPlayback, loading]);
 
-    const { saveHighScore } = useMusicLibrary();
+    const { saveHighScore, logAttempt } = useMusicLibrary();
 
     const [practicedHand, setPracticedHand] = useState<'both' | 'right' | 'left'>('both');
 
@@ -115,6 +115,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         onSectionComplete: onAddXp ? () => onAddXp(50) : undefined, // 50 XP per section (~1/2 level early on)
         songId,
         saveHighScore,
+        logAttempt,
         practicedHand
     });
 

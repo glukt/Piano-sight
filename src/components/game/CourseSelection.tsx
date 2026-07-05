@@ -28,7 +28,7 @@ export const CourseSelection: React.FC<CourseSelectionProps> = ({ userXp, comple
             </p>
 
             <div className="flex flex-col gap-12 mt-4">
-                {courses.sort((a, b) => a.order - b.order).map(course => {
+                {[...courses].sort((a, b) => a.order - b.order).map(course => {
                     const completedInCourse = course.lessons.filter(l => completedLessonIds.has(l.id)).length;
                     const progressPercent = Math.round((completedInCourse / course.lessons.length) * 100);
 

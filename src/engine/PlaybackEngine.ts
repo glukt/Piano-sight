@@ -81,6 +81,10 @@ export class PlaybackEngine {
         this.tempoMultiplier = Math.max(0.4, Math.min(1.2, mult));
     }
 
+    public get TempoMultiplier() {
+        return this.tempoMultiplier;
+    }
+
     public get IsPlaying() {
         return this.isPlaying;
     }

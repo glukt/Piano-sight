@@ -382,7 +382,12 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                     const noteName = parts[0];
                     const accidental = noteName.slice(1);
                     if (accidental === '#' || accidental === 'b' || accidental === '##' || accidental === 'bb' || accidental === 'n') {
-                        staveNote.addModifier(new VF.Accidental(accidental), keyIndex);
+                        const acc = new VF.Accidental(accidental);
+                        // Force rendering of accidentals even if in key signature (as cautionary) during practice
+                        if (keySignature && keySignature !== 'C' && keySignature !== 'Am') {
+                            acc.setAsCautionary();
+                        }
+                        staveNote.addModifier(acc, keyIndex);
                     }
                 });
 

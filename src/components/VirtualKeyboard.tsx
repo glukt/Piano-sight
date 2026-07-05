@@ -293,7 +293,13 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
                             onMouseLeave={interactive ? (e) => handleKeyUp(key.midi, e) : undefined}
                             onTouchStart={interactive ? (e) => handleKeyDown(key.midi, e) : undefined}
                             onTouchEnd={interactive ? (e) => handleKeyUp(key.midi, e) : undefined}
-                        />
+                        >
+                            {showLabels && (
+                                <div className="absolute bottom-1 left-0 right-0 text-center text-[8px] text-white/90 font-sans pointer-events-none font-semibold uppercase">
+                                    {getNoteLabel(key.midi).replace('#', '♯')}
+                                </div>
+                            )}
+                        </div>
                     );
                 })}
             </div>

@@ -43,6 +43,34 @@ const POSITION_MAPS: Record<string, Record<string, { hand: 'LH' | 'RH'; finger: 
         'f/3': { hand: 'LH', finger: 2 },
         'g/3': { hand: 'LH', finger: 1 }
     },
+    'RH_B_POS': {
+        'b/3': { hand: 'RH', finger: 1 },
+        'c/4': { hand: 'RH', finger: 2 },
+        'd/4': { hand: 'RH', finger: 3 },
+        'e/4': { hand: 'RH', finger: 4 },
+        'f/4': { hand: 'RH', finger: 5 }
+    },
+    'LH_B_POS': {
+        'b/2': { hand: 'LH', finger: 5 },
+        'c/3': { hand: 'LH', finger: 4 },
+        'd/3': { hand: 'LH', finger: 3 },
+        'e/3': { hand: 'LH', finger: 2 },
+        'f/3': { hand: 'LH', finger: 1 }
+    },
+    'RH_G_POS': {
+        'g/4': { hand: 'RH', finger: 1 },
+        'a/4': { hand: 'RH', finger: 2 },
+        'b/4': { hand: 'RH', finger: 3 },
+        'c/5': { hand: 'RH', finger: 4 },
+        'd/5': { hand: 'RH', finger: 5 }
+    },
+    'LH_G_POS': {
+        'g/2': { hand: 'LH', finger: 5 },
+        'a/2': { hand: 'LH', finger: 4 },
+        'b/2': { hand: 'LH', finger: 3 },
+        'c/3': { hand: 'LH', finger: 2 },
+        'd/3': { hand: 'LH', finger: 1 }
+    },
     'RH_C_POS': {
         'c/4': { hand: 'RH', finger: 1 },
         'd/4': { hand: 'RH', finger: 2 },
@@ -257,6 +285,10 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                     keys: n.keys,
                     duration: n.duration,
                 });
+
+                if (n.duration.includes('.')) {
+                    staveNote.addDotToAll();
+                }
 
                 // Add fingering annotations if enabled and mapped
                 if (showFingering && highlights && !n.duration.endsWith('r')) {

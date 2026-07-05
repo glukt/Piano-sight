@@ -27,12 +27,14 @@ const LoopingControls: React.FC<LoopingControlsProps> = ({
 }) => {
     const trackRef = useRef<HTMLDivElement>(null);
     const [draggingHandle, setDraggingHandle] = useState<'start' | 'end' | 'progress' | null>(null);
+    const [localLoopStart, setLocalLoopStart] = useState<number | null>(null);
+    const [localLoopEnd, setLocalLoopEnd] = useState<number | null>(null);
 
     const progressPercent = totalDuration > 0 ? (currentTimestamp / totalDuration) * 100 : 0;
 
     // Use current value or default edges for visual rendering of the drag handles
-    const loopStartVal = loopStart !== null ? loopStart : 0;
-    const loopEndVal = loopEnd !== null ? loopEnd : totalDuration;
+    const loopStartVal = localLoopStart !== null ? localLoopStart : (loopStart !== null ? loopStart : 0);
+    const loopEndVal = localLoopEnd !== null ? localLoopEnd : (loopEnd !== null ? loopEnd : totalDuration);
 
     const loopStartPercent = totalDuration > 0 ? (loopStartVal / totalDuration) * 100 : 0;
     const loopEndPercent = totalDuration > 0 ? (loopEndVal / totalDuration) * 100 : 100;
@@ -101,11 +103,15 @@ const LoopingControls: React.FC<LoopingControlsProps> = ({
 
     const handleStartMouseDown = (e: React.MouseEvent) => {
         e.stopPropagation();
+        setLocalLoopStart(loopStart !== null ? loopStart : 0);
+        setLocalLoopEnd(loopEnd !== null ? loopEnd : totalDuration);
         setDraggingHandle('start');
     };
 
     const handleEndMouseDown = (e: React.MouseEvent) => {
         e.stopPropagation();
+        setLocalLoopStart(loopStart !== null ? loopStart : 0);
+        setLocalLoopEnd(loopEnd !== null ? loopEnd : totalDuration);
         setDraggingHandle('end');
     };
 
@@ -119,18 +125,25 @@ const LoopingControls: React.FC<LoopingControlsProps> = ({
             if (draggingHandle === 'start') {
                 const maxStart = Math.max(0, loopEndVal - 0.01);
                 const newStart = Math.min(snapped, maxStart);
-                onSetLoopStart(newStart);
+                setLocalLoopStart(newStart);
             } else if (draggingHandle === 'end') {
                 const minEnd = Math.min(totalDuration, loopStartVal + 0.01);
                 const newEnd = Math.max(snapped, minEnd);
-                onSetLoopEnd(newEnd);
+                setLocalLoopEnd(newEnd);
             } else if (draggingHandle === 'progress') {
                 onSeek(snapped);
             }
         };
 
         const handleMouseUp = () => {
+            if (draggingHandle === 'start' && localLoopStart !== null) {
+                onSetLoopStart(localLoopStart);
+            } else if (draggingHandle === 'end' && localLoopEnd !== null) {
+                onSetLoopEnd(localLoopEnd);
+            }
             setDraggingHandle(null);
+            setLocalLoopStart(null);
+            setLocalLoopEnd(null);
         };
 
         window.addEventListener('mousemove', handleMouseMove);
@@ -140,7 +153,7 @@ const LoopingControls: React.FC<LoopingControlsProps> = ({
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
         };
-    }, [draggingHandle, loopStartVal, loopEndVal, totalDuration, measureTimestamps]);
+    }, [draggingHandle, loopStartVal, loopEndVal, totalDuration, measureTimestamps, localLoopStart, localLoopEnd, onSetLoopStart, onSetLoopEnd]);
 
     const currentMeasure = getMeasureNumber(currentTimestamp) || 1;
     const totalMeasures = measureTimestamps.length || 1;

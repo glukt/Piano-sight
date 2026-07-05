@@ -185,6 +185,8 @@ export function usePracticeMode({
         setFeedback(finalMode === 'wait' ? "Play the notes on the screen..." : "Listen to this section...");
         setErrorMeasures({});
         setIsSongComplete(false);
+        lastExpectedStrRef.current = "";
+        notesActiveAtStepStartRef.current.clear();
     }, [totalMeasures]);
 
     const stopPractice = useCallback(() => {
@@ -235,6 +237,8 @@ export function usePracticeMode({
         setLastSuccessfulNotes(new Set());
         heldWrongNotesRef.current.clear();
         setFeedback("New Section! Listen first.");
+        lastExpectedStrRef.current = "";
+        notesActiveAtStepStartRef.current.clear();
     }, [currentSection, totalMeasures, playbackEngine]);
 
     const retrySection = useCallback(() => {
@@ -257,6 +261,8 @@ export function usePracticeMode({
         // Reset to preview mode. The useEffect will handle stopping and seeking.
         setMode('preview');
         setPreviewLoopCount(0);
+        lastExpectedStrRef.current = "";
+        notesActiveAtStepStartRef.current.clear();
     }, []);
 
     const prevSection = useCallback(() => {
@@ -290,6 +296,8 @@ export function usePracticeMode({
         setLastSuccessfulNotes(new Set());
         heldWrongNotesRef.current.clear();
         setFeedback("Previous Section! Listen first.");
+        lastExpectedStrRef.current = "";
+        notesActiveAtStepStartRef.current.clear();
     }, [currentSection, playbackEngine]);
 
     // Effect to handle Mode Transitions & Looping
@@ -298,12 +306,25 @@ export function usePracticeMode({
         if (!isActive && playbackEngine) {
             playbackEngine.stop();
             playbackEngine.setLoop(null, null);
+            if (autoAdvanceTimerRef.current) {
+                clearTimeout(autoAdvanceTimerRef.current);
+                autoAdvanceTimerRef.current = null;
+            }
             return;
         }
 
         if (!isActive || !playbackEngine) return;
 
+        // Clear any running auto-advance timers immediately when section or mode changes
+        if (autoAdvanceTimerRef.current) {
+            clearTimeout(autoAdvanceTimerRef.current);
+            autoAdvanceTimerRef.current = null;
+        }
+
         const setupLoop = () => {
+            // Reset step change checks and held start keys to prevent ghost auto-evals and key match skips
+            lastExpectedStrRef.current = "";
+            notesActiveAtStepStartRef.current = new Set(userActiveNotesRef.current);
             // Get Timestamps from Engine
             const startTs = playbackEngine.getMeasureTimestamp(currentSection.startMeasure);
             const endTs = playbackEngine.getMeasureTimestamp(currentSection.endMeasure);
@@ -613,6 +634,10 @@ export function usePracticeMode({
 
                 // 5. Check Input
                 const allNotesPressed = freshExpectedObjs.every(noteObj => {
+                    // Ignore notes that were already active at the start of the step (unless they are tied/legato-sustained notes)
+                    if (!noteObj.isTied && notesActiveAtStepStartRef.current.has(noteObj.midi)) {
+                        return false;
+                    }
                     return userActiveNotesRef.current.has(noteObj.midi);
                 });
 
@@ -740,6 +765,8 @@ export function usePracticeMode({
             clearTimeout(autoAdvanceTimerRef.current);
             autoAdvanceTimerRef.current = null;
         }
+        lastExpectedStrRef.current = "";
+        notesActiveAtStepStartRef.current.clear();
     }, [totalMeasures, mode, playbackEngine]);
 
     // Effect to build event timeline for Play Mode

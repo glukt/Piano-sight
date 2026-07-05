@@ -50,6 +50,11 @@ export function useAudioInput(expectedNotesRef?: React.RefObject<number[]>) {
     // sliding window queue for median filtering
     const pitchQueueRef = useRef<(number | null)[]>(new Array(5).fill(null));
 
+    // Web Worker state
+    const workerRef = useRef<Worker | null>(null);
+    const bufferRef = useRef<Float32Array | null>(null);
+    const isWorkerBusy = useRef<boolean>(false);
+
     // Enumerate devices on mount to see if permission was already granted
     const updateDeviceList = useCallback(async () => {
         try {
@@ -78,36 +83,40 @@ export function useAudioInput(expectedNotesRef?: React.RefObject<number[]>) {
         localStorage.setItem('pianopilot_mic_sensitivity', sensitivity.toString());
     }, [sensitivity]);
 
-    const updatePitch = useCallback(() => {
-        if (!detectorRef.current) return;
-
-        const pitch = detectorRef.current.getPitch(expectedNotesRef?.current || undefined);
-        let currentNote: number | null = null;
-        if (pitch && pitch > 0) {
-            const note = detectorRef.current.noteFromPitch(pitch);
-            if (note >= 21 && note <= 108) {
-                currentNote = note;
+    // Clean up worker on unmount
+    useEffect(() => {
+        return () => {
+            if (workerRef.current) {
+                workerRef.current.terminate();
             }
+        };
+    }, []);
+
+    const updatePitch = useCallback(() => {
+        if (!detectorRef.current || !workerRef.current) return;
+        
+        if (isWorkerBusy.current || !bufferRef.current) {
+            requestRef.current = requestAnimationFrame(updatePitch);
+            return;
         }
 
-        // Shift queue and push new sample
-        pitchQueueRef.current.shift();
-        pitchQueueRef.current.push(currentNote);
+        // Fill buffer with raw time domain samples
+        detectorRef.current.getFloatTimeDomainData(bufferRef.current);
 
-        // Apply median filter
-        const smoothedNote = getMedian(pitchQueueRef.current);
-        setDetectedNote(smoothedNote);
+        // Detach buffer and post message to background worker
+        isWorkerBusy.current = true;
+        const transferBuffer = bufferRef.current;
+        bufferRef.current = null;
 
-        // Get volume from detector for UI feedback
-        const now = performance.now();
-        if (now - lastVolumeUpdate.current > 50) { // 20Hz update for volume meter
-            const vol = detectorRef.current.lastVolume;
-            setVolume(vol);
-            lastVolumeUpdate.current = now;
-        }
+        workerRef.current.postMessage({
+            buffer: transferBuffer,
+            sampleRate: detectorRef.current.sampleRate,
+            noiseGateThreshold: sensitivity,
+            expectedMidiNotes: expectedNotesRef?.current || undefined
+        }, [transferBuffer.buffer]);
 
         requestRef.current = requestAnimationFrame(updatePitch);
-    }, [expectedNotesRef]);
+    }, [sensitivity, expectedNotesRef]);
 
     const startListening = async (deviceId?: string) => {
         try {
@@ -127,6 +136,43 @@ export function useAudioInput(expectedNotesRef?: React.RefObject<number[]>) {
             const activeId = deviceId || selectedMicId || undefined;
             await detectorRef.current.init(activeId);
             setActiveMicLabel(detectorRef.current.activeMicLabel);
+
+            // Initialize worker and recycled buffer
+            if (workerRef.current) {
+                workerRef.current.terminate();
+            }
+            workerRef.current = new Worker(new URL('../audio/PitchWorker.ts', import.meta.url), { type: 'module' });
+            bufferRef.current = new Float32Array(4096);
+            isWorkerBusy.current = false;
+
+            workerRef.current.onmessage = (e: MessageEvent) => {
+                const { pitch, rms, buffer } = e.data;
+                // Recycle the buffer back
+                bufferRef.current = buffer;
+                isWorkerBusy.current = false;
+
+                let currentNote: number | null = null;
+                if (pitch && pitch > 0) {
+                    const noteNum = 12 * (Math.log(pitch / 440) / Math.log(2));
+                    const note = Math.round(noteNum) + 69;
+                    if (note >= 21 && note <= 108) {
+                        currentNote = note;
+                    }
+                }
+
+                // Median filtering
+                pitchQueueRef.current.shift();
+                pitchQueueRef.current.push(currentNote);
+                const smoothedNote = getMedian(pitchQueueRef.current);
+                setDetectedNote(smoothedNote);
+
+                // Update volume meter state
+                const now = performance.now();
+                if (now - lastVolumeUpdate.current > 50) {
+                    setVolume(rms);
+                    lastVolumeUpdate.current = now;
+                }
+            };
             
             setIsListening(true);
             requestRef.current = requestAnimationFrame(updatePitch);
@@ -148,6 +194,12 @@ export function useAudioInput(expectedNotesRef?: React.RefObject<number[]>) {
             detectorRef.current.stop();
             detectorRef.current = null;
         }
+        if (workerRef.current) {
+            workerRef.current.terminate();
+            workerRef.current = null;
+        }
+        isWorkerBusy.current = false;
+        bufferRef.current = null;
     };
 
     const changeMicrophone = async (deviceId: string) => {

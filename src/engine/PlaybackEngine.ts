@@ -8,6 +8,7 @@ export class PlaybackEngine {
     private cursor: Cursor | null = null;
     private isPlaying: boolean = false;
     private lastMeasureNumber: number = 0;
+    private tempoMultiplier: number = 1.0;
 
     private getCursor(): Cursor | null {
         if (!this.cursor) {
@@ -74,6 +75,10 @@ export class PlaybackEngine {
 
     public setMuted(muted: boolean) {
         this.isMuted = muted;
+    }
+
+    public setTempoMultiplier(mult: number) {
+        this.tempoMultiplier = Math.max(0.4, Math.min(1.2, mult));
     }
 
     public get IsPlaying() {
@@ -401,7 +406,7 @@ export class PlaybackEngine {
                 return;
             }
 
-            const noteDuration = note.Length.RealValue * (240 / this.bpm);
+            const noteDuration = note.Length.RealValue * (240 / (this.bpm * this.tempoMultiplier));
 
             // Schedule visual key press and release on keyboard overlay aligned to lookahead start
             const pressTime = lookahead * 1000;
@@ -463,26 +468,28 @@ export class PlaybackEngine {
 
         // Highlight notes under cursor, but skip heavy notehead recoloring at high tempos (BPM > 150)
         // to prevent rendering lag from ruining the audio timing loop.
-        this.clearHighlights();
-        const shouldVisualHighlight = this.highlightNotes && this.bpm <= 150;
-
-        if (shouldVisualHighlight) {
-            const gNotes = cursor.GNotesUnderCursor();
-            gNotes.forEach(gn => {
-                // @ts-ignore
-                if (gn.setColor) {
-                    // @ts-ignore
-                    gn.setColor("#3b82f6", { applyToNoteheads: true, applyToStem: true, applyToBeams: true });
-                    this.currentStyledNotes.push(gn as unknown as GraphicalNote);
-                }
-            });
-        }
-
-        // Report Progress
         const iterator = cursor.Iterator;
-        if (this.onProgress) {
-            this.onProgress(iterator.currentTimeStamp.RealValue, this.TotalDuration);
-        }
+        requestAnimationFrame(() => {
+            this.clearHighlights();
+            const shouldVisualHighlight = this.highlightNotes && this.bpm <= 150;
+
+            if (shouldVisualHighlight) {
+                const gNotes = cursor.GNotesUnderCursor();
+                gNotes.forEach(gn => {
+                    // @ts-ignore
+                    if (gn.setColor) {
+                        // @ts-ignore
+                        gn.setColor("#3b82f6", { applyToNoteheads: true, applyToStem: true, applyToBeams: true });
+                        this.currentStyledNotes.push(gn as unknown as GraphicalNote);
+                    }
+                });
+            }
+
+            // Report Progress
+            if (this.onProgress) {
+                this.onProgress(iterator.currentTimeStamp.RealValue, this.TotalDuration);
+            }
+        });
 
         // Detect Tempo from CurrentMeasure's TempoInBPM
         if (iterator && iterator.CurrentMeasure) {
@@ -491,7 +498,7 @@ export class PlaybackEngine {
                 this.bpm = mBpm;
             }
         }
-        const currentBpm = this.bpm;
+        const currentBpm = this.bpm * this.tempoMultiplier;
 
         // Loop Check
         if (this.loopEnd !== null && this.loopStart !== null) {

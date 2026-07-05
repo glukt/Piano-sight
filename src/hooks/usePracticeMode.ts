@@ -119,6 +119,29 @@ export function usePracticeMode({
     const [accuracy, setAccuracy] = useState(100);
     const [feedback, setFeedback] = useState<string | null>(null);
     const [previewLoopCount, setPreviewLoopCount] = useState(0);
+    const [tempoMultiplier, setTempoMultiplierState] = useState(1.0);
+    const [isSpeedTrainerActive, setIsSpeedTrainerActive] = useState(false);
+
+    useEffect(() => {
+        if (playbackEngine) {
+            playbackEngine.setTempoMultiplier(tempoMultiplier);
+        }
+    }, [playbackEngine, tempoMultiplier]);
+
+    useEffect(() => {
+        if (isSpeedTrainerActive) {
+            setTempoMultiplierState(0.6);
+        } else {
+            setTempoMultiplierState(1.0);
+        }
+    }, [isSpeedTrainerActive]);
+
+    const changeTempoMultiplier = useCallback((val: number) => {
+        setTempoMultiplierState(val);
+        if (playbackEngine) {
+            playbackEngine.setTempoMultiplier(val);
+        }
+    }, [playbackEngine]);
     const [expectedNotes, setExpectedNotes] = useState<number[]>([]);
 
     // Accuracy Tracking
@@ -570,9 +593,25 @@ export function usePracticeMode({
                 }
 
                 if (acc >= 90) {
-                    setFeedback(`Great! Accuracy: ${Math.round(acc)}%. Moving on!`);
-                    if (onSectionCompleteRef.current) onSectionCompleteRef.current(); // Major XP event
-                    transitionTimeoutRef.current = setTimeout(() => nextSectionRef.current(), 1500);
+                    if (isSpeedTrainerActive) {
+                        if (tempoMultiplier < 1.0) {
+                            const nextMult = Math.min(1.0, tempoMultiplier + 0.1);
+                            setTempoMultiplierState(nextMult);
+                            if (playbackEngine) playbackEngine.setTempoMultiplier(nextMult);
+                            setFeedback(`🚀 Speed increased to ${Math.round(nextMult * 100)}%! Let's practice again.`);
+                            transitionTimeoutRef.current = setTimeout(() => retrySectionRef.current(), 1500);
+                        } else {
+                            setFeedback(`🎉 Section mastered at 100% speed! Moving on!`);
+                            setTempoMultiplierState(0.6); // Reset for next section
+                            if (playbackEngine) playbackEngine.setTempoMultiplier(0.6);
+                            if (onSectionCompleteRef.current) onSectionCompleteRef.current();
+                            transitionTimeoutRef.current = setTimeout(() => nextSectionRef.current(), 1500);
+                        }
+                    } else {
+                        setFeedback(`Great! Accuracy: ${Math.round(acc)}%. Moving on!`);
+                        if (onSectionCompleteRef.current) onSectionCompleteRef.current(); // Major XP event
+                        transitionTimeoutRef.current = setTimeout(() => nextSectionRef.current(), 1500);
+                    }
                 } else {
                     setFeedback(`Accuracy: ${Math.round(acc)}%. Let's try again.`);
                     transitionTimeoutRef.current = setTimeout(() => retrySectionRef.current(), 1500);
@@ -961,6 +1000,10 @@ export function usePracticeMode({
         startPlayMode,
         passed,
         requiredAccuracy,
-        isCapstone
+        isCapstone,
+        tempoMultiplier,
+        setTempoMultiplier: changeTempoMultiplier,
+        isSpeedTrainerActive,
+        setIsSpeedTrainerActive
     };
 }

@@ -102,7 +102,11 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         startPlayMode,
         passed,
         requiredAccuracy,
-        isCapstone
+        isCapstone,
+        tempoMultiplier,
+        setTempoMultiplier,
+        isSpeedTrainerActive,
+        setIsSpeedTrainerActive
     } = usePracticeMode({
         playbackEngine: playbackRef.current,
         totalMeasures: playbackRef.current?.MeasureCount || 0,
@@ -485,60 +489,78 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         }
     }, [highlightNotes, loading]); // loading dependency ensures it sets after init
 
-    // Smooth scroll interpolation loop
+    const targetScrollLeftRef = useRef<number>(0);
+    const containerWidthRef = useRef<number>(0);
+
+    // Cache container width on mount and resize
     useEffect(() => {
-        if (layoutMode !== 'scrolling' || !osmdRef.current || loading) return;
+        const updateWidth = () => {
+            if (containerRef.current) {
+                containerWidthRef.current = containerRef.current.clientWidth;
+            }
+        };
+        updateWidth();
+        window.addEventListener('resize', updateWidth);
+        return () => window.removeEventListener('resize', updateWidth);
+    }, [loading]);
+
+    // Recalculate target scroll left only when cursor/timestamp/mode changes
+    useEffect(() => {
+        if (layoutMode !== 'scrolling' || !osmdRef.current || loading || !containerRef.current) return;
+
+        const container = containerRef.current;
+        const cursor = osmdRef.current.cursor;
+        const cursorEl = cursor?.cursorElement;
+
+        if (cursorEl) {
+            try {
+                const containerRect = container.getBoundingClientRect();
+                const cursorRect = cursorEl.getBoundingClientRect();
+
+                // Align center of cursor with 25% playhead
+                const computedTarget = container.scrollLeft + 
+                    (cursorRect.left + cursorRect.width / 2 - containerRect.left) - 
+                    (containerWidthRef.current * 0.25);
+                
+                const maxScroll = container.scrollWidth - containerWidthRef.current;
+                targetScrollLeftRef.current = Math.max(0, Math.min(computedTarget, maxScroll));
+            } catch (e) {
+                // Ignore if elements temporary unmounted
+            }
+        }
+    }, [currentTimestamp, expectedNotes, layoutMode, loading, isPracticeActive, practiceMode, playModeStarted]);
+
+    // Smooth scroll LERP loop solely updates container.scrollLeft (no layout measurements)
+    useEffect(() => {
+        if (layoutMode !== 'scrolling' || loading) return;
 
         const container = containerRef.current;
         if (!container) return;
 
         let animationFrameId: number;
-        let targetScrollLeft = container.scrollLeft;
 
-        const updateScroll = () => {
-            if (!container || !osmdRef.current) {
-                animationFrameId = requestAnimationFrame(updateScroll);
-                return;
-            }
-
+        const lerpScroll = () => {
             const isCountdownActive = isPracticeActive && practiceMode === 'play' && !playModeStarted;
 
             if (isCountdownActive) {
-                targetScrollLeft = 0;
+                container.scrollLeft = 0;
+                targetScrollLeftRef.current = 0;
             } else {
-                const cursor = osmdRef.current.cursor;
-                const cursorEl = cursor?.cursorElement;
-                if (cursorEl) {
-                    try {
-                        const containerRect = container.getBoundingClientRect();
-                        const cursorRect = cursorEl.getBoundingClientRect();
-
-                        // Align center of cursor with 25% playhead
-                        const computedTarget = container.scrollLeft + (cursorRect.left + cursorRect.width / 2 - containerRect.left) - (containerRect.width * 0.25);
-                        
-                        const maxScroll = container.scrollWidth - containerRect.width;
-                        targetScrollLeft = Math.max(0, Math.min(computedTarget, maxScroll));
-                    } catch (e) {
-                        // Bounding box query might fail if element not mounted
+                const diff = targetScrollLeftRef.current - container.scrollLeft;
+                if (Math.abs(diff) > 0.5) {
+                    // Snap instantly if it is a backwards jump (e.g. loop reset, seek back) or a massive forward jump
+                    if (diff < -150 || diff > 400) {
+                        container.scrollLeft = targetScrollLeftRef.current;
+                    } else {
+                        container.scrollLeft += diff * 0.15; // LERP tracking factor
                     }
                 }
             }
 
-            // Interpolate scroll position smoothly
-            const diff = targetScrollLeft - container.scrollLeft;
-            if (Math.abs(diff) > 0.5) {
-                // Snap instantly if it is a backwards jump (e.g. loop reset, seek back) or a massive forward jump
-                if (diff < -150 || diff > 400) {
-                    container.scrollLeft = targetScrollLeft;
-                } else {
-                    container.scrollLeft += diff * 0.15; // Increased tracking LERP factor (15%) for highly responsive alignment
-                }
-            }
-
-            animationFrameId = requestAnimationFrame(updateScroll);
+            animationFrameId = requestAnimationFrame(lerpScroll);
         };
 
-        animationFrameId = requestAnimationFrame(updateScroll);
+        animationFrameId = requestAnimationFrame(lerpScroll);
 
         return () => {
             cancelAnimationFrame(animationFrameId);
@@ -782,6 +804,10 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                 isLessonMode={isLessonMode}
                 practicedHand={practicedHand}
                 onChangePracticedHand={setPracticedHand}
+                tempoMultiplier={tempoMultiplier}
+                onChangeTempoMultiplier={setTempoMultiplier}
+                isSpeedTrainerActive={isSpeedTrainerActive}
+                onToggleSpeedTrainer={setIsSpeedTrainerActive}
             />
 
             {/* Practice Mode Overlay - Compact Bottom Bar */}

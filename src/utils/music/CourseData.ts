@@ -32,6 +32,7 @@ export interface Lesson {
     requiredXp: number; // XP required to unlock this lesson
     handPosition?: string;           // Hand position key for visual keyboard guide
     bpm?: number;                    // Target BPM for playback
+    prerequisites?: string[];        // Custom prerequisite lesson IDs
 }
 
 export interface Course {
@@ -2397,6 +2398,14 @@ export const isLessonCapstone = (lesson: Lesson): boolean => {
 };
 
 export const getLessonUnlockedStatus = (lesson: Lesson, completedIds: Set<string>, _userXp: number): boolean => {
+    // Admin mode bypass
+    if (typeof window !== 'undefined' && localStorage.getItem('adminMode') === 'true') return true;
+
+    // Check custom prerequisites if defined
+    if (lesson.prerequisites && lesson.prerequisites.length > 0) {
+        return lesson.prerequisites.every(prereqId => completedIds.has(prereqId));
+    }
+
     const courseIndex = courses.findIndex(c => c.id === lesson.courseId);
     if (courseIndex === -1) return false;
     

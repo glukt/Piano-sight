@@ -67,6 +67,16 @@ export class PitchDetector {
     public lastVolume: number = 0;
     public noiseGateThreshold: number = 0.01;
 
+    public getFloatTimeDomainData(array: Float32Array) {
+        if (this.analyser) {
+            this.analyser.getFloatTimeDomainData(array as any);
+        }
+    }
+
+    public get sampleRate(): number {
+        return this.audioContext.sampleRate;
+    }
+
     public getPitch(expectedMidiNotes?: number[]): number | null {
         this.analyser.getFloatTimeDomainData(this.buffer as any);
         let pitch = this.autoCorrelateYIN(this.buffer as any, this.audioContext.sampleRate, expectedMidiNotes);

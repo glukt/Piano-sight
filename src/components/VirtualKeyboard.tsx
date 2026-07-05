@@ -125,7 +125,7 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
 
                     {/* Clef Indication (Tiny) - Optional */}
                     {/* Note Head */}
-                    <circle cx="20" cy={noteY} r={radius} fill="currentColor" className="text-gray-800 dark:text-gray-200" />
+                    <circle cx="20" cy={noteY} r={radius} fill="currentColor" className="text-gray-800" />
 
                     {/* Ledger Lines Logic */}
                     {/* Below staff */}
@@ -213,11 +213,16 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
                     else if (isUser) bgColor = 'bg-yellow-400';
                 }
 
+                const isPressed = isPlayback || isUser;
+                const pressedClass = isPressed 
+                    ? 'translate-y-[3px] border-b-[2px] border-b-gray-400 dark:border-b-gray-600 shadow-inner' 
+                    : 'border-b-[6px] border-b-gray-300 dark:border-b-gray-500 active:translate-y-[3px] active:border-b-[2px] active:shadow-inner hover:bg-gray-50';
+
                 return (
                     <div
                         key={key.midi}
-                        className={`virtual-key-white flex-1 h-full border border-gray-400 rounded-b-sm relative transition-colors duration-75
-                             ${bgColor} ${interactive ? 'cursor-pointer' : ''}
+                        className={`virtual-key-white flex-1 h-full border border-gray-400 dark:border-gray-600 rounded-b-md relative transition-all duration-75 shadow-sm
+                             ${bgColor} ${interactive ? 'cursor-pointer' : ''} ${pressedClass}
                         `}
                         style={{ zIndex: 1 }}
                         onMouseDown={interactive ? (e) => handleKeyDown(key.midi, e) : undefined}
@@ -268,11 +273,16 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
                     const leftPercent = ((offset - (keyWidthRatio / 2)) / whiteKeyCount) * 100;
                     const widthPercent = (1 / whiteKeyCount) * 100 * keyWidthRatio;
 
+                    const isPressed = isPlayback || isUser;
+                    const pressedClass = isPressed
+                        ? 'translate-y-[2px] border-b-[2px] shadow-inner'
+                        : 'border-b-[5px] border-b-gray-950 active:translate-y-[2px] active:border-b-[2px] active:shadow-inner';
+
                     return (
                         <div
                             key={key.midi}
-                            className={`absolute top-0 h-full rounded-b-sm transition-colors duration-75
-                                ${bgColor} ${interactive ? 'cursor-pointer pointer-events-auto' : ''}
+                            className={`absolute top-0 h-full rounded-b-md transition-all duration-75 shadow-md
+                                ${bgColor} ${interactive ? 'cursor-pointer pointer-events-auto animate-pulse' : ''} ${pressedClass}
                              `}
                             style={{
                                 left: `${leftPercent}%`,

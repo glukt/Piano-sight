@@ -440,7 +440,6 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
     // Active Note Overlapping Protection
     const notesActiveAtStepStart = useRef<Set<number>>(new Set());
     const lastProcessedIndex = useRef<number>(-1);
-    const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Update notes active at step start when cursor index changes
     useEffect(() => {
@@ -482,6 +481,27 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
     useEffect(() => {
         alignedStepsRef.current = alignedSteps;
     }, [alignedSteps]);
+
+    const trebleRangeMidi = useMemo(() => {
+        const midiSet = new Set<number>();
+        alignedSteps.forEach(step => {
+            step.trebleKeys.forEach(k => midiSet.add(parseKeyToMidi(k)));
+        });
+        return midiSet;
+    }, [alignedSteps]);
+
+    const bassRangeMidi = useMemo(() => {
+        const midiSet = new Set<number>();
+        alignedSteps.forEach(step => {
+            step.bassKeys.forEach(k => midiSet.add(parseKeyToMidi(k)));
+        });
+        return midiSet;
+    }, [alignedSteps]);
+
+    const activeNotesRef = useRef<Set<number>>(new Set());
+    useEffect(() => {
+        activeNotesRef.current = effectiveActiveNotes;
+    }, [effectiveActiveNotes]);
 
     // Sync expected notes to mic detector ref
     useEffect(() => {
@@ -846,19 +866,22 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
             step.bassKeys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
         }
 
-        // Debounce evaluation window to allow chords to strike and filter transient noise/brushes
-        const elapsedAtTrigger = elapsedTimeRef.current;
-        
-        if (validationTimerRef.current) {
-            clearTimeout(validationTimerRef.current);
-        }
-
-        validationTimerRef.current = setTimeout(() => {
+        const checkInterval = setInterval(() => {
             const currentRelevantActiveNotes = new Set<number>();
-            effectiveActiveNotes.forEach(n => {
-                if (gameMode === 'both') currentRelevantActiveNotes.add(n);
-                else if (gameMode === 'treble' && n >= 60) currentRelevantActiveNotes.add(n);
-                else if (gameMode === 'bass' && n < 60) currentRelevantActiveNotes.add(n);
+            activeNotesRef.current.forEach(n => {
+                if (gameMode === 'both') {
+                    currentRelevantActiveNotes.add(n);
+                } else if (gameMode === 'treble') {
+                    // Dynamic clef validation using notes present in treble signature, falling back to Middle C threshold
+                    if (trebleRangeMidi.size > 0 ? trebleRangeMidi.has(n) : n >= 60) {
+                        currentRelevantActiveNotes.add(n);
+                    }
+                } else if (gameMode === 'bass') {
+                    // Dynamic clef validation using notes present in bass signature, falling back to Middle C threshold
+                    if (bassRangeMidi.size > 0 ? bassRangeMidi.has(n) : n < 60) {
+                        currentRelevantActiveNotes.add(n);
+                    }
+                }
             });
 
             const currentNewlyPressedActiveNotes = Array.from(currentRelevantActiveNotes).filter(
@@ -888,7 +911,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
             let isPreHeldLocked = preHeld;
             if (isPreHeldLocked) {
                 // Wait for user to completely release the chord before letting them try again
-                const stillHoldingAll = Array.from(requiredNotes).every(n => effectiveActiveNotes.has(n));
+                const stillHoldingAll = Array.from(requiredNotes).every(n => activeNotesRef.current.has(n));
                 const pressedNewRequired = currentNewlyPressedActiveNotes.some(n => requiredNotes.has(n));
 
                 if (!stillHoldingAll || pressedNewRequired) {
@@ -917,6 +940,7 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
                 }
 
                 if (isRhythmMode && isRhythmPlayingRef.current) {
+                    const elapsedAtTrigger = elapsedTimeRef.current;
                     const diff = Math.abs(elapsedAtTrigger - targetTime);
                     if (diff > timeWindow) return;
 
@@ -960,11 +984,8 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
                 }
 
                 lastProcessedIndex.current = cursorIndex;
-                // Progression Delay
-                setTimeout(() => {
-                    setCursorIndex(prev => prev + 1);
-                    setInputStatus('waiting');
-                }, 100);
+                setCursorIndex(prev => prev + 1);
+                setInputStatus('waiting');
                 return;
             }
 
@@ -987,12 +1008,10 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         }, 50);
 
         return () => {
-            if (validationTimerRef.current) {
-                clearTimeout(validationTimerRef.current);
-            }
+            clearInterval(checkInterval);
         };
 
-    }, [effectiveActiveNotes, cursorIndex, alignedSteps, audioStarted, difficulty, gameMode, isRhythmMode, inputStatus, preHeld, streak, maxStreak, addXp, handleAddXp, levelUp, generateNewLevel, notesCorrect, notesMissed, saveHighScore, currentLesson, isLessonComplete, isDemoPlaying]);
+    }, [cursorIndex, alignedSteps, audioStarted, difficulty, gameMode, isRhythmMode, inputStatus, preHeld, streak, maxStreak, addXp, handleAddXp, levelUp, generateNewLevel, notesCorrect, notesMissed, saveHighScore, currentLesson, isLessonComplete, isDemoPlaying, trebleRangeMidi, bassRangeMidi]);
 
 
     const goToNextLesson = useCallback(() => {

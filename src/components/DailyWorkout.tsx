@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useWindowSize } from '../hooks/useWindowSize';
 import { MusicDisplay, StaveNoteData } from './MusicDisplay';
-import { courses, Lesson } from '../utils/music/CourseData';
+import { courses, Lesson, getLessonUnlockedStatus } from '../utils/music/CourseData';
 
 interface DailyWorkoutProps {
     userXp: number;
@@ -150,12 +150,12 @@ export const DailyWorkout: React.FC<DailyWorkoutProps> = ({
         const allLessons = courses.flatMap(c => c.lessons);
         // Find first incomplete unlocked lesson
         const firstIncompleteUnlocked = allLessons.find(
-            l => userXp >= l.requiredXp && !completedLessonIds.has(l.id)
+            l => getLessonUnlockedStatus(l, completedLessonIds, userXp) && !completedLessonIds.has(l.id)
         );
         if (firstIncompleteUnlocked) return firstIncompleteUnlocked;
 
         // If all unlocked lessons are completed, recommend the first locked lesson
-        const firstLocked = allLessons.find(l => l.requiredXp > userXp);
+        const firstLocked = allLessons.find(l => !getLessonUnlockedStatus(l, completedLessonIds, userXp));
         if (firstLocked) return firstLocked;
 
         // Fallback to the last lesson in the curriculum

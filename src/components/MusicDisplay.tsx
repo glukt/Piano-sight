@@ -123,6 +123,66 @@ const POSITION_MAPS: Record<string, Record<string, { hand: 'LH' | 'RH'; finger: 
     }
 };
 
+const KEY_SIGNATURE_MAP: Record<string, string> = {
+    'C': 'C Major', 'G': 'G Major', 'D': 'D Major', 'A': 'A Major', 'E': 'E Major', 'B': 'B Major', 'F#': 'F# Major',
+    'F': 'F Major', 'Bb': 'Bb Major', 'Eb': 'Eb Major', 'Ab': 'Ab Major', 'Db': 'Db Major', 'Gb': 'Gb Major',
+    'Am': 'A Minor', 'Em': 'E Minor', 'Bm': 'B Minor', 'Dm': 'D Minor', 'Gm': 'G Minor', 'Cm': 'C Minor'
+};
+
+interface LocalAlignedStep {
+    trebleNoteIndex: number | null;
+    bassNoteIndex: number | null;
+}
+
+const getDurationInBeats = (durationStr: string): number => {
+    const clean = durationStr.replace('r', '');
+    const isDotted = clean.endsWith('.');
+    const base = isDotted ? clean.slice(0, -1) : clean;
+    let beats = 1;
+    if (base === 'w') beats = 4;
+    else if (base === 'h') beats = 2;
+    else if (base === 'q') beats = 1;
+    else if (base === '8') beats = 0.5;
+    else if (base === '16') beats = 0.25;
+    return isDotted ? beats * 1.5 : beats;
+};
+
+const localAlignNotes = (treble: StaveNoteData[], bass: StaveNoteData[]): LocalAlignedStep[] => {
+    let tTime = 0;
+    const trebleEvents = treble.map((note, index) => {
+        const onset = tTime;
+        const dur = getDurationInBeats(note.duration);
+        tTime += dur;
+        return { index, onset, dur };
+    });
+
+    let bTime = 0;
+    const bassEvents = bass.map((note, index) => {
+        const onset = bTime;
+        const dur = getDurationInBeats(note.duration);
+        bTime += dur;
+        return { index, onset, dur };
+    });
+
+    const onsetsSet = new Set<number>();
+    trebleEvents.forEach(e => onsetsSet.add(e.onset));
+    bassEvents.forEach(e => onsetsSet.add(e.onset));
+    const uniqueOnsets = Array.from(onsetsSet).sort((a, b) => a - b);
+
+    const aligned: LocalAlignedStep[] = [];
+    for (let i = 0; i < uniqueOnsets.length; i++) {
+        const t = uniqueOnsets[i];
+        const tEvent = trebleEvents.find(e => t >= e.onset && t < e.onset + e.dur);
+        const bEvent = bassEvents.find(e => t >= e.onset && t < e.onset + e.dur);
+
+        aligned.push({
+            trebleNoteIndex: tEvent ? tEvent.index : null,
+            bassNoteIndex: bEvent ? bEvent.index : null
+        });
+    }
+    return aligned;
+};
+
 export const MusicDisplay: React.FC<MusicDisplayProps> = ({
     trebleNotes = [{ keys: ["c/4"], duration: "q" }],
     bassNotes = [{ keys: ["c/3"], duration: "q" }],
@@ -407,7 +467,16 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         const bassTickables = bassVoice.getTickables();
         const bassPositions = bassTickables.map(t => (t as any).getAbsoluteX());
 
-        const positions = treblePositions;
+        const displaySteps = localAlignNotes(finalTrebleNotes, finalBassNotes);
+        const positions = displaySteps.map(step => {
+            if (step.trebleNoteIndex !== null && treblePositions[step.trebleNoteIndex] !== undefined) {
+                return treblePositions[step.trebleNoteIndex];
+            }
+            if (step.bassNoteIndex !== null && bassPositions[step.bassNoteIndex] !== undefined) {
+                return bassPositions[step.bassNoteIndex];
+            }
+            return 20; // Fallback
+        });
 
         const svgElement = containerRef.current?.querySelector('svg');
         if (svgElement) {
@@ -522,7 +591,9 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
 
     }, [trebleNotes, bassNotes, width, height, showLabels, cursorIndex, inputStatus, isDarkMode, onLayout, handPosition, showFingering]);
 
-    // Scroll active note into center of the viewport
+    const targetScrollLeftRef = useRef<number>(0);
+
+    // Scroll active note into center of the viewport (update target position)
     useEffect(() => {
         if (!scrollContainerRef.current || !prevPositionsRef.current || cursorIndex === undefined) return;
         const noteX = prevPositionsRef.current[cursorIndex];
@@ -531,19 +602,40 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         const container = scrollContainerRef.current;
         const containerWidth = container.clientWidth;
         const scrollTarget = noteX - containerWidth / 2;
+        const maxScroll = container.scrollWidth - containerWidth;
 
-        container.scrollTo({
-            left: Math.max(0, scrollTarget),
-            behavior: 'smooth'
-        });
+        targetScrollLeftRef.current = Math.max(0, Math.min(scrollTarget, maxScroll));
     }, [cursorIndex]);
+
+    // LERP animation frame loop for smooth scroll tracking
+    useEffect(() => {
+        let animationFrameId: number;
+
+        const lerpScroll = () => {
+            const container = scrollContainerRef.current;
+            if (container) {
+                const diff = targetScrollLeftRef.current - container.scrollLeft;
+                if (Math.abs(diff) > 0.5) {
+                    if (diff < -100 || diff > 300) {
+                        container.scrollLeft = targetScrollLeftRef.current; // Snappy return
+                    } else {
+                        container.scrollLeft += diff * 0.15; // LERP tracking factor
+                    }
+                }
+            }
+            animationFrameId = requestAnimationFrame(lerpScroll);
+        };
+
+        animationFrameId = requestAnimationFrame(lerpScroll);
+        return () => cancelAnimationFrame(animationFrameId);
+    }, []);
 
     return (
         <div className="w-full h-full relative overflow-hidden bg-white dark:bg-gray-800 transition-colors duration-300">
             {/* Floating Scale Pill Badge */}
             <div className="absolute top-3 right-3 px-3 py-1 bg-blue-50/90 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 rounded-full font-bold text-xs shadow-sm border border-blue-100 dark:border-blue-900/50 flex items-center gap-1.5 pointer-events-none select-none z-20">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-                <span>🎵 C Major Scale</span>
+                <span>🎵 {keySignature ? (KEY_SIGNATURE_MAP[keySignature] || `${keySignature} Key`) : 'C Major'}</span>
             </div>
             
             <div 

@@ -25,6 +25,10 @@ interface ScoreControlsProps {
     isLessonMode?: boolean; // NEW
     practicedHand?: 'both' | 'right' | 'left';
     onChangePracticedHand?: (hand: 'both' | 'right' | 'left') => void;
+    tempoMultiplier?: number;
+    onChangeTempoMultiplier?: (val: number) => void;
+    isSpeedTrainerActive?: boolean;
+    onToggleSpeedTrainer?: (val: boolean) => void;
 }
 
 export const ScoreControls: React.FC<ScoreControlsProps> = ({
@@ -51,7 +55,11 @@ export const ScoreControls: React.FC<ScoreControlsProps> = ({
     onToggleMutedKeys,
     isLessonMode = false, // NEW
     practicedHand = 'both',
-    onChangePracticedHand
+    onChangePracticedHand,
+    tempoMultiplier = 1.0,
+    onChangeTempoMultiplier,
+    isSpeedTrainerActive = false,
+    onToggleSpeedTrainer
 }) => {
     return (
         <div className={`w-full max-w-4xl p-4 rounded-xl shadow-lg border flex flex-col gap-4 mb-6 transition-colors duration-500
@@ -96,16 +104,16 @@ export const ScoreControls: React.FC<ScoreControlsProps> = ({
                 ${isDarkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-gray-50 border-gray-200 text-gray-800'}
             `}>
                 {/* Layout Mode Segmented Picker */}
-                <div className="flex bg-gray-200 dark:bg-gray-850 p-1 rounded-full mr-2 border border-gray-300 dark:border-gray-600">
+                <div className="flex bg-gray-200 dark:bg-gray-900 p-1 rounded-full mr-2 border border-gray-300 dark:border-gray-600">
                     <button
                         onClick={() => onChangeLayoutMode('standard')}
-                        className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${layoutMode === 'standard' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-350 hover:text-gray-800 dark:hover:text-white'}`}
+                        className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${layoutMode === 'standard' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white'}`}
                     >
                         Standard Page
                     </button>
                     <button
                         onClick={() => onChangeLayoutMode('scrolling')}
-                        className={`px-3 py-1 text-xs font-bold rounded-full transition-all flex items-center gap-1.5 ${layoutMode === 'scrolling' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-350 hover:text-gray-800 dark:hover:text-white'}`}
+                        className={`px-3 py-1 text-xs font-bold rounded-full transition-all flex items-center gap-1.5 ${layoutMode === 'scrolling' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white'}`}
                     >
                         <span>Scrolling View</span>
                         <span className="text-[9px] bg-indigo-500 text-white font-extrabold px-1.5 py-0.5 rounded-full leading-none">Auto</span>
@@ -114,22 +122,22 @@ export const ScoreControls: React.FC<ScoreControlsProps> = ({
 
                 {/* Practiced Hand Segmented Picker (only if practice mode is active!) */}
                 {isPracticeActive && !isLessonMode && (
-                    <div className="flex bg-gray-200 dark:bg-gray-850 p-1 rounded-full border border-gray-300 dark:border-gray-600 mr-2">
+                    <div className="flex bg-gray-200 dark:bg-gray-900 p-1 rounded-full border border-gray-300 dark:border-gray-600 mr-2">
                         <button
                             onClick={() => onChangePracticedHand?.('both')}
-                            className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${practicedHand === 'both' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-350 hover:text-gray-800 dark:hover:text-white'}`}
+                            className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${practicedHand === 'both' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white'}`}
                         >
                             Both Hands
                         </button>
                         <button
                             onClick={() => onChangePracticedHand?.('right')}
-                            className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${practicedHand === 'right' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-350 hover:text-gray-800 dark:hover:text-white'}`}
+                            className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${practicedHand === 'right' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white'}`}
                         >
                             RH Only
                         </button>
                         <button
                             onClick={() => onChangePracticedHand?.('left')}
-                            className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${practicedHand === 'left' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-350 hover:text-gray-800 dark:hover:text-white'}`}
+                            className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${practicedHand === 'left' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white'}`}
                         >
                             LH Only
                         </button>
@@ -220,6 +228,36 @@ export const ScoreControls: React.FC<ScoreControlsProps> = ({
                     </button>
                 )}
             </div>
+
+            {/* Speed Trainer & Tempo Controls */}
+            {isPracticeActive && (
+                <div className={`flex flex-wrap items-center justify-between gap-4 p-3 rounded-lg border w-full font-sans text-sm transition-colors duration-500
+                    ${isDarkMode ? 'bg-gray-700/50 border-gray-600 text-gray-200' : 'bg-gray-50 border-gray-200 text-gray-800'}
+                `}>
+                    <div className="flex items-center gap-4 flex-1 min-w-[280px]">
+                        <span className="font-bold flex items-center gap-1">⏱️ Speed: {Math.round(tempoMultiplier * 100)}%</span>
+                        <input
+                            type="range"
+                            min="0.4"
+                            max="1.2"
+                            step="0.05"
+                            value={tempoMultiplier}
+                            disabled={isSpeedTrainerActive}
+                            onChange={(e) => onChangeTempoMultiplier?.(parseFloat(e.target.value))}
+                            className="flex-1 max-w-[200px] h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 dark:bg-gray-600 disabled:opacity-50"
+                        />
+                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                            type="checkbox"
+                            checked={isSpeedTrainerActive}
+                            onChange={(e) => onToggleSpeedTrainer?.(e.target.checked)}
+                            className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="font-bold text-rose-500 dark:text-rose-400 flex items-center gap-1">🚀 Auto Speed Trainer (+10% on success)</span>
+                    </label>
+                </div>
+            )}
         </div>
     );
 };

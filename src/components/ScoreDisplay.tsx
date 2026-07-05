@@ -527,11 +527,11 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             // Interpolate scroll position smoothly
             const diff = targetScrollLeft - container.scrollLeft;
             if (Math.abs(diff) > 0.5) {
-                // If it's a huge difference (e.g. initial start, seek, loop reset), snap instantly to prevent lag
-                if (Math.abs(diff) > 300) {
+                // Snap instantly if it is a backwards jump (e.g. loop reset, seek back) or a massive forward jump
+                if (diff < -150 || diff > 400) {
                     container.scrollLeft = targetScrollLeft;
                 } else {
-                    container.scrollLeft += diff * 0.08; // Buttery smooth LERP factor (8% of remaining distance per frame)
+                    container.scrollLeft += diff * 0.15; // Increased tracking LERP factor (15%) for highly responsive alignment
                 }
             }
 

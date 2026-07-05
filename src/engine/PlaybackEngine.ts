@@ -66,6 +66,7 @@ export class PlaybackEngine {
     private activeVisualNotes: Map<number, number> = new Map();
     private isMuted: boolean = false;
     public practicedHand: 'both' | 'right' | 'left' = 'both';
+    public mutePracticedHand: boolean = false;
 
     constructor(osmd: OpenSheetMusicDisplay) {
         this.osmd = osmd;
@@ -428,11 +429,13 @@ export class PlaybackEngine {
 
             // Mute playback for notes on the hand we are practicing!
             let isNoteMuted = this.isMuted;
-            if (this.practicedHand === 'right' && note.ParentStaff?.Id === 1) {
-                isNoteMuted = true;
-            }
-            if (this.practicedHand === 'left' && note.ParentStaff?.Id === 2) {
-                isNoteMuted = true;
+            if (this.mutePracticedHand) {
+                if (this.practicedHand === 'right' && note.ParentStaff?.Id === 1) {
+                    isNoteMuted = true;
+                }
+                if (this.practicedHand === 'left' && note.ParentStaff?.Id === 2) {
+                    isNoteMuted = true;
+                }
             }
 
             // Play the note in Tone.js with the scheduled startTime if not muted

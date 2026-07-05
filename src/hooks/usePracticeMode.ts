@@ -207,6 +207,10 @@ export function usePracticeMode({
             clearTimeout(transitionTimeoutRef.current);
             transitionTimeoutRef.current = null;
         }
+        if (autoAdvanceTimerRef.current) {
+            clearTimeout(autoAdvanceTimerRef.current);
+            autoAdvanceTimerRef.current = null;
+        }
         isTransitioningRef.current = false;
 
         const nextStart = currentSection.endMeasure;
@@ -238,6 +242,10 @@ export function usePracticeMode({
             clearTimeout(transitionTimeoutRef.current);
             transitionTimeoutRef.current = null;
         }
+        if (autoAdvanceTimerRef.current) {
+            clearTimeout(autoAdvanceTimerRef.current);
+            autoAdvanceTimerRef.current = null;
+        }
         isTransitioningRef.current = false;
 
         setFeedback("Let's try that again. Focus on accuracy.");
@@ -255,6 +263,10 @@ export function usePracticeMode({
         if (transitionTimeoutRef.current) {
             clearTimeout(transitionTimeoutRef.current);
             transitionTimeoutRef.current = null;
+        }
+        if (autoAdvanceTimerRef.current) {
+            clearTimeout(autoAdvanceTimerRef.current);
+            autoAdvanceTimerRef.current = null;
         }
         isTransitioningRef.current = false;
 
@@ -310,16 +322,19 @@ export function usePracticeMode({
 
                 // If in preview or tempo mode, start playing
                 if (mode === 'preview' || mode === 'tempo') {
+                    playbackEngine.mutePracticedHand = false;
                     playbackEngine.seek(startTs);
                     playbackEngine.play();
                 } else if (mode === 'wait') {
                     // Wait mode: Stop and wait for input
+                    playbackEngine.mutePracticedHand = true;
                     playbackEngine.stop();
                     playbackEngine.seek(startTs);
                     playbackEngine.playAccompanimentForCurrentPosition();
                     setFeedback("Play the notes to advance!");
                 } else if (mode === 'play' && !playModeStarted) {
                     // Play mode: Stop and wait for Start click
+                    playbackEngine.mutePracticedHand = true;
                     playbackEngine.stop();
                     playbackEngine.seek(startTs);
                     setFeedback("Ready to grade? Click Start to begin!");
@@ -749,6 +764,7 @@ export function usePracticeMode({
                 setExpectedNotes(midis);
             });
 
+            playbackEngine.mutePracticedHand = true;
             playbackEngine.seek(startTs);
             playbackEngine.play();
         }

@@ -192,7 +192,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         };
 
         // Helper function to pad notes with rests until target duration is reached
-        const padNotes = (notesData: StaveNoteData[], targetDuration: number, clef: string): StaveNoteData[] => {
+        const padNotes = (notesData: StaveNoteData[], targetDuration: number, clef: string, timeSignature: string = "4/4"): StaveNoteData[] => {
             let currentDuration = calculateDuration(notesData);
             if (Math.abs(currentDuration - targetDuration) < 0.01) {
                 return [...notesData];
@@ -202,10 +202,21 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
             let remaining = targetDuration - currentDuration;
             const restKey = clef === 'bass' ? "d/3" : "b/4";
 
-            // Greedy breakdown of remaining beats into standard rests
-            while (remaining >= 4) {
-                paddedNotes.push({ keys: [restKey], duration: "wr" });
-                remaining -= 4;
+            const parts = timeSignature.split('/');
+            const beatsPerMeasure = Number(parts[0]) || 4;
+            const beatValue = Number(parts[1]) || 4;
+            const measureDuration = beatsPerMeasure * (4 / beatValue);
+
+            if (measureDuration === 3) {
+                while (remaining >= 3) {
+                    paddedNotes.push({ keys: [restKey], duration: "h.r" });
+                    remaining -= 3;
+                }
+            } else {
+                while (remaining >= 4) {
+                    paddedNotes.push({ keys: [restKey], duration: "wr" });
+                    remaining -= 4;
+                }
             }
             while (remaining >= 2) {
                 paddedNotes.push({ keys: [restKey], duration: "hr" });
@@ -321,8 +332,8 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         const targetDuration = Math.max(trebleDuration, bassDuration);
 
         // Pad both arrays to match the target duration
-        const finalTrebleNotes = padNotes(trebleNotes, targetDuration, "treble");
-        const finalBassNotes = padNotes(bassNotes, targetDuration, "bass");
+        const finalTrebleNotes = padNotes(trebleNotes, targetDuration, "treble", timeSignature);
+        const finalBassNotes = padNotes(bassNotes, targetDuration, "bass", timeSignature);
         // --- Padding Logic End ---
 
 

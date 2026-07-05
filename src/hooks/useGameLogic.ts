@@ -114,7 +114,7 @@ const calculateDuration = (notesData: StaveNoteData[]): number => {
 };
 
 // Helper function to pad notes with rests until target duration is reached
-const padNotes = (notesData: StaveNoteData[], targetDuration: number, clef: string): StaveNoteData[] => {
+const padNotes = (notesData: StaveNoteData[], targetDuration: number, clef: string, timeSignature: string = "4/4"): StaveNoteData[] => {
     const currentDuration = calculateDuration(notesData);
     if (Math.abs(currentDuration - targetDuration) < 0.01) {
         return [...notesData];
@@ -124,9 +124,21 @@ const padNotes = (notesData: StaveNoteData[], targetDuration: number, clef: stri
     let remaining = targetDuration - currentDuration;
     const restKey = clef === 'bass' ? "d/3" : "b/4";
 
-    while (remaining >= 4) {
-        paddedNotes.push({ keys: [restKey], duration: "wr" });
-        remaining -= 4;
+    const parts = timeSignature.split('/');
+    const beatsPerMeasure = Number(parts[0]) || 4;
+    const beatValue = Number(parts[1]) || 4;
+    const measureDuration = beatsPerMeasure * (4 / beatValue);
+
+    if (measureDuration === 3) {
+        while (remaining >= 3) {
+            paddedNotes.push({ keys: [restKey], duration: "h.r" });
+            remaining -= 3;
+        }
+    } else {
+        while (remaining >= 4) {
+            paddedNotes.push({ keys: [restKey], duration: "wr" });
+            remaining -= 4;
+        }
     }
     while (remaining >= 2) {
         paddedNotes.push({ keys: [restKey], duration: "hr" });
@@ -454,12 +466,13 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
         const trebleDuration = calculateDuration(levelData.treble);
         const bassDuration = calculateDuration(levelData.bass);
         const targetDuration = Math.max(trebleDuration, bassDuration);
+        const timeSig = currentLesson?.constraints?.timeSignature || "4/4";
 
         return {
-            treble: padNotes(levelData.treble, targetDuration, "treble"),
-            bass: padNotes(levelData.bass, targetDuration, "bass")
+            treble: padNotes(levelData.treble, targetDuration, "treble", timeSig),
+            bass: padNotes(levelData.bass, targetDuration, "bass", timeSig)
         };
-    }, [levelData]);
+    }, [levelData, currentLesson]);
 
     const alignedSteps = useMemo(() => {
         return alignNotes(paddedLevelData.treble, paddedLevelData.bass);
@@ -888,23 +901,21 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
                 return;
             }
 
-            // Penalty: Only if they press a WRONG note for their current Hand mode
-            if (hasIncorrect) {
-                if (inputStatus !== 'incorrect') {
-                    setInputStatus('incorrect');
-                    setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
-                    setNotesMissed(prev => prev + 1);
-                    setStreak(0);
-                    currentNewlyPressedActiveNotes.filter(n => !requiredNotes.has(n)).forEach(n => {
-                        const name = midiToNoteName(n);
-                        setErrorStats(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
-                    });
-                }
-                return;
-            }
-
-            // Success: Only if they have pressed ALL required notes for their current Hand mode 
             if (allFound) {
+                if (hasIncorrect) {
+                    // Record a mistake, but still let them advance!
+                    if (inputStatus !== 'incorrect') {
+                        setInputStatus('incorrect');
+                        setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
+                        setNotesMissed(prev => prev + 1);
+                        setStreak(0);
+                        currentNewlyPressedActiveNotes.filter(n => !requiredNotes.has(n)).forEach(n => {
+                            const name = midiToNoteName(n);
+                            setErrorStats(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
+                        });
+                    }
+                }
+
                 if (isRhythmMode && isRhythmPlayingRef.current) {
                     const diff = Math.abs(elapsedAtTrigger - targetTime);
                     if (diff > timeWindow) return;
@@ -938,25 +949,41 @@ export const useGameLogic = (saveHighScore?: (id: string, score: number, rank: s
                 }
 
                 // Normal Mode
+                if (!hasIncorrect) {
+                    setScore(s => ({ ...s, correct: s.correct + 1 }));
+                    setNotesCorrect(prev => prev + 1);
+                    if (streak + 1 > maxStreak) setMaxStreak(streak + 1);
+                    setStreak(p => p + 1);
+                    handleAddXp(5);
+                    setLastHitType('good');
+                    setInputStatus('correct');
+                }
+
                 lastProcessedIndex.current = cursorIndex;
-                setScore(s => ({ ...s, correct: s.correct + 1 }));
-                setNotesCorrect(prev => prev + 1);
-                if (streak + 1 > maxStreak) setMaxStreak(streak + 1);
-                setStreak(p => p + 1);
-                handleAddXp(5);
-
-                setLastHitType('good');
-                setInputStatus('correct');
-
                 // Progression Delay
                 setTimeout(() => {
                     setCursorIndex(prev => prev + 1);
                     setInputStatus('waiting');
                 }, 100);
-
-            } else {
-                if (inputStatus !== 'incorrect' && inputStatus !== 'waiting') setInputStatus('waiting');
+                return;
             }
+
+            // Penalty: Only if they press a WRONG note and did NOT hit the success notes
+            if (hasIncorrect) {
+                if (inputStatus !== 'incorrect') {
+                    setInputStatus('incorrect');
+                    setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
+                    setNotesMissed(prev => prev + 1);
+                    setStreak(0);
+                    currentNewlyPressedActiveNotes.filter(n => !requiredNotes.has(n)).forEach(n => {
+                        const name = midiToNoteName(n);
+                        setErrorStats(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
+                    });
+                }
+                return;
+            }
+
+            if (inputStatus !== 'incorrect' && inputStatus !== 'waiting') setInputStatus('waiting');
         }, 50);
 
         return () => {

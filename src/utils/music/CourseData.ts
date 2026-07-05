@@ -1028,6 +1028,78 @@ export const courses: Course[] = [
                 type: 'song', topic: 'both', xpReward: 200, requiredXp: 4340,
                 songUrl: '/scores/Jingle_Bells.musicxml',
                 presetId: 'preset-jingle-bells'
+            },
+            {
+                id: 'c4-l7', bpm: 80, courseId: "grand-staff-coordination",
+                name: "Triads: C Major Chord",
+                description: "Form and play a solid three-note C Major triad (C, E, G).",
+                focus: "Ensure all three notes (C4, E4, G4) sound exactly at the same time. Press with even weight.",
+                instruction: "Place your Right Hand in C Position. Use fingers 1, 3, and 5 to play C, E, and G together.",
+                type: 'exercise', topic: 'chords', xpReward: 120, requiredXp: 4440,
+                handPosition: 'RH_C_POS',
+                constraints: {
+                    trebleRange: ["c/4", "e/4", "g/4"],
+                    bassRange: [],
+                    rhythms: ["h", "w"],
+                    maxJumps: 0,
+                    chordsAllowed: true,
+                    numNotes: 10
+                }
+            },
+            {
+                id: 'c4-l8', bpm: 80, courseId: "grand-staff-coordination",
+                name: "Chord Changes (C to G7)",
+                description: "Practice transitioning between C Major (C-E-G) and G7 (B-F-G) triads.",
+                focus: "Keep your hand relaxed. Shift fingers smoothly to change chord shapes.",
+                instruction: "RH plays C triad (1-3-5) then shifts to G7 triad (1-4-5 on B-F-G). Transition slowly.",
+                type: 'exercise', topic: 'chords', xpReward: 120, requiredXp: 4560,
+                handPosition: 'RH_C_POS',
+                constraints: {
+                    trebleRange: ["b/3", "c/4", "d/4", "e/4", "f/4", "g/4"],
+                    bassRange: [],
+                    rhythms: ["h", "w"],
+                    maxJumps: 2,
+                    chordsAllowed: true,
+                    numNotes: 12
+                }
+            },
+            {
+                id: 'c4-l9', bpm: 90, courseId: "grand-staff-coordination",
+                name: "Melody: Lean On Me Chords",
+                description: "Play the chord progression of the classic song Lean On Me using parallel triads.",
+                focus: "Maintain a steady tempo while moving the triad shape stepwise up and down.",
+                instruction: "Move your 1-3-5 triad shape stepwise: C Major, D minor, E minor, F Major, and back.",
+                type: 'song', topic: 'chords', xpReward: 200, requiredXp: 4680,
+                handPosition: 'RH_C_POS',
+                constraints: {
+                    trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5"],
+                    bassRange: [],
+                    rhythms: ["q", "h"],
+                    maxJumps: 2,
+                    chordsAllowed: true,
+                    numNotes: 16,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["c/4", "e/4", "g/4"], duration: "q" },
+                            { keys: ["d/4", "f/4", "a/4"], duration: "q" },
+                            { keys: ["e/4", "g/4", "b/4"], duration: "q" },
+                            { keys: ["f/4", "a/4", "c/5"], duration: "q" },
+
+                            { keys: ["f/4", "a/4", "c/5"], duration: "q" },
+                            { keys: ["e/4", "g/4", "b/4"], duration: "q" },
+                            { keys: ["d/4", "f/4", "a/4"], duration: "q" },
+                            { keys: ["c/4", "e/4", "g/4"], duration: "q" },
+
+                            { keys: ["c/4", "e/4", "g/4"], duration: "q" },
+                            { keys: ["d/4", "f/4", "a/4"], duration: "q" },
+                            { keys: ["e/4", "g/4", "b/4"], duration: "h" },
+
+                            { keys: ["d/4", "f/4", "a/4"], duration: "h" },
+                            { keys: ["c/4", "e/4", "g/4"], duration: "h" }
+                        ],
+                        bass: []
+                    }
+                }
             }
         ]
     },
@@ -1170,12 +1242,13 @@ export const courses: Course[] = [
                         treble: [
                             { keys: ["e/4"], duration: "8" }, { keys: ["e/4"], duration: "8" },
                             { keys: ["e/4"], duration: "8r" }, { keys: ["e/4"], duration: "8" },
-                            { keys: ["c/4"], duration: "8" }, { keys: ["e/4"], duration: "q" },
+                            { keys: ["e/4"], duration: "8r" }, { keys: ["c/4"], duration: "8" },
+                            { keys: ["e/4"], duration: "q" },
                             { keys: ["g/4"], duration: "q" }, { keys: ["g/4"], duration: "qr" },
                             { keys: ["g/4"], duration: "q" }, { keys: ["g/4"], duration: "qr" },
                             { keys: ["c/4"], duration: "q" }, { keys: ["g/4"], duration: "q" },
                             { keys: ["e/4"], duration: "q" }, { keys: ["a/4"], duration: "q" },
-                            { keys: ["b/4"], duration: "q" }
+                            { keys: ["b/4"], duration: "q" }, { keys: ["b/4"], duration: "qr" }, { keys: ["b/4"], duration: "hr" }
                         ],
                         bass: []
                     }
@@ -1599,22 +1672,23 @@ export const courses: Course[] = [
                 constraints: {
                     trebleRange: ["b/3", "e/4", "g/4", "f#/4", "e/4", "b/4", "a/4", "d#/4", "f/4"],
                     bassRange: [],
-                    rhythms: ["q", "h"],
+                    rhythms: ["q", "h", "h."],
                     maxJumps: 5,
                     chordsAllowed: false,
                     numNotes: 14,
+                    timeSignature: "3/4",
                     presetMelody: {
                         treble: [
-                            { keys: ["b/3"], duration: "q" },
+                            { keys: ["b/3"], duration: "hr" }, { keys: ["b/3"], duration: "q" },
                             { keys: ["e/4"], duration: "h" }, { keys: ["g/4"], duration: "q" },
                             { keys: ["f#/4"], duration: "h" }, { keys: ["e/4"], duration: "q" },
-                            { keys: ["b/4"], duration: "h" },
-                            { keys: ["a/4"], duration: "h" },
-                            { keys: ["f#/4"], duration: "h" },
+                            { keys: ["b/4"], duration: "h." },
+                            { keys: ["a/4"], duration: "h." },
+                            { keys: ["f#/4"], duration: "h." },
                             { keys: ["e/4"], duration: "h" }, { keys: ["g/4"], duration: "q" },
                             { keys: ["f#/4"], duration: "h" }, { keys: ["d#/4"], duration: "q" },
-                            { keys: ["f/4"], duration: "h" },
-                            { keys: ["b/3"], duration: "h" }
+                            { keys: ["f/4"], duration: "h." },
+                            { keys: ["b/3"], duration: "h." }
                         ],
                         bass: []
                     }
@@ -1751,7 +1825,7 @@ export const courses: Course[] = [
                             { keys: ["d/3"], duration: "q" }, { keys: ["b/2"], duration: "q" }, { keys: ["d/3"], duration: "h" },
                             { keys: ["b/2"], duration: "q" }, { keys: ["c#/3"], duration: "q" }, { keys: ["d/3"], duration: "q" }, { keys: ["e/3"], duration: "q" },
                             { keys: ["f#/3"], duration: "q" }, { keys: ["d/3"], duration: "q" }, { keys: ["b/3"], duration: "q" }, { keys: ["a/3"], duration: "q" },
-                            { keys: ["f#/3"], duration: "h" }
+                            { keys: ["f#/3"], duration: "w" }
                         ]
                     }
                 }

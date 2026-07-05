@@ -65,6 +65,7 @@ export class PlaybackEngine {
     private currentStyledNotes: GraphicalNote[] = [];
     private activeVisualNotes: Map<number, number> = new Map();
     private isMuted: boolean = false;
+    public practicedHand: 'both' | 'right' | 'left' = 'both';
 
     constructor(osmd: OpenSheetMusicDisplay) {
         this.osmd = osmd;
@@ -216,6 +217,15 @@ export class PlaybackEngine {
         const result: { midi: number, isTied: boolean }[] = [];
         notes.forEach(note => {
             if (!note.isRest() && note.Pitch) {
+                // Filter by practicedHand clef if selected
+                // Staff index is 1-based. Id === 1 is treble (RH), Id === 2 is bass (LH)
+                if (this.practicedHand === 'right' && note.ParentStaff?.Id !== 1) {
+                    return;
+                }
+                if (this.practicedHand === 'left' && note.ParentStaff?.Id !== 2) {
+                    return;
+                }
+
                 // Check if this note is a tied note (continuation)
                 // If NoteTie exists, check if we are the StartNote.
                 // If we are NOT the StartNote, then we are a continuation (isTied = true).
@@ -397,8 +407,17 @@ export class PlaybackEngine {
             }, releaseTime);
             this.noteTimeouts.push(releaseTimeoutId);
 
+            // Mute playback for notes on the hand we are practicing!
+            let isNoteMuted = this.isMuted;
+            if (this.practicedHand === 'right' && note.ParentStaff?.Id === 1) {
+                isNoteMuted = true;
+            }
+            if (this.practicedHand === 'left' && note.ParentStaff?.Id === 2) {
+                isNoteMuted = true;
+            }
+
             // Play the note in Tone.js with the scheduled startTime if not muted
-            if (!this.isMuted) {
+            if (!isNoteMuted) {
                 if (this.shouldPlayWithPedal()) {
                     audio.playNote(midi, 85, undefined, startTime);
                     const releaseTimeout = window.setTimeout(() => {
@@ -456,9 +475,16 @@ export class PlaybackEngine {
         if (this.loopEnd !== null && this.loopStart !== null) {
             if (iterator.currentTimeStamp.RealValue >= this.loopEnd) {
                 if (this.onLoop) this.onLoop();
-                this.stop(); // Clear current notes
+                // Clear current step timeouts and seek back without fully releasing audio synth
+                if (this.intervalId) {
+                    window.clearTimeout(this.intervalId);
+                    this.intervalId = null;
+                }
+                this.clearNoteTimeouts();
                 this.seek(this.loopStart);
-                this.play(); // Resume
+                this.isPlaying = true;
+                this.expectedNextStepTime = Date.now();
+                this.step();
                 return;
             }
         }

@@ -23,6 +23,8 @@ interface ScoreControlsProps {
     onToggleMutedPlayback: (val: boolean) => void;
     onToggleMutedKeys: (val: boolean) => void;
     isLessonMode?: boolean; // NEW
+    practicedHand?: 'both' | 'right' | 'left';
+    onChangePracticedHand?: (hand: 'both' | 'right' | 'left') => void;
 }
 
 export const ScoreControls: React.FC<ScoreControlsProps> = ({
@@ -47,7 +49,9 @@ export const ScoreControls: React.FC<ScoreControlsProps> = ({
     onChangeLayoutMode,
     onToggleMutedPlayback,
     onToggleMutedKeys,
-    isLessonMode = false // NEW
+    isLessonMode = false, // NEW
+    practicedHand = 'both',
+    onChangePracticedHand
 }) => {
     return (
         <div className={`w-full max-w-4xl p-4 rounded-xl shadow-lg border flex flex-col gap-4 mb-6 transition-colors duration-500
@@ -101,12 +105,36 @@ export const ScoreControls: React.FC<ScoreControlsProps> = ({
                     </button>
                     <button
                         onClick={() => onChangeLayoutMode('scrolling')}
-                        className={`px-3 py-1 text-xs font-bold rounded-full transition-all flex items-center gap-1.5 ${layoutMode === 'scrolling' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-355 hover:text-gray-800 dark:hover:text-white'}`}
+                        className={`px-3 py-1 text-xs font-bold rounded-full transition-all flex items-center gap-1.5 ${layoutMode === 'scrolling' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-350 hover:text-gray-800 dark:hover:text-white'}`}
                     >
                         <span>Scrolling View</span>
                         <span className="text-[9px] bg-indigo-500 text-white font-extrabold px-1.5 py-0.5 rounded-full leading-none">Auto</span>
                     </button>
                 </div>
+
+                {/* Practiced Hand Segmented Picker (only if practice mode is active!) */}
+                {isPracticeActive && !isLessonMode && (
+                    <div className="flex bg-gray-200 dark:bg-gray-850 p-1 rounded-full border border-gray-300 dark:border-gray-600 mr-2">
+                        <button
+                            onClick={() => onChangePracticedHand?.('both')}
+                            className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${practicedHand === 'both' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-350 hover:text-gray-800 dark:hover:text-white'}`}
+                        >
+                            Both Hands
+                        </button>
+                        <button
+                            onClick={() => onChangePracticedHand?.('right')}
+                            className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${practicedHand === 'right' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-350 hover:text-gray-800 dark:hover:text-white'}`}
+                        >
+                            RH Only
+                        </button>
+                        <button
+                            onClick={() => onChangePracticedHand?.('left')}
+                            className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${practicedHand === 'left' ? 'bg-blue-600 text-white shadow' : 'text-gray-600 dark:text-gray-350 hover:text-gray-800 dark:hover:text-white'}`}
+                        >
+                            LH Only
+                        </button>
+                    </div>
+                )}
 
                 <div className={`font-serif font-bold mr-1 ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Display:</div>
 

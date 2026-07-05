@@ -70,10 +70,19 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 
     const { saveHighScore } = useMusicLibrary();
 
+    const [practicedHand, setPracticedHand] = useState<'both' | 'right' | 'left'>('both');
+
+    useEffect(() => {
+        if (playbackRef.current) {
+            playbackRef.current.practicedHand = practicedHand;
+        }
+    }, [practicedHand, loading]);
+
     // Practice Mode
     const {
         isActive: isPracticeActive,
         currentSection: practiceSection,
+        setCurrentSection: setPracticeSection,
         mode: practiceMode,
         feedback: practiceFeedback,
         startPractice,
@@ -613,11 +622,29 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         }
     };
 
+    const getMeasureFromTimestamp = (timestamp: number | null): number => {
+        if (timestamp === null || measureTimestamps.length === 0) return 0;
+        let closestIndex = 0;
+        let minDiff = Math.abs(timestamp - measureTimestamps[0]);
+        for (let i = 1; i < measureTimestamps.length; i++) {
+            const diff = Math.abs(timestamp - measureTimestamps[i]);
+            if (diff < minDiff) {
+                minDiff = diff;
+                closestIndex = i;
+            }
+        }
+        return closestIndex;
+    };
+
     const handleSetLoopStart = (val?: number | null) => {
         if (!playbackRef.current) return;
         const current = val !== undefined && val !== null ? val : playbackRef.current.CurrentTimestamp;
         setLoopStart(current);
         playbackRef.current.setLoop(current, loopEnd);
+
+        const startMeasure = getMeasureFromTimestamp(current);
+        const endMeasure = loopEnd !== null ? getMeasureFromTimestamp(loopEnd) : (playbackRef.current.MeasureCount || 0);
+        setPracticeSection({ startMeasure, endMeasure });
     };
 
     const handleSetLoopEnd = (val?: number | null) => {
@@ -625,6 +652,10 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         const current = val !== undefined && val !== null ? val : playbackRef.current.CurrentTimestamp;
         setLoopEnd(current);
         playbackRef.current.setLoop(loopStart, current);
+
+        const startMeasure = loopStart !== null ? getMeasureFromTimestamp(loopStart) : 0;
+        const endMeasure = getMeasureFromTimestamp(current);
+        setPracticeSection({ startMeasure, endMeasure });
     };
 
     const handleClearLoop = () => {
@@ -632,7 +663,20 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         setLoopStart(null);
         setLoopEnd(null);
         playbackRef.current.setLoop(null, null);
+
+        const startMeasure = Math.floor(playbackRef.current.CurrentTimestamp / ((playbackRef.current.TotalDuration || 1) / (playbackRef.current.MeasureCount || 1)));
+        const endMeasure = Math.min(startMeasure + 2, playbackRef.current.MeasureCount || 0);
+        setPracticeSection({ startMeasure, endMeasure });
     };
+
+    useEffect(() => {
+        if (isPracticeActive && playbackRef.current && measureTimestamps.length > 0) {
+            const startTs = playbackRef.current.getMeasureTimestamp(practiceSection.startMeasure);
+            const endTs = playbackRef.current.getMeasureTimestamp(practiceSection.endMeasure);
+            setLoopStart(startTs);
+            setLoopEnd(endTs);
+        }
+    }, [isPracticeActive, practiceSection, measureTimestamps]);
 
     const stopPlayback = () => {
         playbackRef.current?.stop();
@@ -672,6 +716,8 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                 onToggleMutedPlayback={setIsMutedPlayback}
                 onToggleMutedKeys={onToggleMutedKeys || (() => {})}
                 isLessonMode={isLessonMode}
+                practicedHand={practicedHand}
+                onChangePracticedHand={setPracticedHand}
             />
 
             {/* Practice Mode Overlay - Compact Bottom Bar */}

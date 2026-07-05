@@ -432,9 +432,11 @@ export function usePracticeMode({
             const currentExpectedStr = currentExpectedMidis.slice().sort().join(',');
 
             // Detect step change to capture currently held keys as "legato safety"
+            let stepChanged = false;
             if (currentExpectedStr !== lastExpectedStrRef.current) {
                 notesActiveAtStepStartRef.current = new Set(userActiveNotesRef.current);
                 lastExpectedStrRef.current = currentExpectedStr;
+                stepChanged = true;
             } else {
                 // Keep notesActiveAtStepStartRef in sync with releases
                 const currentActive = userActiveNotesRef.current;
@@ -485,8 +487,8 @@ export function usePracticeMode({
             }
 
             // If we are just polling for the stuck timer, we exit early here!
-            // This prevents the poll from clearing or restarting the validation timer.
-            if (isFromPoll) return;
+            // However, if the step changed, we want to let the new validation timer schedule, so we don't exit early before that.
+            if (isFromPoll && !stepChanged) return;
 
             // 1. Check for End of Section
             const currentTimestamp = playbackEngine.CurrentTimestamp;
@@ -533,11 +535,14 @@ export function usePracticeMode({
             setExpectedNotes(currentExpectedMidis);
 
             // Debounce the validation logic (Steps 4, 5, and 6)
-            if (validationTimerRef.current) {
-                clearTimeout(validationTimerRef.current);
-            }
+            // We only clear/reschedule the timer if user active notes changed (!isFromPoll)
+            // or if the step just changed (stepChanged).
+            if (!isFromPoll || stepChanged) {
+                if (validationTimerRef.current) {
+                    clearTimeout(validationTimerRef.current);
+                }
 
-            validationTimerRef.current = setTimeout(() => {
+                validationTimerRef.current = setTimeout(() => {
                 if (isTransitioningRef.current) return;
 
                 const freshExpectedObjs = playbackEngine.getNotesAtCurrentPosition();
@@ -633,6 +638,7 @@ export function usePracticeMode({
                     }
                 }
             }, 50);
+            }
         };
 
         const interval = setInterval(() => checkInput(true), 50); // Poll 20Hz
@@ -824,6 +830,7 @@ export function usePracticeMode({
     return {
         isActive,
         currentSection,
+        setCurrentSection,
         mode,
         accuracy,
         feedback,

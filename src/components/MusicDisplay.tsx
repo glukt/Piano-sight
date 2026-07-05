@@ -288,7 +288,9 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                 });
 
                 if (n.duration.includes('.')) {
-                    staveNote.addDotToAll();
+                    n.keys.forEach((_, keyIndex) => {
+                        staveNote.addModifier(new VF.Dot(), keyIndex);
+                    });
                 }
 
                 // Add fingering annotations if enabled and mapped

@@ -489,18 +489,24 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
             .joinVoices([trebleVoice, bassVoice])
             .format([trebleVoice, bassVoice], staveWidth - 50);
 
+        const trebleTickables = trebleVoice.getTickables();
+        const bassTickables = bassVoice.getTickables();
+
         trebleVoice.draw(context, trebleStave);
         bassVoice.draw(context, bassStave);
 
         // Draw ties connecting adjacent notes
         const trebleTies: any[] = [];
         finalTrebleNotes.forEach((n, i) => {
-            if (n.tied && i < trebleTickables.length - 1) {
+            const isCurrentRest = n.duration.endsWith('r');
+            const isNextRest = finalTrebleNotes[i + 1]?.duration.endsWith('r');
+            if (n.tied && i < trebleTickables.length - 1 && !isCurrentRest && !isNextRest) {
+                const indices = n.keys.map((_, keyIdx) => keyIdx);
                 const tie = new VF.StaveTie({
                     first_note: trebleTickables[i] as any,
                     last_note: trebleTickables[i + 1] as any,
-                    first_indices: [0],
-                    last_indices: [0]
+                    first_indices: indices,
+                    last_indices: indices
                 });
                 trebleTies.push(tie);
             }
@@ -509,12 +515,15 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
 
         const bassTies: any[] = [];
         finalBassNotes.forEach((n, i) => {
-            if (n.tied && i < bassTickables.length - 1) {
+            const isCurrentRest = n.duration.endsWith('r');
+            const isNextRest = finalBassNotes[i + 1]?.duration.endsWith('r');
+            if (n.tied && i < bassTickables.length - 1 && !isCurrentRest && !isNextRest) {
+                const indices = n.keys.map((_, keyIdx) => keyIdx);
                 const tie = new VF.StaveTie({
                     first_note: bassTickables[i] as any,
                     last_note: bassTickables[i + 1] as any,
-                    first_indices: [0],
-                    last_indices: [0]
+                    first_indices: indices,
+                    last_indices: indices
                 });
                 bassTies.push(tie);
             }
@@ -528,10 +537,7 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         // -----------------------------------------------------------------------
         // Extract Layout & Draw Custom Watermarks
         // -----------------------------------------------------------------------
-        const trebleTickables = trebleVoice.getTickables();
         const treblePositions = trebleTickables.map(t => (t as any).getAbsoluteX());
-
-        const bassTickables = bassVoice.getTickables();
         const bassPositions = bassTickables.map(t => (t as any).getAbsoluteX());
 
         const displaySteps = localAlignNotes(finalTrebleNotes, finalBassNotes);

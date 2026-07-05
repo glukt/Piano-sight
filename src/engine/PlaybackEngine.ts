@@ -133,6 +133,16 @@ export class PlaybackEngine {
                 // Extract MIDI key if structurally present to map to correct/incorrect sets
                 // @ts-ignore
                 if (gn.sourceNote && gn.sourceNote.Pitch) {
+                    if (gn.sourceNote.ParentStaff) {
+                        const staffId = gn.sourceNote.ParentStaff.Id;
+                        if (this.practicedHand === 'right' && staffId !== 1) {
+                            return;
+                        }
+                        if (this.practicedHand === 'left' && staffId !== 2) {
+                            return;
+                        }
+                    }
+
                     // @ts-ignore
                     const midi = gn.sourceNote.Pitch.getHalfTone() + 12;
                     if (correctSet?.has(midi)) {
@@ -360,6 +370,15 @@ export class PlaybackEngine {
         // 1. Get Notes and Play them immediately with a lookahead to decouple from UI thread blockages
         const notes: Note[] = cursor.NotesUnderCursor();
         const stepMidis = notes
+            .filter(note => {
+                if (this.practicedHand === 'right' && note.ParentStaff?.Id !== 1) {
+                    return false;
+                }
+                if (this.practicedHand === 'left' && note.ParentStaff?.Id !== 2) {
+                    return false;
+                }
+                return true;
+            })
             .map(n => n.halfTone !== undefined ? n.halfTone + 12 : n.Pitch ? n.Pitch.getHalfTone() + 12 : 0)
             .filter(n => n > 0);
 
@@ -600,6 +619,8 @@ export class PlaybackEngine {
 
             notes.forEach(note => {
                 if (note.isRest()) return;
+                if (this.practicedHand === 'right' && note.ParentStaff?.Id !== 1) return;
+                if (this.practicedHand === 'left' && note.ParentStaff?.Id !== 2) return;
                 const midi = note.halfTone !== undefined ? note.halfTone + 12 : (note.Pitch ? note.Pitch.getHalfTone() + 12 : 0);
                 if (midi > 0) {
                     list.push({

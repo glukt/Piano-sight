@@ -110,7 +110,8 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         onNoteCorrect: onAddXp ? () => onAddXp(2) : undefined, // 2 XP per note
         onSectionComplete: onAddXp ? () => onAddXp(50) : undefined, // 50 XP per section (~1/2 level early on)
         songId,
-        saveHighScore
+        saveHighScore,
+        practicedHand
     });
 
     // ... (rest of code)

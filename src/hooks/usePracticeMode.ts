@@ -98,6 +98,7 @@ interface UsePracticeModeProps {
     onSectionComplete?: () => void;
     songId?: string | null;
     saveHighScore?: (id: string, score: number, rank: string, notesHit: number, maxNotes: number) => Promise<void>;
+    practicedHand?: 'both' | 'right' | 'left';
 }
 
 export function usePracticeMode({
@@ -107,7 +108,8 @@ export function usePracticeMode({
     onNoteCorrect,
     onSectionComplete,
     songId,
-    saveHighScore
+    saveHighScore,
+    practicedHand = 'both'
 }: UsePracticeModeProps) {
     const { preferences } = usePreferences();
     const hintDelay = preferences.hintDelay;
@@ -317,7 +319,7 @@ export function usePracticeMode({
 
         setupLoop();
 
-    }, [isActive, currentSection, mode, playbackEngine, playModeStarted]);
+    }, [isActive, currentSection, mode, playbackEngine, playModeStarted, practicedHand]);
 
     // Effect to auto-transition from Preview to Wait
     useEffect(() => {
@@ -650,7 +652,7 @@ export function usePracticeMode({
             }
         };
 
-    }, [isActive, mode, playbackEngine, userActiveNotes]);
+    }, [isActive, mode, playbackEngine, userActiveNotes, practicedHand]);
 
 
     const changeMode = useCallback((newMode: PracticeModeType) => {
@@ -717,7 +719,7 @@ export function usePracticeMode({
                 playbackEngine.setStepCallback(() => {});
             }
         };
-    }, [isActive, currentSection, mode, playbackEngine, playModeStarted]);
+    }, [isActive, currentSection, mode, playbackEngine, playModeStarted, practicedHand]);
 
     const prevActiveNotesRef = useRef<Set<number>>(new Set());
 

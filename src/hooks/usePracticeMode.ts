@@ -128,6 +128,13 @@ export function usePracticeMode({
         }
     }, [playbackEngine, tempoMultiplier]);
 
+    // Sync practicedHand changes directly to the playback engine
+    useEffect(() => {
+        if (playbackEngine) {
+            playbackEngine.practicedHand = practicedHand;
+        }
+    }, [playbackEngine, practicedHand]);
+
     useEffect(() => {
         if (isSpeedTrainerActive) {
             setTempoMultiplierState(0.6);
@@ -281,8 +288,8 @@ export function usePracticeMode({
         setLastSuccessfulNotes(new Set());
         heldWrongNotesRef.current.clear();
 
-        // Reset to preview mode. The useEffect will handle stopping and seeking.
-        setMode('preview');
+        // Reset to wait mode immediately so the user can play without preview delay
+        setMode('wait');
         setPreviewLoopCount(0);
         lastExpectedStrRef.current = "";
         notesActiveAtStepStartRef.current.clear();
@@ -690,11 +697,6 @@ export function usePracticeMode({
 
                 // 5. Check Input
                 const allNotesPressed = freshExpectedObjs.every(noteObj => {
-                    // Ignore notes that were already active at the start of the step (unless they are tied/legato-sustained notes)
-                    if (!noteObj.isTied && notesActiveAtStepStartRef.current.has(noteObj.midi)) {
-                        return false;
-                    }
-                    
                     // Match if currently held OR if pressed within the 150ms latch window
                     const isCurrentlyHeld = userActiveNotesRef.current.has(noteObj.midi);
                     const lastPressedTime = recentPressesRef.current.get(noteObj.midi);

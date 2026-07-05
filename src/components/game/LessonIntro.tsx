@@ -149,6 +149,47 @@ const KeyboardGuide: React.FC<{ handPosition?: string }> = ({ handPosition }) =>
     );
 };
 
+const ChordGuideCard: React.FC<{ lesson: Lesson }> = ({ lesson }) => {
+    const isChordLesson = lesson.topic === 'chords' || lesson.name.toLowerCase().includes('chord') || lesson.name.toLowerCase().includes('triad');
+    if (!isChordLesson) return null;
+
+    const chordList = [
+        { name: "C Major Chord", notes: "C4 - E4 - G4", fingers: "Right Hand: 1 - 3 - 5 (Thumb, Middle, Pinky)" },
+        { name: "G7 Chord", notes: "B3 - F4 - G4", fingers: "Right Hand: 1 - 4 - 5 (Thumb, Ring, Pinky)" },
+        { name: "D minor (Dm) Chord", notes: "D4 - F4 - A4", fingers: "Right Hand: 1 - 3 - 5 (Thumb, Middle, Pinky)" },
+        { name: "E minor (Em) Chord", notes: "E4 - G4 - B4", fingers: "Right Hand: 1 - 3 - 5 (Thumb, Middle, Pinky)" },
+        { name: "F Major Chord", notes: "F4 - A4 - C5", fingers: "Right Hand: 1 - 3 - 5 (Thumb, Middle, Pinky)" },
+        { name: "A minor (Am) Chord", notes: "A4 - C5 - E5", fingers: "Right Hand: 1 - 3 - 5 (Thumb, Middle, Pinky)" }
+    ];
+
+    const relevantChords = chordList.filter(c => 
+        lesson.name.toLowerCase().includes(c.name.split(' ')[0].toLowerCase()) || 
+        lesson.instruction.toLowerCase().includes(c.name.split(' ')[0].toLowerCase()) ||
+        lesson.description.toLowerCase().includes(c.name.split(' ')[0].toLowerCase()) ||
+        lesson.name.toLowerCase().includes('change') || 
+        lesson.name.toLowerCase().includes('lean on me')
+    );
+
+    const displayChords = relevantChords.length > 0 ? relevantChords : chordList.slice(0, 2);
+
+    return (
+        <div className="p-6 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-xl border border-indigo-100 dark:border-indigo-900/40 text-left w-full flex flex-col gap-2">
+            <h4 className="text-xs font-bold text-indigo-950 dark:text-indigo-200 uppercase tracking-wider mb-1">
+                🎹 Chord Fingering & Positioning Guide
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {displayChords.map(c => (
+                    <div key={c.name} className="p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm">
+                        <div className="font-bold text-gray-900 dark:text-white text-sm">{c.name}</div>
+                        <div className="text-xs text-gray-505 dark:text-gray-400 mt-1">Notes: <span className="font-mono font-semibold text-gray-700 dark:text-gray-300">{c.notes}</span></div>
+                        <div className="text-xs text-gray-505 dark:text-gray-400 mt-0.5">Fingering: <span className="font-semibold text-indigo-600 dark:text-indigo-400">{c.fingers}</span></div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
+
 interface LessonIntroProps {
     lesson: Lesson;
     onStart: () => void;
@@ -184,6 +225,9 @@ export const LessonIntro: React.FC<LessonIntroProps> = ({ lesson, onStart, onBac
                     {lesson.handPosition && (
                         <KeyboardGuide handPosition={lesson.handPosition} />
                     )}
+
+                    {/* Chord Fingering & Positioning Guide */}
+                    <ChordGuideCard lesson={lesson} />
 
                     {/* Focus Area */}
                     <div className="bg-yellow-50 dark:bg-yellow-900/20 p-6 rounded-xl border border-yellow-100 dark:border-yellow-800">

@@ -13,6 +13,8 @@ interface PracticeOverlayProps {
     playModeStarted?: boolean;
     countdown?: number | null;
     onStartPlayMode?: () => void;
+    totalMeasures?: number;
+    onChangeSection?: (section: { startMeasure: number; endMeasure: number }) => void;
 }
 
 export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
@@ -26,8 +28,26 @@ export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
     onModeChange,
     playModeStarted = false,
     countdown = null,
-    onStartPlayMode
+    onStartPlayMode,
+    totalMeasures = 0,
+    onChangeSection
 }) => {
+    const [isEditingRange, setIsEditingRange] = React.useState(false);
+    const [tempStart, setTempStart] = React.useState(practiceSection.startMeasure + 1);
+    const [tempEnd, setTempEnd] = React.useState(practiceSection.endMeasure);
+
+    React.useEffect(() => {
+        setTempStart(practiceSection.startMeasure + 1);
+        setTempEnd(practiceSection.endMeasure);
+    }, [practiceSection]);
+
+    const handleApplyRange = () => {
+        const start = Math.max(0, tempStart - 1);
+        const end = Math.min(totalMeasures, Math.max(start + 1, tempEnd));
+        onChangeSection?.({ startMeasure: start, endMeasure: end });
+        setIsEditingRange(false);
+    };
+
     return (
         <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-6 md:bottom-32 w-auto md:w-80 bg-slate-900/90 dark:bg-slate-950/90 backdrop-blur-md text-white border border-slate-700/50 p-4 rounded-2xl shadow-2xl z-50 flex flex-col gap-3.5 animate-in fade-in slide-in-from-bottom-5 duration-300">
             {/* Header / Info Section */}
@@ -41,12 +61,56 @@ export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
                     </span>
                 </div>
                 <div className="flex flex-col items-end">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Measures</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1">
+                        Measures
+                        {onChangeSection && totalMeasures > 0 && (
+                            <button
+                                onClick={() => setIsEditingRange(!isEditingRange)}
+                                className={`transition-all hover:text-sky-400 ${isEditingRange ? 'text-sky-400' : 'text-slate-500'}`}
+                                title="Edit Practice Range"
+                            >
+                                ⚙️
+                            </button>
+                        )}
+                    </span>
                     <span className="font-mono font-bold text-sm bg-slate-800/60 px-2 py-0.5 rounded text-sky-400">
                         {practiceSection.startMeasure + 1} – {practiceSection.endMeasure}
                     </span>
                 </div>
             </div>
+
+            {isEditingRange && onChangeSection && totalMeasures > 0 && (
+                <div className="flex flex-col gap-2 p-3 bg-slate-950/60 rounded-xl border border-slate-800/50 animate-in slide-in-from-top-2 duration-150">
+                    <div className="flex items-center justify-between text-[11px] text-slate-300">
+                        <span>Start Measure:</span>
+                        <input
+                            type="number"
+                            min="1"
+                            max={tempEnd}
+                            value={tempStart}
+                            onChange={e => setTempStart(Math.max(1, Math.min(totalMeasures, parseInt(e.target.value) || 1)))}
+                            className="w-12 bg-slate-800 border border-slate-700 text-white text-center rounded py-0.5 text-xs font-mono font-bold"
+                        />
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-300">
+                        <span>End Measure:</span>
+                        <input
+                            type="number"
+                            min={tempStart}
+                            max={totalMeasures}
+                            value={tempEnd}
+                            onChange={e => setTempEnd(Math.max(tempStart, Math.min(totalMeasures, parseInt(e.target.value) || totalMeasures)))}
+                            className="w-12 bg-slate-800 border border-slate-700 text-white text-center rounded py-0.5 text-xs font-mono font-bold"
+                        />
+                    </div>
+                    <button
+                        onClick={handleApplyRange}
+                        className="w-full mt-1 py-1.5 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold text-[11px] rounded-lg shadow transition-all duration-150 active:scale-95"
+                    >
+                        Apply Practice Range
+                    </button>
+                </div>
+            )}
 
             {/* Mode Switch Selector */}
             <div className="flex bg-slate-800/60 p-1 rounded-xl border border-slate-700/30 w-full justify-between items-center text-[10px]">

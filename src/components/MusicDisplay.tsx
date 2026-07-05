@@ -4,6 +4,7 @@ import Vex from 'vexflow';
 export interface StaveNoteData {
     keys: string[];
     duration: string;
+    tied?: boolean;
 }
 
 interface MusicDisplayProps {
@@ -133,6 +134,28 @@ interface LocalAlignedStep {
     trebleNoteIndex: number | null;
     bassNoteIndex: number | null;
 }
+
+const getChordName = (keys: string[]): string | null => {
+    if (keys.length < 3) return null;
+    const noteNames = keys.map(k => k.split('/')[0].toLowerCase());
+    const notesSet = new Set(noteNames);
+    const has = (n: string) => notesSet.has(n);
+
+    if (has('c') && has('e') && has('g')) return "C";
+    if (has('d') && has('f') && has('a')) return "Dm";
+    if (has('e') && has('g') && has('b')) return "Em";
+    if (has('f') && has('a') && has('c')) return "F";
+    if (has('g') && has('b') && has('d')) {
+        if (has('f')) return "G7";
+        return "G";
+    }
+    if (has('a') && has('c') && has('e')) return "Am";
+    if (has('b') && has('d') && has('f')) return "Bdim";
+    if (has('b') && has('f') && has('g')) return "G7";
+    if (has('g') && has('b') && has('f')) return "G7";
+
+    return null;
+};
 
 const getDurationInBeats = (durationStr: string): number => {
     const clean = durationStr.replace('r', '');
@@ -353,6 +376,30 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                     });
                 }
 
+                // Add Accidental Modifiers explicitly to draw sharps and flats
+                n.keys.forEach((key, keyIndex) => {
+                    const parts = key.split('/');
+                    const noteName = parts[0];
+                    const accidental = noteName.slice(1);
+                    if (accidental === '#' || accidental === 'b' || accidental === '##' || accidental === 'bb' || accidental === 'n') {
+                        staveNote.addModifier(new VF.Accidental(accidental), keyIndex);
+                    }
+                });
+
+                // Add Chord Name Annotations
+                if (n.keys.length >= 3) {
+                    const chordName = getChordName(n.keys);
+                    if (chordName) {
+                        const justify = clef === 'bass' ? VF.Annotation.VerticalJustify.BOTTOM : VF.Annotation.VerticalJustify.TOP;
+                        staveNote.addModifier(
+                            new VF.Annotation(chordName)
+                                .setFont("sans-serif", 10, "bold")
+                                .setVerticalJustification(justify),
+                            0
+                        );
+                    }
+                }
+
                 // Add fingering annotations if enabled and mapped
                 if (showFingering && highlights && !n.duration.endsWith('r')) {
                     n.keys.forEach((key, keyIndex) => {
@@ -439,20 +486,40 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
         // Format & Draw
         // -----------------------------------------------------------------------
         new VF.Formatter()
-            .joinVoices([trebleVoice])
-            .joinVoices([bassVoice])
-            // .format([trebleVoice, bassVoice], staveWidth - 50); // Original
-            // To ensure linear spacing for rhythm, we might want to use a different format call?
-            // But Formatter uses note durations.
-            // Using a large available width ensures spacing.
+            .joinVoices([trebleVoice, bassVoice])
             .format([trebleVoice, bassVoice], staveWidth - 50);
 
-
         trebleVoice.draw(context, trebleStave);
-
-
-
         bassVoice.draw(context, bassStave);
+
+        // Draw ties connecting adjacent notes
+        const trebleTies: any[] = [];
+        finalTrebleNotes.forEach((n, i) => {
+            if (n.tied && i < trebleTickables.length - 1) {
+                const tie = new VF.StaveTie({
+                    first_note: trebleTickables[i] as any,
+                    last_note: trebleTickables[i + 1] as any,
+                    first_indices: [0],
+                    last_indices: [0]
+                });
+                trebleTies.push(tie);
+            }
+        });
+        trebleTies.forEach(t => t.setContext(context).draw());
+
+        const bassTies: any[] = [];
+        finalBassNotes.forEach((n, i) => {
+            if (n.tied && i < bassTickables.length - 1) {
+                const tie = new VF.StaveTie({
+                    first_note: bassTickables[i] as any,
+                    last_note: bassTickables[i + 1] as any,
+                    first_indices: [0],
+                    last_indices: [0]
+                });
+                bassTies.push(tie);
+            }
+        });
+        bassTies.forEach(t => t.setContext(context).draw());
 
 
         // -----------------------------------------------------------------------

@@ -56,7 +56,8 @@ const alignNotes = (treble: StaveNoteData[], bass: StaveNoteData[]): AlignedStep
         const onset = tTime;
         const dur = getDurationInBeats(note.duration);
         tTime += dur;
-        return { index, onset, dur, keys: note.duration.endsWith('r') ? [] : note.keys };
+        const isTied = index > 0 && treble[index - 1].tied === true;
+        return { index, onset, dur, isTied, keys: note.duration.endsWith('r') ? [] : note.keys };
     });
 
     let bTime = 0;
@@ -64,7 +65,8 @@ const alignNotes = (treble: StaveNoteData[], bass: StaveNoteData[]): AlignedStep
         const onset = bTime;
         const dur = getDurationInBeats(note.duration);
         bTime += dur;
-        return { index, onset, dur, keys: note.duration.endsWith('r') ? [] : note.keys };
+        const isTied = index > 0 && bass[index - 1].tied === true;
+        return { index, onset, dur, isTied, keys: note.duration.endsWith('r') ? [] : note.keys };
     });
 
     const onsetsSet = new Set<number>();
@@ -81,8 +83,8 @@ const alignNotes = (treble: StaveNoteData[], bass: StaveNoteData[]): AlignedStep
         const tEvent = trebleEvents.find(e => t >= e.onset && t < e.onset + e.dur);
         const bEvent = bassEvents.find(e => t >= e.onset && t < e.onset + e.dur);
 
-        const isTrebleOnset = tEvent ? Math.abs(t - tEvent.onset) < 0.01 : false;
-        const isBassOnset = bEvent ? Math.abs(t - bEvent.onset) < 0.01 : false;
+        const isTrebleOnset = tEvent ? (Math.abs(t - tEvent.onset) < 0.01 && !tEvent.isTied) : false;
+        const isBassOnset = bEvent ? (Math.abs(t - bEvent.onset) < 0.01 && !bEvent.isTied) : false;
 
         aligned.push({
             time: t,

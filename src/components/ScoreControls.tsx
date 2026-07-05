@@ -121,7 +121,7 @@ export const ScoreControls: React.FC<ScoreControlsProps> = ({
                 </div>
 
                 {/* Practiced Hand Segmented Picker (only if practice mode is active!) */}
-                {isPracticeActive && !isLessonMode && (
+                {isPracticeActive && (
                     <div className="flex bg-gray-200 dark:bg-gray-900 p-1 rounded-full border border-gray-300 dark:border-gray-600 mr-2">
                         <button
                             onClick={() => onChangePracticedHand?.('both')}

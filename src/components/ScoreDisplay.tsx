@@ -824,6 +824,8 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                     playModeStarted={playModeStarted}
                     countdown={countdown}
                     onStartPlayMode={startPlayMode}
+                    totalMeasures={playbackRef.current?.MeasureCount || 0}
+                    onChangeSection={setPracticeSection}
                 />
             )}
 

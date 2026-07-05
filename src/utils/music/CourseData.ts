@@ -9,8 +9,8 @@ export interface LessonConstraints {
     chordsAllowed: boolean;// Whether to generate chords or single notes
     numNotes: number;      // How long the generated level should be
     presetMelody?: {
-        treble: { keys: string[]; duration: string }[];
-        bass: { keys: string[]; duration: string }[];
+        treble: { keys: string[]; duration: string; tied?: boolean }[];
+        bass: { keys: string[]; duration: string; tied?: boolean }[];
     };
     keySignature?: string;  // e.g., "G", "F"
     timeSignature?: string; // e.g., "3/4", "6/8"
@@ -105,7 +105,7 @@ export const courses: Course[] = [
                     presetMelody: {
                         treble: [
                             { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" },
-                            { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "h" },
+                            { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "q", tied: true }, { keys: ["e/4"], duration: "h" },
                             { keys: ["d/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["d/4"], duration: "h" },
                             { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "h" },
                             { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" },

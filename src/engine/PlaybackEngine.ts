@@ -644,4 +644,58 @@ export class PlaybackEngine {
 
         return list;
     }
+
+    public getCurrentStepDuration(): number {
+        const cursor = this.getCursor();
+        if (!cursor) return 0.25;
+        let stepDuration = 0.25;
+        try {
+            const nextIterator = cursor.Iterator.clone();
+            nextIterator.moveToNext();
+            if (!nextIterator.EndReached) {
+                stepDuration = nextIterator.currentTimeStamp.RealValue - cursor.Iterator.currentTimeStamp.RealValue;
+            } else {
+                stepDuration = 0.25;
+            }
+        } catch (e) {
+            stepDuration = 0.25;
+        }
+        const secondsPerWhole = 240 / this.bpm;
+        return stepDuration * secondsPerWhole;
+    }
+
+    public playAccompanimentForCurrentPosition() {
+        const cursor = this.getCursor();
+        if (!cursor) return;
+        const notes: Note[] = cursor.NotesUnderCursor();
+        const lookahead = 0.01;
+        const startTime = audio.now() + lookahead;
+        
+        notes.forEach(note => {
+            if (note.isRest()) return;
+            
+            let isAccompaniment = false;
+            if (this.practicedHand === 'right' && note.ParentStaff?.Id === 2) {
+                isAccompaniment = true;
+            }
+            if (this.practicedHand === 'left' && note.ParentStaff?.Id === 1) {
+                isAccompaniment = true;
+            }
+            
+            if (isAccompaniment) {
+                let midi = 0;
+                if (note.halfTone !== undefined) {
+                    midi = note.halfTone + 12;
+                } else if (note.Pitch) {
+                    midi = note.Pitch.getHalfTone() + 12;
+                } else {
+                    return;
+                }
+                
+                const noteDuration = note.Length.RealValue * (240 / this.bpm);
+                // Play accompaniment note quietly
+                audio.playNote(midi, 35, noteDuration, startTime);
+            }
+        });
+    }
 }

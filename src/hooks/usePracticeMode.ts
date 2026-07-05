@@ -154,11 +154,16 @@ export function usePracticeMode({
     const isTransitioningRef = useRef(false);
     const transitionTimeoutRef = useRef<any>(null);
     const validationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const autoAdvanceTimerRef = useRef<any>(null);
 
     const startPractice = useCallback((startMeasure?: number, initialMode?: 'wait' | 'preview') => {
         if (transitionTimeoutRef.current) {
             clearTimeout(transitionTimeoutRef.current);
             transitionTimeoutRef.current = null;
+        }
+        if (autoAdvanceTimerRef.current) {
+            clearTimeout(autoAdvanceTimerRef.current);
+            autoAdvanceTimerRef.current = null;
         }
         isTransitioningRef.current = false;
         setIsActive(true);
@@ -186,6 +191,10 @@ export function usePracticeMode({
         if (transitionTimeoutRef.current) {
             clearTimeout(transitionTimeoutRef.current);
             transitionTimeoutRef.current = null;
+        }
+        if (autoAdvanceTimerRef.current) {
+            clearTimeout(autoAdvanceTimerRef.current);
+            autoAdvanceTimerRef.current = null;
         }
         isTransitioningRef.current = false;
         setIsActive(false);
@@ -307,6 +316,7 @@ export function usePracticeMode({
                     // Wait mode: Stop and wait for input
                     playbackEngine.stop();
                     playbackEngine.seek(startTs);
+                    playbackEngine.playAccompanimentForCurrentPosition();
                     setFeedback("Play the notes to advance!");
                 } else if (mode === 'play' && !playModeStarted) {
                     // Play mode: Stop and wait for Start click
@@ -433,6 +443,12 @@ export function usePracticeMode({
             const currentExpectedMidis = currentExpectedObjs.map(n => n.midi);
             const currentExpectedStr = currentExpectedMidis.slice().sort().join(',');
 
+            // Clear auto-advance timer if we have notes the user needs to play
+            if (currentExpectedMidis.length > 0 && autoAdvanceTimerRef.current) {
+                clearTimeout(autoAdvanceTimerRef.current);
+                autoAdvanceTimerRef.current = null;
+            }
+
             // Detect step change to capture currently held keys as "legato safety"
             let stepChanged = false;
             if (currentExpectedStr !== lastExpectedStrRef.current) {
@@ -521,9 +537,19 @@ export function usePracticeMode({
                 return;
             }
 
-            // 2. Handle Rests / Empty Steps
-            if (currentExpectedObjs.length === 0) {
-                playbackEngine.nextStep();
+            // 2. Handle Rests / Empty Steps (Auto-advance accompaniment-only steps in Wait Mode)
+            if (currentExpectedMidis.length === 0) {
+                if (!autoAdvanceTimerRef.current) {
+                    const stepDurationMs = playbackEngine.getCurrentStepDuration() * 1000;
+                    autoAdvanceTimerRef.current = setTimeout(() => {
+                        if (isTransitioningRef.current) return;
+                        autoAdvanceTimerRef.current = null;
+                        playbackEngine.nextStep();
+                        playbackEngine.playAccompanimentForCurrentPosition();
+                        // Trigger checkInput re-evaluation via expectedNotes state
+                        setExpectedNotes([]);
+                    }, stepDurationMs);
+                }
                 setLastSuccessfulNotes(new Set());
                 return;
             }
@@ -576,8 +602,13 @@ export function usePracticeMode({
                 });
 
                 if (allNotesPressed) {
+                    if (autoAdvanceTimerRef.current) {
+                        clearTimeout(autoAdvanceTimerRef.current);
+                        autoAdvanceTimerRef.current = null;
+                    }
                     setFeedback("Good!");
                     playbackEngine.nextStep();
+                    playbackEngine.playAccompanimentForCurrentPosition();
                     setNotesCorrect(prev => prev + 1);
                     if (onNoteCorrectRef.current) onNoteCorrectRef.current();
 
@@ -650,6 +681,10 @@ export function usePracticeMode({
             if (validationTimerRef.current) {
                 clearTimeout(validationTimerRef.current);
             }
+            if (autoAdvanceTimerRef.current) {
+                clearTimeout(autoAdvanceTimerRef.current);
+                autoAdvanceTimerRef.current = null;
+            }
         };
 
     }, [isActive, mode, playbackEngine, userActiveNotes, practicedHand]);
@@ -685,6 +720,10 @@ export function usePracticeMode({
         if (transitionTimeoutRef.current) {
             clearTimeout(transitionTimeoutRef.current);
             transitionTimeoutRef.current = null;
+        }
+        if (autoAdvanceTimerRef.current) {
+            clearTimeout(autoAdvanceTimerRef.current);
+            autoAdvanceTimerRef.current = null;
         }
     }, [totalMeasures, mode, playbackEngine]);
 

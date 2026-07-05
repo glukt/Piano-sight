@@ -177,6 +177,37 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                     return;
                 }
 
+                // Adjust staff visibility and zoom based on practicedHand and layoutMode before initial render
+                if (osmdRef.current.Sheet && osmdRef.current.Sheet.Instruments) {
+                    osmdRef.current.Sheet.Instruments.forEach(instrument => {
+                        if (instrument.Staves) {
+                            instrument.Staves.forEach(staff => {
+                                if (layoutMode === 'scrolling') {
+                                    if (practicedHand === 'right') {
+                                        staff.Visible = staff.Id === 1;
+                                    } else if (practicedHand === 'left') {
+                                        staff.Visible = staff.Id === 2;
+                                    } else {
+                                        staff.Visible = true;
+                                    }
+                                } else {
+                                    staff.Visible = true;
+                                }
+                            });
+                        }
+                    });
+                }
+
+                if (layoutMode === 'scrolling') {
+                    if (practicedHand !== 'both') {
+                        osmdRef.current.Zoom = 1.4;
+                    } else {
+                        osmdRef.current.Zoom = 1.0;
+                    }
+                } else {
+                    osmdRef.current.Zoom = 1.0;
+                }
+
                 osmdRef.current.render();
 
                 // Show cursor immediately on load
@@ -240,9 +271,41 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 
     // Combined OSMD styling, rendering, and interaction handler
     useEffect(() => {
-        if (!osmdRef.current || loading) return;
+        if (!osmdRef.current || loading || !osmdRef.current.Sheet) return;
 
         try {
+            // Adjust staff visibility based on practicedHand and layoutMode
+            if (osmdRef.current.Sheet && osmdRef.current.Sheet.Instruments) {
+                osmdRef.current.Sheet.Instruments.forEach(instrument => {
+                    if (instrument.Staves) {
+                        instrument.Staves.forEach(staff => {
+                            if (layoutMode === 'scrolling') {
+                                if (practicedHand === 'right') {
+                                    staff.Visible = staff.Id === 1;
+                                } else if (practicedHand === 'left') {
+                                    staff.Visible = staff.Id === 2;
+                                } else {
+                                    staff.Visible = true;
+                                }
+                            } else {
+                                staff.Visible = true;
+                            }
+                        });
+                    }
+                });
+            }
+
+            // Adjust zoom level for scrolling view
+            if (layoutMode === 'scrolling') {
+                if (practicedHand !== 'both') {
+                    osmdRef.current.Zoom = 1.4; // Scale up when showing only one hand
+                } else {
+                    osmdRef.current.Zoom = 1.0;
+                }
+            } else {
+                osmdRef.current.Zoom = 1.0;
+            }
+
             // Apply theme options and re-render
             osmdRef.current.setOptions({
                 darkMode: isDarkMode,
@@ -413,7 +476,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         } catch (e) {
             console.error("Error drawing labels or binding interactions:", e);
         }
-    }, [showNoteNames, loading, isDarkMode, layoutMode]);
+    }, [showNoteNames, loading, isDarkMode, layoutMode, practicedHand]);
 
     // Update Highlight Settings when toggled
     useEffect(() => {

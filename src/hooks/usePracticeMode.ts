@@ -400,6 +400,7 @@ export function usePracticeMode({
     // Active Note Overlapping / Legato Protection for Wait Mode
     const notesActiveAtStepStartRef = useRef<Set<number>>(new Set());
     const lastExpectedStrRef = useRef<string>("");
+    const recentPressesRef = useRef<Map<number, number>>(new Map());
 
     // Refs to avoid constant cleanup/restart of the 50ms check interval
     const userActiveNotesRef = useRef(userActiveNotes);
@@ -415,6 +416,14 @@ export function usePracticeMode({
     const playModeStartedRef = useRef(playModeStarted);
 
     useEffect(() => {
+        // Detect new press events to populate recentPressesRef
+        const now = Date.now();
+        userActiveNotes.forEach(midi => {
+            if (!userActiveNotesRef.current.has(midi)) {
+                recentPressesRef.current.set(midi, now);
+            }
+        });
+
         userActiveNotesRef.current = userActiveNotes;
         lastSuccessfulNotesRef.current = lastSuccessfulNotes;
         notesCorrectRef.current = notesCorrect;
@@ -609,6 +618,14 @@ export function usePracticeMode({
                 validationTimerRef.current = setTimeout(() => {
                 if (isTransitioningRef.current) return;
 
+                const checkTime = Date.now();
+                // Clean up old presses older than 150ms
+                recentPressesRef.current.forEach((timestamp, midi) => {
+                    if (checkTime - timestamp > 150) {
+                        recentPressesRef.current.delete(midi);
+                    }
+                });
+
                 const freshExpectedObjs = playbackEngine.getNotesAtCurrentPosition();
                 const freshExpectedMidis = freshExpectedObjs.map(n => n.midi);
                 if (freshExpectedObjs.length === 0) return;
@@ -638,7 +655,13 @@ export function usePracticeMode({
                     if (!noteObj.isTied && notesActiveAtStepStartRef.current.has(noteObj.midi)) {
                         return false;
                     }
-                    return userActiveNotesRef.current.has(noteObj.midi);
+                    
+                    // Match if currently held OR if pressed within the 150ms latch window
+                    const isCurrentlyHeld = userActiveNotesRef.current.has(noteObj.midi);
+                    const lastPressedTime = recentPressesRef.current.get(noteObj.midi);
+                    const isPressedRecently = lastPressedTime !== undefined && (checkTime - lastPressedTime < 150);
+                    
+                    return isCurrentlyHeld || isPressedRecently;
                 });
 
                 if (allNotesPressed) {

@@ -69,7 +69,7 @@ export class PitchDetector {
 
     public getPitch(expectedMidiNotes?: number[]): number | null {
         this.analyser.getFloatTimeDomainData(this.buffer as any);
-        let pitch = this.autoCorrelateYIN(this.buffer as any, this.audioContext.sampleRate);
+        let pitch = this.autoCorrelateYIN(this.buffer as any, this.audioContext.sampleRate, expectedMidiNotes);
 
         if (pitch === -1) {
             return null;
@@ -101,12 +101,12 @@ export class PitchDetector {
     }
 
     // YIN Fundamental Frequency Estimator with 2x decimation
-    private autoCorrelateYIN(buf: Float32Array, sampleRate: number): number {
+    private autoCorrelateYIN(buf: Float32Array, sampleRate: number, expectedMidiNotes?: number[]): number {
         const factor = 2;
         const n = Math.floor(buf.length / factor);
         const dsBuf = new Float32Array(n);
         let rms = 0;
-
+ 
         // Downsample & calculate RMS
         for (let i = 0; i < n; i++) {
             const val = buf[i * factor];
@@ -115,16 +115,25 @@ export class PitchDetector {
         }
         rms = Math.sqrt(rms / n);
         this.lastVolume = rms;
-
+ 
         // Noise gate
         if (rms < this.noiseGateThreshold) return -1;
-
+ 
         const dsSampleRate = sampleRate / factor;
         
         // Define YIN parameters
         const W = 512; // Integration window size
         const minTau = 5; // Corresponding to ~4410Hz (C8 is 4186Hz)
-        const maxTau = Math.min(820, Math.floor(n / 2)); // Capped at A0 (27.5Hz is ~802 samples)
+ 
+        // Dynamic search range based on expected notes for massive performance boost
+        let maxTau = Math.min(820, Math.floor(n / 2)); // Capped at A0 (27.5Hz is ~802 samples)
+        if (expectedMidiNotes && expectedMidiNotes.length > 0) {
+            const lowestMidi = Math.min(...expectedMidiNotes);
+            const safetyMidi = Math.max(21, lowestMidi - 5); // 5 semitones buffer below lowest note
+            const freq = 440 * Math.pow(2, (safetyMidi - 69) / 12);
+            const computedTau = Math.ceil(dsSampleRate / freq);
+            maxTau = Math.min(820, Math.max(minTau + 20, computedTau));
+        }
 
         // 1. Difference function d(tau)
         const d = new Float32Array(maxTau);

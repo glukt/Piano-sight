@@ -386,7 +386,7 @@ export class PlaybackEngine {
         if (this.onStep) {
             this.onStep(stepMidis);
         }
-        const lookahead = 0.035; // 35ms audio scheduling lookahead
+        const lookahead = 0.100; // 100ms audio scheduling lookahead (protects against SVG rendering lag)
         const startTime = audio.now() + lookahead;
 
         notes.forEach(note => {
@@ -671,7 +671,7 @@ export class PlaybackEngine {
         const cursor = this.getCursor();
         if (!cursor) return;
         const notes: Note[] = cursor.NotesUnderCursor();
-        const lookahead = 0.01;
+        const lookahead = 0.05; // 50ms lookahead for responsive touch/accompaniment playback
         const startTime = audio.now() + lookahead;
         
         notes.forEach(note => {

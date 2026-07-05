@@ -136,18 +136,18 @@ export const courses: Course[] = [
                 type: 'exercise', topic: 'treble', xpReward: 120, requiredXp: 320,
                 handPosition: 'RH_C_POS',
                 constraints: {
-                    trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 62,
+                    trebleRange: cPosTreble, bassRange: [], rhythms: ["8", "q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 62,
                     presetMelody: {
                         treble: [
                             { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["g/4"], duration: "q" },
                             { keys: ["g/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" },
                             { keys: ["c/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "q" },
-                            { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["d/4"], duration: "h" },
+                            { keys: ["e/4"], duration: "q." }, { keys: ["d/4"], duration: "8" }, { keys: ["d/4"], duration: "h" },
 
                             { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["g/4"], duration: "q" },
                             { keys: ["g/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" },
                             { keys: ["c/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "q" },
-                            { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["c/4"], duration: "h" },
+                            { keys: ["d/4"], duration: "q." }, { keys: ["c/4"], duration: "8" }, { keys: ["c/4"], duration: "h" },
 
                             { keys: ["d/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["c/4"], duration: "q" },
                             { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "8" }, { keys: ["f/4"], duration: "8" }, { keys: ["e/4"], duration: "q" }, { keys: ["c/4"], duration: "q" },
@@ -157,7 +157,7 @@ export const courses: Course[] = [
                             { keys: ["e/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["g/4"], duration: "q" },
                             { keys: ["g/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" },
                             { keys: ["c/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "q" },
-                            { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["c/4"], duration: "h" }
+                            { keys: ["d/4"], duration: "q." }, { keys: ["c/4"], duration: "8" }, { keys: ["c/4"], duration: "h" }
                         ],
                         bass: []
                     }
@@ -227,16 +227,14 @@ export const courses: Course[] = [
                 type: 'exercise', topic: 'treble', xpReward: 80, requiredXp: 760,
                 handPosition: 'RH_C_POS',
                 constraints: {
-                    trebleRange: ["g/4", "a/4", "b/4", "c/5", "d/5"], bassRange: [], rhythms: ["q", "h", "h."], maxJumps: 5, chordsAllowed: false, numNotes: 14,
+                    trebleRange: ["g/4", "a/4", "b/4", "c/5", "d/5"], bassRange: [], rhythms: ["8", "q", "h", "h."], maxJumps: 5, chordsAllowed: false, numNotes: 14,
                     timeSignature: "3/4",
                     presetMelody: {
                         treble: [
-                            { keys: ["g/4"], duration: "hr" }, { keys: ["g/4"], duration: "q" },
-                            { keys: ["g/4"], duration: "q" }, { keys: ["a/4"], duration: "q" }, { keys: ["g/4"], duration: "q" },
-                            { keys: ["c/5"], duration: "h" }, { keys: ["b/4"], duration: "q" },
-                            { keys: ["g/4"], duration: "h" }, { keys: ["g/4"], duration: "q" },
-                            { keys: ["g/4"], duration: "q" }, { keys: ["a/4"], duration: "q" }, { keys: ["g/4"], duration: "q" },
-                            { keys: ["d/5"], duration: "h" }, { keys: ["c/5"], duration: "q" },
+                            { keys: ["g/4"], duration: "hr" }, { keys: ["g/4"], duration: "8" }, { keys: ["g/4"], duration: "8" },
+                            { keys: ["a/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["c/5"], duration: "q" },
+                            { keys: ["b/4"], duration: "h" }, { keys: ["g/4"], duration: "8" }, { keys: ["g/4"], duration: "8" },
+                            { keys: ["a/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["d/5"], duration: "q" },
                             { keys: ["c/5"], duration: "h." }
                         ],
                         bass: []
@@ -470,20 +468,17 @@ export const courses: Course[] = [
                 type: 'exercise', topic: 'treble', xpReward: 120, requiredXp: 2120,
                 handPosition: 'RH_C_POS',
                 constraints: {
-                    trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5"], bassRange: [], rhythms: ["q", "h", "w"], maxJumps: 2, chordsAllowed: false, numNotes: 47,
+                    trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5"], bassRange: [], rhythms: ["8", "q", "h", "w"], maxJumps: 2, chordsAllowed: false, numNotes: 39,
                     presetMelody: {
                         treble: [
-                            { keys: ["d/4"], duration: 'q' }, { keys: ["c/4"], duration: 'h' }, { keys: ["c/4"], duration: 'q' },
-                            { keys: ["e/4"], duration: 'q' }, { keys: ["f/4"], duration: 'q' }, { keys: ["g/4"], duration: 'q' }, { keys: ["a/4"], duration: 'q' },
-                            { keys: ["b/4"], duration: 'q' }, { keys: ["c/5"], duration: 'q' }, { keys: ["b/4"], duration: 'q' }, { keys: ["a/4"], duration: 'q' },
-                            { keys: ["a/4"], duration: 'h' }, { keys: ["a/4"], duration: 'q' }, { keys: ["g/4"], duration: 'q' },
-                            { keys: ["a/4"], duration: 'q' }, { keys: ["b/4"], duration: 'q' }, { keys: ["a/4"], duration: 'q' }, { keys: ["g/4"], duration: 'q' },
-                            { keys: ["f/4"], duration: 'q' }, { keys: ["a/4"], duration: 'q' }, { keys: ["g/4"], duration: 'h' },
+                            { keys: ["d/4"], duration: '8' }, { keys: ["c/4"], duration: '8' }, { keys: ["c/4"], duration: 'h' }, { keys: ["qr"], duration: 'q' },
+                            { keys: ["8r"], duration: '8' }, { keys: ["e/4"], duration: '8' }, { keys: ["f/4"], duration: '8' }, { keys: ["g/4"], duration: '8' }, { keys: ["a/4"], duration: '8' }, { keys: ["b/4"], duration: '8' }, { keys: ["c/5"], duration: '8' }, { keys: ["b/4"], duration: '8' },
+                            { keys: ["a/4"], duration: 'h' }, { keys: ["8r"], duration: '8' }, { keys: ["a/4"], duration: '8' }, { keys: ["a/4"], duration: '8' }, { keys: ["g/4"], duration: '8' },
+                            { keys: ["a/4"], duration: '8' }, { keys: ["b/4"], duration: '8' }, { keys: ["a/4"], duration: '8' }, { keys: ["g/4"], duration: '8' }, { keys: ["f/4"], duration: '8' }, { keys: ["a/4"], duration: '8' }, { keys: ["g/4"], duration: 'q' }, { keys: ["qr"], duration: 'q' },
                             { keys: ["f/4"], duration: 'w' },
-                            { keys: ["g/4"], duration: 'q' }, { keys: ["f/4"], duration: 'q' }, { keys: ["e/4"], duration: 'q' }, { keys: ["d/4"], duration: 'q' },
-                            { keys: ["c/4"], duration: 'h' }, { keys: ["e/4"], duration: 'q' }, { keys: ["g/4"], duration: 'q' },
-                            { keys: ["a/4"], duration: 'h' }, { keys: ["f/4"], duration: 'q' }, { keys: ["a/4"], duration: 'q' },
-                            { keys: ["g/4"], duration: 'q' }, { keys: ["f/4"], duration: 'q' }, { keys: ["e/4"], duration: 'q' }, { keys: ["d/4"], duration: 'q' },
+                            { keys: ["g/4"], duration: '8' }, { keys: ["f/4"], duration: '8' }, { keys: ["e/4"], duration: '8' }, { keys: ["d/4"], duration: '8' }, { keys: ["c/4"], duration: 'h' },
+                            { keys: ["e/4"], duration: 'q' }, { keys: ["g/4"], duration: 'q' }, { keys: ["a/4"], duration: 'h' },
+                            { keys: ["f/4"], duration: 'q' }, { keys: ["a/4"], duration: 'q' }, { keys: ["g/4"], duration: '8' }, { keys: ["f/4"], duration: '8' }, { keys: ["e/4"], duration: '8' }, { keys: ["d/4"], duration: '8' },
                             { keys: ["c/4"], duration: 'h' }, { keys: ["d/4"], duration: 'h' },
                             { keys: ["c/4"], duration: 'w' }
                         ],
@@ -621,32 +616,20 @@ export const courses: Course[] = [
                 type: 'exercise', topic: 'bass', xpReward: 120, requiredXp: 3080,
                 handPosition: 'LH_LOW_C_POS',
                 constraints: {
-                    trebleRange: [], bassRange: ["b/2", "c/3", "d/3", "e/3", "g/3"], rhythms: ["q", "h", "w"], maxJumps: 3, chordsAllowed: false, numNotes: 46,
+                    trebleRange: [], bassRange: ["b/2", "c/3", "d/3", "e/3", "g/3"], rhythms: ["8", "q", "h", "w"], maxJumps: 3, chordsAllowed: false, numNotes: 34,
                     presetMelody: {
                         treble: [],
                         bass: [
-                            { keys: ["e/3"], duration: 'h' }, { keys: ["e/3"], duration: 'q' }, { keys: ["g/3"], duration: 'q' },
-                            { keys: ["e/3"], duration: 'q' }, { keys: ["d/3"], duration: 'q' }, { keys: ["c/3"], duration: 'h' },
+                            { keys: ["e/3"], duration: 'q.' }, { keys: ["e/3"], duration: '8' }, { keys: ["g/3"], duration: 'q' }, { keys: ["e/3"], duration: 'q' },
+                            { keys: ["d/3"], duration: 'h' }, { keys: ["c/3"], duration: 'h' },
                             { keys: ["b/2"], duration: 'w' },
                             
-                            { keys: ["e/3"], duration: 'h' }, { keys: ["e/3"], duration: 'q' }, { keys: ["g/3"], duration: 'q' },
-                            { keys: ["e/3"], duration: 'q' }, { keys: ["d/3"], duration: 'q' }, { keys: ["c/3"], duration: 'h' },
+                            { keys: ["e/3"], duration: 'q.' }, { keys: ["e/3"], duration: '8' }, { keys: ["g/3"], duration: 'q' }, { keys: ["e/3"], duration: 'q' },
+                            { keys: ["d/3"], duration: 'h' }, { keys: ["c/3"], duration: 'h' },
                             { keys: ["b/2"], duration: 'w' },
                             
-                            { keys: ["e/3"], duration: 'h' }, { keys: ["e/3"], duration: 'q' }, { keys: ["g/3"], duration: 'q' },
-                            { keys: ["e/3"], duration: 'q' }, { keys: ["d/3"], duration: 'q' }, { keys: ["c/3"], duration: 'q' }, { keys: ["d/3"], duration: 'q' },
-                            { keys: ["c/3"], duration: 'q' }, { keys: ["b/2"], duration: 'h.' },
-                            
-                            { keys: ["e/3"], duration: 'h' }, { keys: ["e/3"], duration: 'q' }, { keys: ["g/3"], duration: 'q' },
-                            { keys: ["e/3"], duration: 'q' }, { keys: ["d/3"], duration: 'q' }, { keys: ["c/3"], duration: 'h' },
-                            { keys: ["b/2"], duration: 'w' },
-                            
-                            { keys: ["e/3"], duration: 'h' }, { keys: ["e/3"], duration: 'q' }, { keys: ["g/3"], duration: 'q' },
-                            { keys: ["e/3"], duration: 'q' }, { keys: ["d/3"], duration: 'q' }, { keys: ["c/3"], duration: 'h' },
-                            { keys: ["b/2"], duration: 'w' },
-                            
-                            { keys: ["e/3"], duration: 'h' }, { keys: ["e/3"], duration: 'q' }, { keys: ["g/3"], duration: 'q' },
-                            { keys: ["e/3"], duration: 'q' }, { keys: ["d/3"], duration: 'q' }, { keys: ["c/3"], duration: 'q' }, { keys: ["d/3"], duration: 'q' },
+                            { keys: ["e/3"], duration: 'q.' }, { keys: ["e/3"], duration: '8' }, { keys: ["g/3"], duration: 'q' }, { keys: ["e/3"], duration: 'q' },
+                            { keys: ["d/3"], duration: 'q.' }, { keys: ["d/3"], duration: '8' }, { keys: ["c/3"], duration: 'q' }, { keys: ["d/3"], duration: 'q' },
                             { keys: ["c/3"], duration: 'q' }, { keys: ["b/2"], duration: 'h.' }
                         ]
                     }
@@ -738,26 +721,22 @@ export const courses: Course[] = [
                 type: 'exercise', topic: 'bass', xpReward: 100, requiredXp: 3570,
                 handPosition: 'LH_LOW_C_POS',
                 constraints: {
-                    trebleRange: [], bassRange: ["f/2", "g/2", "a/2", "c/3", "d/3", "e/3"], rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 32,
+                    trebleRange: [], bassRange: ["f/2", "g/2", "a/2", "c/3", "d/3", "e/3"], rhythms: ["8", "q", "h", "w"], maxJumps: 4, chordsAllowed: false, numNotes: 34,
                     presetMelody: {
                         treble: [],
                         bass: [
-                            { keys: ["c/3"], duration: "h" }, { keys: ["c/3"], duration: "q" }, { keys: ["e/3"], duration: "q" },
-                            { keys: ["a/2"], duration: "h" }, { keys: ["a/2"], duration: "h" },
-                            { keys: ["f/2"], duration: "h" }, { keys: ["g/2"], duration: "h" },
-                            { keys: ["c/3"], duration: "w" },
-                            { keys: ["c/3"], duration: "h" }, { keys: ["c/3"], duration: "q" }, { keys: ["e/3"], duration: "q" },
-                            { keys: ["a/2"], duration: "h" }, { keys: ["a/2"], duration: "h" },
-                            { keys: ["f/2"], duration: "h" }, { keys: ["g/2"], duration: "h" },
+                            { keys: ["c/3"], duration: "h." }, { keys: ["c/3"], duration: "8" }, { keys: ["d/3"], duration: "8" },
+                            { keys: ["e/3"], duration: "q." }, { keys: ["d/3"], duration: "8" }, { keys: ["c/3"], duration: "q" }, { keys: ["b/2"], duration: "q" },
+                            { keys: ["a/2"], duration: "h." }, { keys: ["a/2"], duration: "8" }, { keys: ["b/2"], duration: "8" },
+                            { keys: ["c/3"], duration: "q." }, { keys: ["a/2"], duration: "8" }, { keys: ["f/2"], duration: "h" },
+                            { keys: ["f/2"], duration: "q." }, { keys: ["f/2"], duration: "8" }, { keys: ["g/2"], duration: "h" },
                             { keys: ["c/3"], duration: "w" },
 
-                            { keys: ["c/3"], duration: "h" }, { keys: ["c/3"], duration: "q" }, { keys: ["e/3"], duration: "q" },
-                            { keys: ["a/2"], duration: "h" }, { keys: ["a/2"], duration: "h" },
-                            { keys: ["f/2"], duration: "h" }, { keys: ["g/2"], duration: "h" },
-                            { keys: ["c/3"], duration: "w" },
-                            { keys: ["c/3"], duration: "h" }, { keys: ["c/3"], duration: "q" }, { keys: ["e/3"], duration: "q" },
-                            { keys: ["a/2"], duration: "h" }, { keys: ["a/2"], duration: "h" },
-                            { keys: ["f/2"], duration: "h" }, { keys: ["g/2"], duration: "h" },
+                            { keys: ["c/3"], duration: "h." }, { keys: ["c/3"], duration: "8" }, { keys: ["d/3"], duration: "8" },
+                            { keys: ["e/3"], duration: "q." }, { keys: ["d/3"], duration: "8" }, { keys: ["c/3"], duration: "q" }, { keys: ["b/2"], duration: "q" },
+                            { keys: ["a/2"], duration: "h." }, { keys: ["a/2"], duration: "8" }, { keys: ["b/2"], duration: "8" },
+                            { keys: ["c/3"], duration: "q." }, { keys: ["a/2"], duration: "8" }, { keys: ["f/2"], duration: "h" },
+                            { keys: ["f/2"], duration: "q." }, { keys: ["f/2"], duration: "8" }, { keys: ["g/2"], duration: "h" },
                             { keys: ["c/3"], duration: "w" }
                         ]
                     }
@@ -772,13 +751,14 @@ export const courses: Course[] = [
                 type: 'exercise', topic: 'bass', xpReward: 100, requiredXp: 3670,
                 handPosition: 'LH_G_POS',
                 constraints: {
-                    trebleRange: [], bassRange: ["g/2", "bb/2", "eb/2"], rhythms: ["q", "h", "w"], maxJumps: 4, chordsAllowed: false, numNotes: 11,
+                    trebleRange: [], bassRange: ["g/2", "bb/2", "eb/2"], rhythms: ["8", "q", "h", "w"], maxJumps: 4, chordsAllowed: false, numNotes: 18,
                     presetMelody: {
                         treble: [],
                         bass: [
-                            { keys: ["g/2"], duration: "q" }, { keys: ["g/2"], duration: "q" }, { keys: ["g/2"], duration: "q" }, { keys: ["eb/2"], duration: "q" },
-                            { keys: ["bb/2"], duration: "q" }, { keys: ["g/2"], duration: "q" }, { keys: ["eb/2"], duration: "q" }, { keys: ["bb/2"], duration: "q" },
-                            { keys: ["g/2"], duration: "w" }
+                            { keys: ["g/2"], duration: "q" }, { keys: ["g/2"], duration: "q" }, { keys: ["g/2"], duration: "q" }, { keys: ["eb/2"], duration: "8" }, { keys: ["bb/2"], duration: "8" },
+                            { keys: ["g/2"], duration: "q" }, { keys: ["eb/2"], duration: "8" }, { keys: ["bb/2"], duration: "8" }, { keys: ["g/2"], duration: "h" },
+                            { keys: ["g/2"], duration: "q" }, { keys: ["g/2"], duration: "q" }, { keys: ["g/2"], duration: "q" }, { keys: ["eb/2"], duration: "8" }, { keys: ["bb/2"], duration: "8" },
+                            { keys: ["g/2"], duration: "q" }, { keys: ["eb/2"], duration: "8" }, { keys: ["bb/2"], duration: "8" }, { keys: ["g/2"], duration: "h" }
                         ]
                     }
                 }
@@ -1083,15 +1063,15 @@ export const courses: Course[] = [
                     trebleRange: cPosTreble, bassRange: [], rhythms: ["q", "8"], maxJumps: 1, chordsAllowed: false, numNotes: 27,
                     presetMelody: {
                         treble: [
-                            { keys: ["c/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "q" },
-                            { keys: ["c/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "h" },
-                            { keys: ["c/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "q" },
-                            { keys: ["c/4"], duration: "h" }, { keys: ["b/3"], duration: "h" },
-
-                            { keys: ["c/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "q" },
-                            { keys: ["f/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "q" },
-                            { keys: ["b/3"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["b/3"], duration: "q" },
-                            { keys: ["c/4"], duration: "h" }, { keys: ["c/4"], duration: "h" }
+                            { keys: ["c/4"], duration: "8" }, { keys: ["c/4"], duration: "8" }, { keys: ["d/4"], duration: "8" }, { keys: ["e/4"], duration: "8" },
+                            { keys: ["c/4"], duration: "8" }, { keys: ["e/4"], duration: "8" }, { keys: ["d/4"], duration: "q" },
+                            { keys: ["c/4"], duration: "8" }, { keys: ["c/4"], duration: "8" }, { keys: ["d/4"], duration: "8" }, { keys: ["e/4"], duration: "8" },
+                            { keys: ["c/4"], duration: "q" }, { keys: ["b/3"], duration: "q" },
+ 
+                            { keys: ["c/4"], duration: "8" }, { keys: ["c/4"], duration: "8" }, { keys: ["d/4"], duration: "8" }, { keys: ["e/4"], duration: "8" },
+                            { keys: ["f/4"], duration: "8" }, { keys: ["e/4"], duration: "8" }, { keys: ["d/4"], duration: "8" }, { keys: ["c/4"], duration: "8" },
+                            { keys: ["b/3"], duration: "8" }, { keys: ["c/4"], duration: "8" }, { keys: ["d/4"], duration: "8" }, { keys: ["b/3"], duration: "8" },
+                            { keys: ["c/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }
                         ],
                         bass: []
                     }
@@ -1638,7 +1618,7 @@ export const courses: Course[] = [
                         treble: [
                             { keys: ["c/4"], duration: "h" }, { keys: ["c/5"], duration: "h" },
                             { keys: ["b/4"], duration: "h" }, { keys: ["g/4"], duration: "q" }, { keys: ["a/4"], duration: "q" },
-                            { keys: ["b/4"], duration: "q" }, { keys: ["c/5"], duration: "q" }, { keys: ["c/4"], duration: "h" },
+                            { keys: ["b/4"], duration: "q" }, { keys: ["c/5"], duration: "q" }, { keys: ["a/4"], duration: "h" },
                             { keys: ["a/4"], duration: "h" }, { keys: ["f/4"], duration: "q" }, { keys: ["g/4"], duration: "q" },
                             { keys: ["a/4"], duration: "q" }, { keys: ["b/4"], duration: "q" }, { keys: ["g/4"], duration: "h" },
                             { keys: ["f/4"], duration: "h" }, { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "q" },
@@ -1725,16 +1705,16 @@ export const courses: Course[] = [
                 type: 'exercise', topic: 'treble', xpReward: 100, requiredXp: 8020,
                 handPosition: 'RH_G_POS',
                 constraints: {
-                    trebleRange: ["a/4", "d/5", "e/5", "f/5", "g/5", "a/5"], bassRange: [], rhythms: ["q", "h", "w"], maxJumps: 5, chordsAllowed: false, numNotes: 21,
+                    trebleRange: ["a/4", "d/5", "e/5", "f/5", "g/5", "a/5"], bassRange: [], rhythms: ["8", "q", "h", "w"], maxJumps: 5, chordsAllowed: false, numNotes: 20,
                     presetMelody: {
                         treble: [
-                            { keys: ["a/4"], duration: "q" }, { keys: ["d/5"], duration: "q" }, { keys: ["f/5"], duration: "q" }, { keys: ["a/5"], duration: "q" },
-                            { keys: ["g/5"], duration: "h" }, { keys: ["e/5"], duration: "h" },
-                            { keys: ["d/5"], duration: "h" }, { keys: ["f/5"], duration: "q" }, { keys: ["e/5"], duration: "q" },
+                            { keys: ["a/4"], duration: "h." }, { keys: ["d/5"], duration: "8" }, { keys: ["f/5"], duration: "8" },
+                            { keys: ["a/5"], duration: "h." }, { keys: ["g/5"], duration: "8" }, { keys: ["f/5"], duration: "8" },
+                            { keys: ["g/5"], duration: "q" }, { keys: ["e/5"], duration: "h" }, { keys: ["f/5"], duration: "q" },
                             { keys: ["d/5"], duration: "w" },
-                            { keys: ["a/4"], duration: "q" }, { keys: ["d/5"], duration: "q" }, { keys: ["f/5"], duration: "q" }, { keys: ["a/5"], duration: "q" },
-                            { keys: ["g/5"], duration: "h" }, { keys: ["e/5"], duration: "h" },
-                            { keys: ["d/5"], duration: "h" }, { keys: ["f/5"], duration: "q" }, { keys: ["e/5"], duration: "q" },
+                            { keys: ["a/4"], duration: "h." }, { keys: ["d/5"], duration: "8" }, { keys: ["f/5"], duration: "8" },
+                            { keys: ["a/5"], duration: "h." }, { keys: ["g/5"], duration: "8" }, { keys: ["f/5"], duration: "8" },
+                            { keys: ["g/5"], duration: "q" }, { keys: ["e/5"], duration: "h" }, { keys: ["f/5"], duration: "q" },
                             { keys: ["d/5"], duration: "w" }
                         ],
                         bass: []
@@ -1742,7 +1722,7 @@ export const courses: Course[] = [
                 }
             },
             {
-                id: 'c6-l5-song-popular', bpm: 85, courseId: 'expanding-positions',
+                id: 'c6-l5-song-popular', bpm: 65, courseId: 'expanding-positions',
                 name: "Song: Perfect",
                 description: "Play Ed Sheeran's romantic ballad with a flowing 6/8 arpeggiated movement.",
                 focus: "Practice expanding your hand beyond the 5-finger position to sweep across the octave.",
@@ -1841,21 +1821,16 @@ export const courses: Course[] = [
                 type: 'exercise', topic: 'treble', xpReward: 80, requiredXp: 8240,
                 handPosition: 'RH_HIGH_C_POS',
                 constraints: {
-                    trebleRange: trebleSharps, bassRange: [], rhythms: ["q", "h", "h."], maxJumps: 4, chordsAllowed: false, numNotes: 27,
+                    trebleRange: trebleSharps, bassRange: [], rhythms: ["8", "q", "h", "h."], maxJumps: 4, chordsAllowed: false, numNotes: 27,
                     timeSignature: "3/4",
                     presetMelody: {
                         treble: [
-                            { keys: ["e/5"], duration: "qr" }, { keys: ["e/5"], duration: "q" }, { keys: ["d#/5"], duration: "q" },
-                            { keys: ["e/5"], duration: "q" }, { keys: ["d#/5"], duration: "q" }, { keys: ["e/5"], duration: "q" },
-                            { keys: ["b/4"], duration: "q" }, { keys: ["d/5"], duration: "q" }, { keys: ["c/5"], duration: "q" },
-                            { keys: ["a/4"], duration: "h." },
-                            { keys: ["c/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["a/4"], duration: "q" },
-                            { keys: ["b/4"], duration: "h." },
-                            { keys: ["e/4"], duration: "q" }, { keys: ["g#/4"], duration: "q" }, { keys: ["b/4"], duration: "q" },
-                            { keys: ["c/5"], duration: "h." },
-                            { keys: ["e/4"], duration: "q" }, { keys: ["e/5"], duration: "q" }, { keys: ["d#/5"], duration: "q" },
-                            { keys: ["e/5"], duration: "q" }, { keys: ["d#/5"], duration: "q" }, { keys: ["e/5"], duration: "q" },
-                            { keys: ["b/4"], duration: "q" }, { keys: ["d/5"], duration: "q" }, { keys: ["c/5"], duration: "q" },
+                            { keys: ["e/5"], duration: "hr" }, { keys: ["e/5"], duration: "8" }, { keys: ["d#/5"], duration: "8" },
+                            { keys: ["e/5"], duration: "8" }, { keys: ["d#/5"], duration: "8" }, { keys: ["e/5"], duration: "8" }, { keys: ["b/4"], duration: "8" }, { keys: ["d/5"], duration: "8" }, { keys: ["c/5"], duration: "8" },
+                            { keys: ["a/4"], duration: "q" }, { keys: ["a/4"], duration: "8r" }, { keys: ["c/4"], duration: "8" }, { keys: ["e/4"], duration: "8" }, { keys: ["a/4"], duration: "8" },
+                            { keys: ["b/4"], duration: "q" }, { keys: ["b/4"], duration: "8r" }, { keys: ["e/4"], duration: "8" }, { keys: ["g#/4"], duration: "8" }, { keys: ["b/4"], duration: "8" },
+                            { keys: ["c/5"], duration: "q" }, { keys: ["c/5"], duration: "8r" }, { keys: ["e/4"], duration: "8" }, { keys: ["e/5"], duration: "8" }, { keys: ["d#/5"], duration: "8" },
+                            { keys: ["e/5"], duration: "8" }, { keys: ["d#/5"], duration: "8" }, { keys: ["e/5"], duration: "8" }, { keys: ["b/4"], duration: "8" }, { keys: ["d/5"], duration: "8" }, { keys: ["c/5"], duration: "8" },
                             { keys: ["a/4"], duration: "h." }
                         ],
                         bass: []
@@ -1888,21 +1863,19 @@ export const courses: Course[] = [
                 constraints: {
                     trebleRange: ["b/3", "d/4", "d#/4", "e/4", "f/4", "f#/4", "g/4", "a/4", "b/4"],
                     bassRange: [],
-                    rhythms: ["q", "h", "h."],
+                    rhythms: ["8", "q", "h", "h."],
                     maxJumps: 5,
                     chordsAllowed: false,
-                    numNotes: 14,
+                    numNotes: 15,
                     timeSignature: "3/4",
                     presetMelody: {
                         treble: [
                             { keys: ["b/3"], duration: "hr" }, { keys: ["b/3"], duration: "q" },
-                            { keys: ["e/4"], duration: "h" }, { keys: ["g/4"], duration: "q" },
-                            { keys: ["f#/4"], duration: "h" }, { keys: ["e/4"], duration: "q" },
-                            { keys: ["b/4"], duration: "h" }, { keys: ["a/4"], duration: "q" },
+                            { keys: ["e/4"], duration: "q." }, { keys: ["g/4"], duration: "8" }, { keys: ["f#/4"], duration: "q" },
+                            { keys: ["e/4"], duration: "q." }, { keys: ["b/4"], duration: "8" }, { keys: ["a/4"], duration: "q" },
                             { keys: ["f#/4"], duration: "h." },
-                            { keys: ["e/4"], duration: "h" }, { keys: ["g/4"], duration: "q" },
-                            { keys: ["f#/4"], duration: "h" }, { keys: ["d#/4"], duration: "q" },
-                            { keys: ["f/4"], duration: "h" }, { keys: ["d/4"], duration: "q" },
+                            { keys: ["e/4"], duration: "q." }, { keys: ["g/4"], duration: "8" }, { keys: ["f#/4"], duration: "q" },
+                            { keys: ["d#/4"], duration: "q." }, { keys: ["f/4"], duration: "8" }, { keys: ["d/4"], duration: "q" },
                             { keys: ["b/3"], duration: "h." }
                         ],
                         bass: []
@@ -1918,97 +1891,40 @@ export const courses: Course[] = [
                 type: 'exercise', topic: 'both', xpReward: 120, requiredXp: 8480,
                 handPosition: 'GRAND_C_POS',
                 constraints: {
-                    trebleRange: ["a/4", "c/5", "d/5", "e/5", "f/5", "g/5", "a/5", "bb/5"], bassRange: ["g/2", "a/2", "bb/2", "c/3", "d/3", "f/3"], rhythms: ["8", "q", "h", "qr"], maxJumps: 4, chordsAllowed: false, numNotes: 80,
+                    trebleRange: ["a/4", "c/5", "d/5", "e/5", "f/5", "g/5", "a/5", "bb/5"], bassRange: ["g/2", "a/2", "bb/2", "c/3", "d/3", "f/3"], rhythms: ["8", "q", "h", "qr"], maxJumps: 4, chordsAllowed: false, numNotes: 61,
                     timeSignature: "3/4",
                     presetMelody: {
                         treble: [
-                            { keys: ["a/4"], duration: 'hr' },
-                            { keys: ["a/4"], duration: '8' },
-                            { keys: ["c/5"], duration: '8' },
-                            { keys: ["d/5"], duration: 'q' },
-                            { keys: ["d/5"], duration: '8' },
-                            { keys: ["d/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' },
-                            { keys: ["f/5"], duration: '8' },
-                            { keys: ["f/5"], duration: 'q' },
-                            { keys: ["f/5"], duration: '8' },
-                            { keys: ["f/5"], duration: '8' },
-                            { keys: ["g/5"], duration: '8' },
-                            { keys: ["a/5"], duration: '8' },
-                            { keys: ["a/5"], duration: 'q' },
-                            { keys: ["a/5"], duration: '8' },
-                            { keys: ["bb/5"], duration: '8' },
-                            { keys: ["a/5"], duration: '8' },
-                            { keys: ["g/5"], duration: '8' },
-                            { keys: ["f/5"], duration: 'q' },
-                            { keys: ["e/5"], duration: '8' },
-                            { keys: ["d/5"], duration: 'q' },
-                            { keys: ["a/4"], duration: '8' },
-                            { keys: ["a/4"], duration: '8' },
-                            { keys: ["c/5"], duration: '8' },
-                            { keys: ["d/5"], duration: 'q' },
-                            { keys: ["d/5"], duration: '8' },
-                            { keys: ["d/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' },
-                            { keys: ["f/5"], duration: '8' },
-                            { keys: ["f/5"], duration: 'q' },
-                            { keys: ["f/5"], duration: '8' },
-                            { keys: ["f/5"], duration: '8' },
-                            { keys: ["g/5"], duration: '8' },
-                            { keys: ["a/5"], duration: '8' },
-                            { keys: ["a/5"], duration: 'q' },
-                            { keys: ["a/5"], duration: '8' },
-                            { keys: ["bb/5"], duration: '8' },
-                            { keys: ["a/5"], duration: 'q' },
-                            { keys: ["g/5"], duration: '8' },
-                            { keys: ["a/5"], duration: 'q' },
-                            { keys: ["d/5"], duration: '8' },
-                            { keys: ["d/5"], duration: 'q' },
-                            { keys: ["d/5"], duration: '8' },
-                            { keys: ["d/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' },
-                            { keys: ["f/5"], duration: '8' },
-                            { keys: ["f/5"], duration: 'q' },
-                            { keys: ["f/5"], duration: '8' },
-                            { keys: ["f/5"], duration: '8' },
-                            { keys: ["g/5"], duration: '8' },
-                            { keys: ["a/5"], duration: '8' },
-                            { keys: ["a/5"], duration: 'q' },
-                            { keys: ["d/5"], duration: '8' },
-                            { keys: ["d/5"], duration: '8' },
-                            { keys: ["e/5"], duration: '8' },
-                            { keys: ["f/5"], duration: '8' },
-                            { keys: ["g/5"], duration: 'q' },
-                            { keys: ["e/5"], duration: '8' },
-                            { keys: ["d/5"], duration: 'q' },
-                            { keys: ["d/5"], duration: '8r' }
+                            { keys: ["a/4"], duration: 'hr' }, { keys: ["a/4"], duration: '8' }, { keys: ["c/5"], duration: '8' },
+                            { keys: ["d/5"], duration: 'q' }, { keys: ["d/5"], duration: '8' }, { keys: ["d/5"], duration: '8' }, { keys: ["e/5"], duration: '8' }, { keys: ["f/5"], duration: '8' },
+                            { keys: ["f/5"], duration: 'q' }, { keys: ["f/5"], duration: '8' }, { keys: ["f/5"], duration: '8' }, { keys: ["g/5"], duration: '8' }, { keys: ["a/5"], duration: '8' },
+                            { keys: ["a/5"], duration: 'q' }, { keys: ["a/5"], duration: '8' }, { keys: ["bb/5"], duration: '8' }, { keys: ["a/5"], duration: '8' }, { keys: ["g/5"], duration: '8' },
+                            { keys: ["f/5"], duration: 'q' }, { keys: ["e/5"], duration: '8' }, { keys: ["d/5"], duration: '8' }, { keys: ["a/4"], duration: '8' }, { keys: ["c/5"], duration: '8' },
+                            
+                            { keys: ["d/5"], duration: 'q' }, { keys: ["d/5"], duration: '8' }, { keys: ["d/5"], duration: '8' }, { keys: ["e/5"], duration: '8' }, { keys: ["f/5"], duration: '8' },
+                            { keys: ["e/5"], duration: 'q' }, { keys: ["f/5"], duration: '8' }, { keys: ["f/5"], duration: '8' }, { keys: ["f/5"], duration: '8' }, { keys: ["g/5"], duration: '8' },
+                            { keys: ["a/5"], duration: 'q' }, { keys: ["a/5"], duration: '8' }, { keys: ["a/5"], duration: '8' }, { keys: ["bb/5"], duration: '8' }, { keys: ["a/5"], duration: '8' },
+                            { keys: ["g/5"], duration: 'q' }, { keys: ["g/5"], duration: '8' }, { keys: ["a/5"], duration: '8' }, { keys: ["f/5"], duration: '8' }, { keys: ["e/5"], duration: '8' },
+                            { keys: ["d/5"], duration: 'q' }, { keys: ["qr"], duration: 'q' }, { keys: ["a/4"], duration: '8' }, { keys: ["c/5"], duration: '8' },
+                            
+                            { keys: ["d/5"], duration: 'q' }, { keys: ["d/5"], duration: '8' }, { keys: ["d/5"], duration: '8' }, { keys: ["e/5"], duration: '8' }, { keys: ["f/5"], duration: '8' },
+                            { keys: ["f/5"], duration: 'q' }, { keys: ["f/5"], duration: '8' }, { keys: ["f/5"], duration: '8' }, { keys: ["g/5"], duration: '8' }, { keys: ["a/5"], duration: '8' },
+                            { keys: ["g/5"], duration: 'q' }, { keys: ["e/5"], duration: '8' }, { keys: ["d/5"], duration: 'q' }, { keys: ["d/5"], duration: '8r' }
                         ],
                         bass: [
                             { keys: ["d/3"], duration: 'h.r' },
-                            { keys: ["d/3"], duration: 'h' },
-                            { keys: ["d/3"], duration: 'q' },
-                            { keys: ["f/3"], duration: 'h' },
-                            { keys: ["f/3"], duration: 'q' },
-                            { keys: ["g/2"], duration: 'h' },
-                            { keys: ["g/2"], duration: 'q' },
-                            { keys: ["d/3"], duration: 'h' },
-                            { keys: ["d/3"], duration: 'q' },
-                            { keys: ["d/3"], duration: 'h' },
-                            { keys: ["d/3"], duration: 'q' },
-                            { keys: ["f/3"], duration: 'h' },
-                            { keys: ["f/3"], duration: 'q' },
-                            { keys: ["g/2"], duration: 'h' },
-                            { keys: ["g/2"], duration: 'q' },
-                            { keys: ["d/3"], duration: 'h' },
-                            { keys: ["d/3"], duration: 'q' },
-                            { keys: ["bb/2"], duration: 'h' },
-                            { keys: ["bb/2"], duration: 'q' },
-                            { keys: ["f/3"], duration: 'h' },
-                            { keys: ["f/3"], duration: 'q' },
-                            { keys: ["c/3"], duration: 'h' },
-                            { keys: ["c/3"], duration: 'q' },
-                            { keys: ["d/3"], duration: 'h' },
-                            { keys: ["d/3"], duration: 'q' }
+                            { keys: ["d/3"], duration: 'h' }, { keys: ["d/3"], duration: 'q' },
+                            { keys: ["f/3"], duration: 'h' }, { keys: ["f/3"], duration: 'q' },
+                            { keys: ["g/2"], duration: 'h' }, { keys: ["g/2"], duration: 'q' },
+                            { keys: ["d/3"], duration: 'h' }, { keys: ["d/3"], duration: 'q' },
+                            { keys: ["d/3"], duration: 'h' }, { keys: ["d/3"], duration: 'q' },
+                            { keys: ["f/3"], duration: 'h' }, { keys: ["f/3"], duration: 'q' },
+                            { keys: ["g/2"], duration: 'h' }, { keys: ["g/2"], duration: 'q' },
+                            { keys: ["d/3"], duration: 'h' }, { keys: ["d/3"], duration: 'q' },
+                            { keys: ["bb/2"], duration: 'h' }, { keys: ["bb/2"], duration: 'q' },
+                            { keys: ["f/3"], duration: 'h' }, { keys: ["f/3"], duration: 'q' },
+                            { keys: ["c/3"], duration: 'h' }, { keys: ["c/3"], duration: 'q' },
+                            { keys: ["d/3"], duration: 'h' }, { keys: ["d/3"], duration: 'q' }
                         ]
                     }
                 }

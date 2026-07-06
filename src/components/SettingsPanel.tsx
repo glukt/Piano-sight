@@ -401,6 +401,49 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     </div>
                 </div>
 
+                {/* Acoustic Space & Reverb */}
+                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-4">Acoustic Space & Reverb</h3>
+
+                    {/* Reverb Decay (Size) Slider */}
+                    <div className="mb-4">
+                        <div className="flex justify-between text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                            <span>Room Size (Decay)</span>
+                            <span className="font-mono">{preferences.reverbDecay.toFixed(1)}s</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0.5"
+                            max="5.0"
+                            step="0.1"
+                            value={preferences.reverbDecay}
+                            onChange={(e) => updatePreference('reverbDecay', Number(e.target.value))}
+                            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-650"
+                        />
+                        <div className="flex justify-between text-[10px] text-gray-450 mt-1">
+                            <span>Dry/Small Room (0.5s)</span>
+                            <span>Cathedral Hall (5.0s)</span>
+                        </div>
+                    </div>
+
+                    {/* Reverb Wet (Mix) Slider */}
+                    <div>
+                        <div className="flex justify-between text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                            <span>Reverb Mix (Wetness)</span>
+                            <span className="font-mono">{Math.round(preferences.reverbWet * 100)}%</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0"
+                            max="0.5"
+                            step="0.02"
+                            value={preferences.reverbWet}
+                            onChange={(e) => updatePreference('reverbWet', Number(e.target.value))}
+                            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-650"
+                        />
+                    </div>
+                </div>
+
                 {/* Danger Zone */}
                 <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800">
                     <h3 className="font-bold text-red-700 dark:text-red-300 mb-2">Danger Zone</h3>

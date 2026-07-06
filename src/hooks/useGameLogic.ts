@@ -211,11 +211,13 @@ export const useGameLogic = (
     const [audioStarted, setAudioStarted] = useState(false);
     const [isAudioLoading, setIsAudioLoading] = useState(false);
 
-    // Apply metronome preferences to the audio engine dynamically
+    // Apply audio engine & metronome preferences dynamically
     useEffect(() => {
         audio.setMetronomeSoundType(preferences.metronomeSoundType);
         audio.setMetronomeVolume(preferences.metronomeVolume);
-    }, [preferences.metronomeSoundType, preferences.metronomeVolume]);
+        audio.setReverbDecay(preferences.reverbDecay);
+        audio.setReverbWet(preferences.reverbWet);
+    }, [preferences.metronomeSoundType, preferences.metronomeVolume, preferences.reverbDecay, preferences.reverbWet]);
 
     // Muting & Completion
     const [isMutedKeys, setIsMutedKeys] = useState(false);

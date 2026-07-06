@@ -195,6 +195,18 @@ class AudioEngine {
         this.metronomeSynth.volume.value = db;
     }
 
+    setReverbDecay(decay: number) {
+        if (this.reverb) {
+            this.reverb.decay = decay;
+        }
+    }
+
+    setReverbWet(wet: number) {
+        if (this.reverb) {
+            this.reverb.wet.value = wet;
+        }
+    }
+
     playMetronomeClick(isDownbeat: boolean) {
         if (!this.isInitialized || !this.metronomeSynth) return;
         

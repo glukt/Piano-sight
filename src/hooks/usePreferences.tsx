@@ -13,6 +13,8 @@ export interface Preferences {
     noteLabelType: 'scientific' | 'solfege';
     metronomeSoundType: 'digital' | 'woodblock' | 'rimshot' | 'tick';
     metronomeVolume: number; // 0 to 1
+    reverbDecay: number; // 0.1 to 5.0
+    reverbWet: number; // 0 to 1
 }
 
 const DEFAULT_PREFERENCES: Preferences = {
@@ -28,6 +30,8 @@ const DEFAULT_PREFERENCES: Preferences = {
     noteLabelType: 'scientific',
     metronomeSoundType: 'digital',
     metronomeVolume: 0.8,
+    reverbDecay: 1.8,
+    reverbWet: 0.22,
 };
 
 interface PreferencesContextType {

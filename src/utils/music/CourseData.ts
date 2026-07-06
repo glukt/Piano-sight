@@ -2897,6 +2897,58 @@ export const courses: Course[] = [
                 presetId: 'preset-bumblebee'
             }
         ]
+    },
+    {
+        id: "epic-standards",
+        name: "Course 19: Epic Film, Gaming, & Holiday Masterworks",
+        order: 19,
+        description: "Explore dramatic cinematic themes, nostalgic game music, and intense classical dances.",
+        lessons: [
+            {
+                id: 'c19-l1', bpm: 90, courseId: "epic-standards",
+                name: "Song: Bella Ciao (Money Heist)",
+                description: "Perform this lively, dramatic Italian protest and cinematic standard.",
+                focus: "Coordinate the syncopated right-hand melody with dry left-hand chords.",
+                instruction: "Focus on crisp staccato chords and maintaining a steady, driving march beat.",
+                type: 'song', topic: 'both', xpReward: 250, requiredXp: 33000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Bella_Ciao_-_La_Casa_de_Papel.mxl',
+                presetId: 'preset-bellaciao-filmtv'
+            },
+            {
+                id: 'c19-l2', bpm: 75, courseId: "epic-standards",
+                name: "Song: Autumn Voyage (RuneScape)",
+                description: "Journey through RuneScape's legendary, nostalgic fantasy soundtrack.",
+                focus: "Practice coordinating clean left-hand bass intervals with the whimsical right-hand melody.",
+                instruction: "Play with a warm, steady, and storybook-like fantasy expression.",
+                type: 'song', topic: 'both', xpReward: 300, requiredXp: 33500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Autumn_Voyage_-_Runescape.mxl',
+                presetId: 'preset-runescape-autumn'
+            },
+            {
+                id: 'c19-l3', bpm: 80, courseId: "epic-standards",
+                name: "Song: Carol of the Bells",
+                description: "Master the hypnotic, rapidly cascading holiday classic.",
+                focus: "Practice the repeating four-note ostinato pattern and coordinating sweeping left-hand responses.",
+                instruction: "Keep your tempo perfectly steady. Let the dynamic waves build like ringing bells.",
+                type: 'song', topic: 'both', xpReward: 350, requiredXp: 34000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Carol_of_the_Bells.mxl',
+                presetId: 'preset-carol-bells'
+            },
+            {
+                id: 'c19-l4', bpm: 100, courseId: "epic-standards",
+                name: "Song: Hungarian Dance No. 5 (Brahms) [Capstone]",
+                description: "The epic capstone. Play Brahms' dramatic and fiery dance.",
+                focus: "Coordinate sudden tempo fluctuations (rubato), rapid jumps, and intense chordal peaks.",
+                instruction: "Exaggerate the contrast between slow, heavy sections and rapid, light, bouncy sections.",
+                type: 'song', topic: 'both', xpReward: 450, requiredXp: 34500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Hungarian_Dance_No_5_in_G_Minor.mxl',
+                presetId: 'preset-brahms-hungarian5'
+            }
+        ]
     }
 ];
 export const getLessonById = (id: string): Lesson | undefined => {

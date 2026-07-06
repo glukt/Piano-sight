@@ -100,6 +100,9 @@ This file is automatically updated by the autonomous conservatory developer agen
 - **[task-029] Pitch-Based Rainbow Notehead Theme**
   - *Details*: Implemented a pitch-based color-coding mapping (Rainbow theme) matching the diatonic Boomwhacker color scheme in VexFlow stave note rendering, supporting beginners and visual learners.
   - *Date*: 2026-07-06
+- **[task-030] Metronome Confidence Mode (Auto-Mute)**
+  - *Details*: Engineered a "confidence practice" metronome coach option that automatically silences click audio during alternating measures (2 bars audible, 2 bars muted) to train the pianist's inner rhythmic pulse.
+  - *Date*: 2026-07-06
 
 ---
 

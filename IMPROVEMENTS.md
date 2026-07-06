@@ -76,6 +76,9 @@ This file is automatically updated by the autonomous conservatory developer agen
 - **[task-020] Visual Sustain Pedal Overlay Guide**
   - *Details*: Built a 3D animated sustain pedal overlay guide inside the practice display viewport. Automatically tracks downbeats of measures (lift-and-press/pedal changes) and displays clear instructions (e.g. LIFT & PRESS vs HOLD SUSTAIN) alongside a metal piano pedal that tilts up and down using CSS transitions to guide timing.
   - *Date*: 2026-07-06
+- **[task-022] Course 17: Contemporary Neo-Classical & Ballads**
+  - *Details*: Added a structured 4-lesson curriculum covering modern minimalist patterns, rich left-hand arpeggios, and expressive cinematic themes, binding authentic masterwork files (Kiss the Rain, Sunlight, Comptine d'un autre été, and Mariage d'Amour).
+  - *Date*: 2026-07-06
 
 ---
 

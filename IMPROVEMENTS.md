@@ -36,6 +36,14 @@ This file is automatically updated by the autonomous conservatory developer agen
   - *Details*: Added a premium classical course binding authentic scores for Ode to Joy, Bach's Minuet in G, Für Elise, Bach's C Major Prelude, and Chopin's Waltz in A Minor.
   - *Date*: 2026-07-06
 
+### Milestone 4: Scales & Arpeggios Courses
+- **[task-009] Scales & Key Signatures Mastery (Course 11)**
+  - *Details*: Added a structured 5-lesson course covering C Major, G Major (F#), F Major (Bb), and A Minor (Natural & Harmonic) with long-form instructions, crossing-over finger guides, and up to 64 notes per exercise.
+  - *Date*: 2026-07-06
+- **[task-010] Arpeggios & Broken Triads (Course 12)**
+  - *Details*: Added a structured 5-lesson course covering sweeping major and minor triads, dominant seventh chords (Cmaj7 & G7), and multi-octave arpeggio runs with thumb-tuck wrist-rotation instructions.
+  - *Date*: 2026-07-06
+
 ---
 
 ## 🔍 Stability & Code Cleanliness Audits

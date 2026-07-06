@@ -94,6 +94,9 @@ This file is automatically updated by the autonomous conservatory developer agen
 - **[task-027] Course 20: Virtuoso Conservatory Level 2**
   - *Details*: Created the ultimate advanced capstone curriculum, binding authentic masterwork files (Burgmüller's Arabesque, Chopin's C# Minor Waltz, Liszt's Liebestraum No. 3, and Bach's Toccata & Fugue in D Minor).
   - *Date*: 2026-07-06
+- **[task-028] Customizable Reverb Space Settings**
+  - *Details*: Mounted room ambiance sliders in the settings panel to control Tone.js Reverb decay size (0.5s to 5s) and dry/wet mix level (0 to 50%), backed by persistent localStorage preferences.
+  - *Date*: 2026-07-06
 
 ---
 

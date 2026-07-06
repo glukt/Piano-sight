@@ -88,6 +88,9 @@ This file is automatically updated by the autonomous conservatory developer agen
 - **[task-025] Course 19: Epic Film, Gaming, & Holiday Masterworks**
   - *Details*: Added a structured 4-lesson curriculum covering dramatic cinematic themes, nostalgic game music, and intense classical dances, binding authentic masterwork files (Bella Ciao, Autumn Voyage, Carol of the Bells, and Hungarian Dance No. 5).
   - *Date*: 2026-07-06
+- **[task-026] Metronome Soundscapes & Volume Controls**
+  - *Details*: Extended global state and preferences to support toggleable audio metronome click instruments (Digital, Woodblock, Rimshot, Mechanical Tick) alongside a dedicated volume slider (0 to 100%) in the settings panel.
+  - *Date*: 2026-07-06
 
 ---
 

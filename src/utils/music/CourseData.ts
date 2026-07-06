@@ -2425,6 +2425,122 @@ export const courses: Course[] = [
                 presetId: 'preset-chopin-waltz'
             }
         ]
+    },
+    {
+        id: "scales-mastery",
+        name: "Course 11: Scales & Key Signatures Mastery",
+        order: 11,
+        description: "Master the linear finger patterns, hand transitions, and key signatures of major and minor scales.",
+        lessons: [
+            {
+                id: 'c11-l1', bpm: 75, courseId: "scales-mastery",
+                name: "C Major Scale & Coordination",
+                description: "Play a full one-octave C Major scale up and down, practicing finger crossings (thumb tucks and finger cross-overs).",
+                focus: "Cross thumb under finger 3 (RH ascending / LH descending) and finger 3 over thumb (RH descending / LH ascending).",
+                instruction: "Play stepwise motions up and down the C position.",
+                type: 'exercise', topic: 'both', xpReward: 120, requiredXp: 15500,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5"], bassRange: ["c/3", "d/3", "e/3", "f/3", "g/3", "a/3", "b/3", "c/4"], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 32 }
+            },
+            {
+                id: 'c11-l2', bpm: 75, courseId: "scales-mastery",
+                name: "G Major Scale (F# Accidental)",
+                description: "Practice G Major, introducing the F# accidental in both clefs with longer scalar runs.",
+                focus: "Smoothly cross under after the 3rd note. Keep all F notes sharp.",
+                instruction: "Cross fingers cleanly. Notice the G Major key signature active in both clefs.",
+                type: 'exercise', topic: 'both', xpReward: 150, requiredXp: 15800,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["g/4", "a/4", "b/4", "c/5", "d/5", "e/5", "f#/5", "g/5"], bassRange: ["g/3", "a/3", "b/3", "c/4", "d/4", "e/4", "f#/4", "g/4"], rhythms: ["q", "h", "8"], maxJumps: 1, chordsAllowed: false, numNotes: 48, keySignature: "G" }
+            },
+            {
+                id: 'c11-l3', bpm: 70, courseId: "scales-mastery",
+                name: "F Major Scale (Bb Accidental)",
+                description: "Navigate F Major, which uses Bb. Note that the Right Hand crosses on the 4th note (F-G-A-Bb, cross thumb under to C).",
+                focus: "RH thumb tucks under finger 4 on Bb to reach C. Do not use finger 5 on Bb.",
+                instruction: "Smoothly transition. Watch for the Bb flat sign in both clefs.",
+                type: 'exercise', topic: 'both', xpReward: 150, requiredXp: 16100,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["f/4", "g/4", "a/4", "bb/4", "c/5", "d/5", "e/5", "f/5"], bassRange: ["f/3", "g/3", "a/3", "bb/3", "c/4", "d/4", "e/4", "f/4"], rhythms: ["q", "h", "8"], maxJumps: 1, chordsAllowed: false, numNotes: 48, keySignature: "F" }
+            },
+            {
+                id: 'c11-l4', bpm: 70, courseId: "scales-mastery",
+                name: "A Minor Scale (Natural & Harmonic)",
+                description: "Learn A Minor. Contrast the natural minor scale with the harmonic minor (which raises G to G#).",
+                focus: "Listen for the wide step-and-a-half leap between F and G# in the harmonic minor.",
+                instruction: "Watch for the G# accidental. Read and play the intervals carefully.",
+                type: 'exercise', topic: 'both', xpReward: 180, requiredXp: 16400,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["a/4", "b/4", "c/5", "d/5", "e/5", "f/5", "g#/5", "a/5"], bassRange: ["a/3", "b/3", "c/4", "d/4", "e/4", "f/4", "g#/4", "a/4"], rhythms: ["q", "h", "8"], maxJumps: 2, chordsAllowed: false, numNotes: 48 }
+            },
+            {
+                id: 'c11-l5', bpm: 75, courseId: "scales-mastery",
+                name: "Scales Mastery Capstone",
+                description: "A long, challenging exercise combining C Major, G Major, and F Major scalar runs in both hands.",
+                focus: "Transition between different key signatures and scale structures fluidly.",
+                instruction: "The ultimate scales test. Keep your fingers curved and play evenly.",
+                type: 'exercise', topic: 'both', xpReward: 250, requiredXp: 16800,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5", "d/5", "e/5", "f/5", "g/5"], bassRange: ["c/3", "d/3", "e/3", "f/3", "g/3", "a/3", "b/3", "c/4", "d/4", "e/4", "f/4", "g/4"], rhythms: ["q", "h", "8"], maxJumps: 2, chordsAllowed: true, numNotes: 64 }
+            }
+        ]
+    },
+    {
+        id: "arpeggios-mastery",
+        name: "Course 12: Arpeggios & Broken Triads",
+        order: 12,
+        description: "Learn to play sweeping, fluid arpeggios and broken chord patterns across multiple registers.",
+        lessons: [
+            {
+                id: 'c12-l1', bpm: 75, courseId: "arpeggios-mastery",
+                name: "C Major Arpeggios (Basic)",
+                description: "Play sweeping C Major arpeggios (C-E-G-C) up and down using tucks and crossovers.",
+                focus: "Cross thumb under finger 3 to reach the higher octave. Play evenly and smoothly.",
+                instruction: "Focus on finger coordination to keep arpeggios flowing.",
+                type: 'exercise', topic: 'both', xpReward: 120, requiredXp: 17200,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["c/4", "e/4", "g/4", "c/5"], bassRange: ["c/3", "e/3", "g/3", "c/4"], rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 32 }
+            },
+            {
+                id: 'c12-l2', bpm: 75, courseId: "arpeggios-mastery",
+                name: "G Major & F Major Arpeggios",
+                description: "Practice arpeggiating G Major (G-B-D-G) and F Major (F-A-C-F) triads.",
+                focus: "Adapt to the slightly wider physical shapes of these major chords.",
+                instruction: "Maintain hand relaxation as you expand your finger spacing.",
+                type: 'exercise', topic: 'both', xpReward: 150, requiredXp: 17500,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["f/4", "g/4", "a/4", "b/4", "c/5", "d/5", "g/5"], bassRange: ["f/3", "g/3", "a/3", "b/3", "c/4", "d/4", "g/4"], rhythms: ["q", "h", "8"], maxJumps: 4, chordsAllowed: false, numNotes: 48 }
+            },
+            {
+                id: 'c12-l3', bpm: 70, courseId: "arpeggios-mastery",
+                name: "Minor Triad Arpeggios",
+                description: "Play arpeggios of minor triads: A minor (A-C-E-A), E minor (E-G-B-E), and D minor (D-F-A-D).",
+                focus: "Notice the darker quality of minor thirds in the chord shapes.",
+                instruction: "Keep your finger weight even as you move across the keys.",
+                type: 'exercise', topic: 'both', xpReward: 180, requiredXp: 17800,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["a/4", "c/5", "d/5", "e/5", "f/5", "a/5"], bassRange: ["a/3", "c/4", "d/4", "e/4", "f/4", "a/4"], rhythms: ["q", "h", "8"], maxJumps: 4, chordsAllowed: false, numNotes: 48 }
+            },
+            {
+                id: 'c12-l4', bpm: 70, courseId: "arpeggios-mastery",
+                name: "Seventh Chord Arpeggios",
+                description: "Navigate four-note chord arpeggios: C Major 7 (C-E-G-B) and Dominant 7 (G-B-D-F).",
+                focus: "Four-note arpeggios require using finger 4 to stretch across the full chord width before crossing.",
+                instruction: "Align your wrist rotation to keep the thumb crossover fluid.",
+                type: 'exercise', topic: 'both', xpReward: 200, requiredXp: 18100,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["c/4", "e/4", "f/4", "g/4", "b/4", "d/5", "f/5"], bassRange: ["c/3", "e/3", "f/3", "g/3", "b/3", "d/4", "f/4"], rhythms: ["q", "h", "8"], maxJumps: 4, chordsAllowed: false, numNotes: 48 }
+            },
+            {
+                id: 'c12-l5', bpm: 75, courseId: "arpeggios-mastery",
+                name: "Arpeggios Mastery Capstone",
+                description: "A comprehensive exercise combining major, minor, and seventh arpeggios across multiple octaves.",
+                focus: "Perform sweeping run transitions smoothly without letting the hand tense up.",
+                instruction: "The ultimate arpeggio challenge. Keep your hand completely fluid.",
+                type: 'exercise', topic: 'both', xpReward: 300, requiredXp: 18500,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["c/4", "e/4", "g/4", "b/4", "c/5", "e/5", "g/5", "b/5"], bassRange: ["c/3", "e/3", "g/3", "b/3", "c/4", "e/4", "g/4", "b/4"], rhythms: ["q", "h", "8"], maxJumps: 4, chordsAllowed: true, numNotes: 64 }
+            }
+        ]
     }
 ];
 export const getLessonById = (id: string): Lesson | undefined => {

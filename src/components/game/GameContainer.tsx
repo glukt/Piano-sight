@@ -405,6 +405,37 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                         </div>
                     )}
 
+                    {/* Visual Sustain Pedal Guide */}
+                    {isRhythmMode && isRhythmPlaying && (
+                        <div className="flex items-center justify-between gap-4 py-2 px-4 bg-slate-900/60 backdrop-blur rounded-lg border border-slate-800/80 mb-3 max-w-sm mx-auto shadow-md">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Sustain Pedal Guide</span>
+                                <span className="text-xs font-semibold text-slate-300 font-mono mt-0.5">
+                                    { (currentBeat % beatsPerMeasure) === 0 ? (
+                                        <span className="text-amber-400 font-extrabold animate-pulse">LIFT & PRESS 🔀</span>
+                                    ) : (
+                                        <span className="text-indigo-400 font-extrabold">HOLD SUSTAIN ⬇️</span>
+                                    ) }
+                                </span>
+                            </div>
+                            <div className="relative w-12 h-12 flex items-center justify-center bg-slate-950 rounded border border-slate-800">
+                                {/* The metal foot pedal visual */}
+                                <div 
+                                    className={`w-3 h-8 bg-gradient-to-b from-slate-350 to-slate-500 rounded-b shadow transition-all duration-150 origin-top ${
+                                        (currentBeat % beatsPerMeasure) === 0 
+                                            ? 'transform -rotate-12 translate-y-[-2px] brightness-125' 
+                                            : 'transform rotate-0 translate-y-0.5 brightness-90 shadow-[0_0_8px_rgba(99,102,241,0.5)] border-t border-indigo-400'
+                                    }`}
+                                    style={{
+                                        boxShadow: (currentBeat % beatsPerMeasure) === 0 
+                                            ? 'none' 
+                                            : '0 2px 4px rgba(0,0,0,0.5), 0 0 8px rgba(99,102,241,0.5)'
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )}
+
                     <MusicDisplay
                         gameMode={gameMode}
                         trebleNotes={paddedLevelData.treble}

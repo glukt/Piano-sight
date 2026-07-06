@@ -8,6 +8,62 @@ import { PerformanceReportCard } from '../PerformanceReportCard';
 import { useGameLogic } from '../../hooks/useGameLogic';
 import { usePreferences } from '../../hooks/usePreferences';
 
+interface ChordSpelling {
+    name: string;
+    notes: string[];
+    fingers: string;
+}
+
+const recognizeChord = (keys: string[]): ChordSpelling | null => {
+    if (keys.length < 3) return null;
+    
+    // Normalize keys to base note names (without octaves and deduplicated)
+    const notes = Array.from(new Set(keys.map(k => k.split('/')[0].toUpperCase())));
+    notes.sort();
+
+    // Common chord combinations (sorted alphabetically)
+    const chordMap: Record<string, ChordSpelling> = {
+        // Triads
+        "C,E,G": { name: "C Major", notes: ["C", "E", "G"], fingers: "RH: 1-3-5 | LH: 5-3-1" },
+        "D,F#,A": { name: "D Major", notes: ["D", "F#", "A"], fingers: "RH: 1-3-5 | LH: 5-3-1" },
+        "D,F,A": { name: "D minor (Dm)", notes: ["D", "F", "A"], fingers: "RH: 1-3-5 | LH: 5-3-1" },
+        "E,G#,B": { name: "E Major", notes: ["E", "G#", "B"], fingers: "RH: 1-3-5 | LH: 5-3-1" },
+        "E,G,B": { name: "E minor (Em)", notes: ["E", "G", "B"], fingers: "RH: 1-3-5 | LH: 5-3-1" },
+        "F,G,A,C": { name: "F Major", notes: ["F", "A", "C"], fingers: "RH: 1-2-4-5 | LH: 5-4-2-1" },
+        "A,C,F": { name: "F Major", notes: ["F", "A", "C"], fingers: "RH: 1-3-5 | LH: 5-3-1" },
+        "C,F,A": { name: "F Major", notes: ["F", "A", "C"], fingers: "RH: 1-3-5 | LH: 5-3-1" },
+        "G,B,D": { name: "G Major", notes: ["G", "B", "D"], fingers: "RH: 1-3-5 | LH: 5-3-1" },
+        "A,C#,E": { name: "A Major", notes: ["A", "C#", "E"], fingers: "RH: 1-3-5 | LH: 5-3-1" },
+        "A,C,E": { name: "A minor (Am)", notes: ["A", "C", "E"], fingers: "RH: 1-3-5 | LH: 5-3-1" },
+        // Seventh Chords
+        "B,D,F,G": { name: "G7 (Dominant 7th)", notes: ["G", "B", "D", "F"], fingers: "RH: 1-2-4-5 | LH: 5-4-2-1" },
+        "C,E,G,B": { name: "Cmaj7 (Major 7th)", notes: ["C", "E", "G", "B"], fingers: "RH: 1-2-3-5 | LH: 5-3-2-1" },
+        "A,C,E,G": { name: "Am7 (Minor 7th)", notes: ["A", "C", "E", "G"], fingers: "RH: 1-2-3-5 | LH: 5-3-2-1" },
+        "D,F,A,C": { name: "Dm7 (Minor 7th)", notes: ["D", "F", "A", "C"], fingers: "RH: 1-2-3-5 | LH: 5-3-2-1" }
+    };
+
+    // Try perfect match
+    const keyString = notes.join(',');
+    if (chordMap[keyString]) return chordMap[keyString];
+
+    // Try checking circular permutations (inversions)
+    const isTriad = (n1: string, n2: string, n3: string, targetSpelling: ChordSpelling) => {
+        const set = new Set([n1, n2, n3]);
+        return targetSpelling.notes.every(n => set.has(n));
+    };
+
+    for (const key of Object.keys(chordMap)) {
+        const spelling = chordMap[key];
+        if (spelling.notes.length === 3 && notes.length === 3) {
+            if (isTriad(notes[0], notes[1], notes[2], spelling)) {
+                return spelling;
+            }
+        }
+    }
+
+    return null;
+};
+
 interface GameContainerProps {
     gameLogic: ReturnType<typeof useGameLogic>;
     windowWidth: number;
@@ -38,7 +94,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         showNoteLabels, setShowNoteLabels,
         showStaff, setShowStaff,
         showMicPopup, setShowMicPopup,
-        score, difficulty, paddedLevelData,
+        score, difficulty, paddedLevelData, alignedSteps,
 
         // Actions
         testAudio,
@@ -78,6 +134,13 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         if (gameMode !== 'treble' && b) b.keys.forEach(k => targets.push(parseKeyToMidi(k)));
         return targets;
     }, [paddedLevelData, cursorIndex, trebleCursorIndex, bassCursorIndex, gameMode, parseKeyToMidi]);
+
+    const activeChord = React.useMemo(() => {
+        const step = alignedSteps[cursorIndex];
+        if (!step) return null;
+        const allKeys = [...step.trebleKeys, ...step.bassKeys];
+        return recognizeChord(allKeys);
+    }, [alignedSteps, cursorIndex]);
 
     const bottomPaddingClass = preferences.showKeyboard ? 'pb-44' : 'pb-10';
 
@@ -434,6 +497,23 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                         >
                             ✕
                         </button>
+                        {activeChord && (
+                            <div className="w-full max-w-lg mb-2 p-2 px-3 rounded-lg border flex flex-row items-center justify-between gap-3 bg-gray-800 dark:bg-gray-850 border-gray-700/50 shadow-sm animate-in fade-in slide-in-from-bottom-2">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm">🎼</span>
+                                    <div className="text-left">
+                                        <div className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">Active Chord Structure</div>
+                                        <div className="text-xs font-black text-indigo-400">
+                                            {activeChord.name} <span className="text-[10px] font-medium text-gray-400">({activeChord.notes.join(" - ")})</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="text-right text-[10px]">
+                                    <span className="font-semibold text-gray-400">Recommended Fingers</span>
+                                    <span className="font-black text-indigo-400 font-mono mt-0.5 block">{activeChord.fingers}</span>
+                                </div>
+                            </div>
+                        )}
                         <VirtualKeyboard
                             activeNotes={new Set()}
                             userActiveNotes={effectiveActiveNotes}

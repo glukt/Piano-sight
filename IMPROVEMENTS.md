@@ -73,6 +73,9 @@ This file is automatically updated by the autonomous conservatory developer agen
 - **[task-019] Solfege Note Naming Support (Do, Re, Mi)**
   - *Details*: Extended preference context and global storage to support toggleable scientific/solfege note naming models. Implemented dynamic string parsing in the SVG notehead drawing engine of the score display, rendering centered text badges and automatically adjusting rendering circle radii to fit multi-character Solfege syllables.
   - *Date*: 2026-07-06
+- **[task-020] Visual Sustain Pedal Overlay Guide**
+  - *Details*: Built a 3D animated sustain pedal overlay guide inside the practice display viewport. Automatically tracks downbeats of measures (lift-and-press/pedal changes) and displays clear instructions (e.g. LIFT & PRESS vs HOLD SUSTAIN) alongside a metal piano pedal that tilts up and down using CSS transitions to guide timing.
+  - *Date*: 2026-07-06
 
 ---
 

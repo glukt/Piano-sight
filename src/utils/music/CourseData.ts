@@ -2388,7 +2388,7 @@ export const courses: Course[] = [
                 instruction: "Play the elegant Bach melody. Remember to sharp all F notes.",
                 type: 'song', topic: 'both', xpReward: 250, requiredXp: 13800,
                 handPosition: 'GRAND_C_POS',
-                songUrl: '/scores/Minuet_in_G.musicxml',
+                songUrl: '/scores/bach_minuet_g_major.musicxml',
                 presetId: 'preset-minuet-g'
             },
             {

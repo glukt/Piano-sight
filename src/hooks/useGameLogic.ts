@@ -363,6 +363,7 @@ export const useGameLogic = (
     const {
         detectedNote: micNote,
         detectedNoteName: micNoteName,
+        detectedFrequency: micFrequency,
         isListening: isMicListening,
         startListening: startMic,
         stopListening: stopMic,
@@ -1250,6 +1251,7 @@ export const useGameLogic = (
         isMicListening, startMic, stopMic,
         micVolume,
         micNoteName,
+        micFrequency,
         micSensitivity,
         setMicSensitivity,
         isMicCalibrating: isCalibrating,

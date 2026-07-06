@@ -22,6 +22,7 @@ function getNoteName(midi: number | null): string {
 export function useAudioInput(expectedNotesRef?: React.RefObject<number[]>) {
     const [isListening, setIsListening] = useState(false);
     const [detectedNote, setDetectedNote] = useState<number | null>(null);
+    const [detectedFrequency, setDetectedFrequency] = useState<number | null>(null);
     const [volume, setVolume] = useState(0);
     const [sensitivity, setSensitivity] = useState(() => {
         const saved = localStorage.getItem('pianopilot_mic_sensitivity');
@@ -158,6 +159,9 @@ export function useAudioInput(expectedNotesRef?: React.RefObject<number[]>) {
                     if (note >= 21 && note <= 108) {
                         currentNote = note;
                     }
+                    setDetectedFrequency(Math.round(pitch * 10) / 10);
+                } else {
+                    setDetectedFrequency(null);
                 }
 
                 // Median filtering
@@ -189,6 +193,7 @@ export function useAudioInput(expectedNotesRef?: React.RefObject<number[]>) {
         if (requestRef.current) cancelAnimationFrame(requestRef.current);
         setIsListening(false);
         setDetectedNote(null);
+        setDetectedFrequency(null);
         pitchQueueRef.current.fill(null);
         if (detectorRef.current) {
             detectorRef.current.stop();
@@ -337,6 +342,7 @@ export function useAudioInput(expectedNotesRef?: React.RefObject<number[]>) {
         isListening,
         detectedNote,
         detectedNoteName,
+        detectedFrequency,
         volume,
         sensitivity,
         setSensitivity,

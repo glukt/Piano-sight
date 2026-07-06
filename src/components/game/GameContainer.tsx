@@ -278,6 +278,33 @@ export const GameContainer: React.FC<GameContainerProps> = ({
 
                 {/* Music Display Container */}
                 <div className="bg-white dark:bg-gray-800 p-2 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700 relative overflow-hidden" style={{ backgroundColor: isDarkMode ? '' : 'white' }}>
+                    {gameLogic.isMicListening && (
+                        <div 
+                            onClick={() => gameLogic.setShowMicPopup(true)}
+                            className="absolute top-2 right-2 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-900/80 dark:bg-gray-950/80 backdrop-blur-sm border border-gray-700/50 text-white text-[10px] font-bold shadow-lg hover:bg-gray-900 dark:hover:bg-gray-950 cursor-pointer transition active:scale-95 z-40 animate-in fade-in slide-in-from-top-2"
+                            title="Microphone Tuner (Click to Calibrate)"
+                        >
+                            <span className="animate-pulse text-indigo-400">🎙️</span>
+                            <div className="flex flex-col">
+                                <div className="flex items-center gap-1.5">
+                                    <span className="font-mono text-gray-300">Level:</span>
+                                    <div className="w-12 h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                                        <div 
+                                            className="h-full bg-gradient-to-r from-emerald-400 to-green-500 transition-all duration-75"
+                                            style={{ width: `${Math.min(100, Math.round((gameLogic.micVolume / gameLogic.micSensitivity) * 50))}%` }}
+                                        />
+                                    </div>
+                                </div>
+                                {gameLogic.micNoteName && gameLogic.micNoteName !== 'None' ? (
+                                    <div className="text-emerald-400 font-extrabold flex items-center gap-1 mt-0.5">
+                                        🎯 {gameLogic.micNoteName} <span className="opacity-60 font-medium">({gameLogic.micFrequency} Hz)</span>
+                                    </div>
+                                ) : (
+                                    <span className="text-gray-400 font-medium mt-0.5">Listening...</span>
+                                )}
+                            </div>
+                        </div>
+                    )}
                     <MusicDisplay
                         gameMode={gameMode}
                         trebleNotes={paddedLevelData.treble}

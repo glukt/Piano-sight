@@ -67,6 +67,12 @@ This file is automatically updated by the autonomous conservatory developer agen
 - **[task-018] Visual Metronome Pendulum Indicator**
   - *Details*: Developed a floating visual metronome indicator in the sheet music stave viewport. Destructured current beat progress from the rhythm engine and rendered pulsing downbeat/upbeat indicator lights (rose/emerald) alongside a swinging physical pendulum that pulses synchronously to the beat.
   - *Date*: 2026-07-06
+- **[task-017] Course 16: Pop, Folk, & Ragtime Standards**
+  - *Details*: Added a structured 5-lesson curriculum covering pop vocal accompaniment, stride piano ragtime syncopations, and iconic folk and game music, binding authentic masterwork files (Canon in D, Sea Shanty 2, Always Remember Us This Way, Let Her Go, and The Entertainer).
+  - *Date*: 2026-07-06
+- **[task-019] Solfege Note Naming Support (Do, Re, Mi)**
+  - *Details*: Extended preference context and global storage to support toggleable scientific/solfege note naming models. Implemented dynamic string parsing in the SVG notehead drawing engine of the score display, rendering centered text badges and automatically adjusting rendering circle radii to fit multi-character Solfege syllables.
+  - *Date*: 2026-07-06
 
 ---
 

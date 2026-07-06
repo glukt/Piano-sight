@@ -97,6 +97,9 @@ This file is automatically updated by the autonomous conservatory developer agen
 - **[task-028] Customizable Reverb Space Settings**
   - *Details*: Mounted room ambiance sliders in the settings panel to control Tone.js Reverb decay size (0.5s to 5s) and dry/wet mix level (0 to 50%), backed by persistent localStorage preferences.
   - *Date*: 2026-07-06
+- **[task-029] Pitch-Based Rainbow Notehead Theme**
+  - *Details*: Implemented a pitch-based color-coding mapping (Rainbow theme) matching the diatonic Boomwhacker color scheme in VexFlow stave note rendering, supporting beginners and visual learners.
+  - *Date*: 2026-07-06
 
 ---
 

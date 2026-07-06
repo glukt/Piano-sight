@@ -807,6 +807,26 @@ export function useMusicLibrary() {
         }
     }, []);
 
+    const getAllPerformanceAttempts = useCallback(async (): Promise<PerformanceSessionLog[]> => {
+        try {
+            const db = await openDB();
+            const transaction = db.transaction(PERFORMANCE_STORE, 'readonly');
+            const store = transaction.objectStore(PERFORMANCE_STORE);
+
+            const attempts = await new Promise<PerformanceSessionLog[]>((resolve, reject) => {
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result as PerformanceSessionLog[]);
+                req.onerror = () => reject(req.error);
+            });
+
+            attempts.sort((a, b) => a.timestamp - b.timestamp);
+            return attempts;
+        } catch (err: any) {
+            console.error("Failed to get all performance attempts:", err);
+            return [];
+        }
+    }, []);
+
     const addScore = useCallback(async (file: File, title?: string, composer?: string, tags: string[] = []) => {
         try {
             const db = await openDB();
@@ -1054,6 +1074,7 @@ export function useMusicLibrary() {
         toggleBookmark,
         lessonProgress,
         logAttempt,
-        getPerformanceAttempts
+        getPerformanceAttempts,
+        getAllPerformanceAttempts
     };
 }

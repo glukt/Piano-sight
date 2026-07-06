@@ -2,8 +2,8 @@ import React from 'react';
 
 
 interface TopNavProps {
-    currentView: 'game' | 'musicxml' | 'reference' | 'settings' | 'courseSelection' | 'intro' | 'dailyWorkout' | 'trainer';
-    setCurrentView: (view: 'game' | 'musicxml' | 'reference' | 'settings' | 'courseSelection' | 'intro' | 'dailyWorkout' | 'trainer') => void;
+    currentView: 'game' | 'musicxml' | 'reference' | 'settings' | 'courseSelection' | 'intro' | 'dailyWorkout' | 'trainer' | 'stats';
+    setCurrentView: (view: 'game' | 'musicxml' | 'reference' | 'settings' | 'courseSelection' | 'intro' | 'dailyWorkout' | 'trainer' | 'stats') => void;
     level: number;
     xp: number;
     newUnlocksCount: number;
@@ -59,7 +59,7 @@ export const TopNav: React.FC<TopNavProps> = ({
 
             {/* Center Navigation Tabs: Horizontally Scrollable on Mobile */}
             <div className="flex gap-1 bg-gray-100 dark:bg-gray-900 p-1 rounded-xl w-full md:w-auto overflow-x-auto no-scrollbar scroll-smooth">
-                {(['courseSelection', 'trainer', 'dailyWorkout', 'musicxml', 'reference', 'settings'] as const).map(view => (
+                {(['courseSelection', 'trainer', 'dailyWorkout', 'musicxml', 'stats', 'reference', 'settings'] as const).map(view => (
                     <button
                         key={view}
                         onClick={() => setCurrentView(view)}
@@ -68,7 +68,7 @@ export const TopNav: React.FC<TopNavProps> = ({
                             : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                             }`}
                     >
-                        {view === 'musicxml' ? 'Library' : view === 'courseSelection' ? 'Courses' : view === 'dailyWorkout' ? 'Workout' : view === 'trainer' ? 'Trainer' : view.charAt(0).toUpperCase() + view.slice(1)}
+                        {view === 'musicxml' ? 'Library' : view === 'courseSelection' ? 'Courses' : view === 'dailyWorkout' ? 'Workout' : view === 'trainer' ? 'Trainer' : view === 'stats' ? 'Stats' : view.charAt(0).toUpperCase() + view.slice(1)}
                     </button>
                 ))}
             </div>

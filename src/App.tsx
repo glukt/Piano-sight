@@ -19,6 +19,7 @@ import { Lesson } from './utils/music/CourseData';
 import { LevelUpModal } from './components/game/LevelUpModal';
 import { DailyWorkout } from './components/DailyWorkout';
 import { SightReadingTrainer } from './components/game/SightReadingTrainer';
+import { StatisticsPanel } from './components/StatisticsPanel';
 
 function App() {
     const { width: windowWidth } = useWindowSize();
@@ -26,7 +27,7 @@ function App() {
     const isDarkMode = preferences.isDarkMode;
     const setIsDarkMode = (val: boolean) => updatePreference('isDarkMode', val);
 
-    const [currentView, setCurrentView] = useState<'game' | 'musicxml' | 'reference' | 'settings' | 'courseSelection' | 'intro' | 'dailyWorkout' | 'trainer'>('courseSelection');
+    const [currentView, setCurrentView] = useState<'game' | 'musicxml' | 'reference' | 'settings' | 'courseSelection' | 'intro' | 'dailyWorkout' | 'trainer' | 'stats'>('courseSelection');
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
     const [isAchievementsOpen, setIsAchievementsOpen] = useState(false);
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -267,6 +268,22 @@ function App() {
                                 setSelectedLesson(lesson);
                                 setLessonSourceView('dailyWorkout');
                                 setCurrentView('intro');
+                            }}
+                        />
+                    </div>
+                )}
+
+                {/* DIAGNOSTICS VIEW */}
+                {currentView === 'stats' && (
+                    <div className="w-full flex justify-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <StatisticsPanel
+                            hitStats={gameLogic.hitStats}
+                            errorStats={gameLogic.errorStats}
+                            isDarkMode={isDarkMode}
+                            getAllPerformanceAttempts={library.getAllPerformanceAttempts}
+                            onReset={() => {
+                                localStorage.removeItem('pianopilot_stats');
+                                window.location.reload();
                             }}
                         />
                     </div>

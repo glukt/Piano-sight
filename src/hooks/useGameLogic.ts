@@ -537,6 +537,7 @@ export const useGameLogic = (
     // Scoring
     const [score, setScore] = useState({ correct: 0, incorrect: 0 });
     const [errorStats, setErrorStats] = useState<Record<string, number>>({});
+    const [hitStats, setHitStats] = useState<Record<string, number>>({});
 
     // Muting & Completion
 
@@ -868,6 +869,8 @@ export const useGameLogic = (
         setCurrentLesson(lesson);
         setTempoMultiplier(1.0);
         consecutiveFailuresRef.current = 0;
+        setHitStats({});
+        setErrorStats({});
         startTimeRef.current = Date.now();
         // Switch hand mode based on topic
         if (lesson.topic === 'treble') setGameMode('treble');
@@ -1132,6 +1135,10 @@ export const useGameLogic = (
                     handleAddXp(5);
                     setLastHitType('good');
                     setInputStatus('correct');
+                    requiredNotes.forEach(n => {
+                        const name = midiToNoteName(n);
+                        setHitStats(prev => ({ ...prev, [name]: (prev[name] || 0) + 1 }));
+                    });
                 }
 
                 lastProcessedIndex.current = cursorIndex;
@@ -1300,6 +1307,10 @@ export const useGameLogic = (
 
         // Tempo Adaptability
         tempoMultiplier,
-        setTempoMultiplier
+        setTempoMultiplier,
+
+        // Stats
+        hitStats,
+        errorStats
     };
 };

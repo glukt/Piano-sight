@@ -61,6 +61,12 @@ This file is automatically updated by the autonomous conservatory developer agen
 - **[task-021] Redundant Library & Presets Consolidation**
   - *Details*: Resolved duplicate score files (Greensleeves, Nuvole Bianche) in the public assets and cleaned up 4 redundant preset definitions (Minuet G traditional, Autumn Voyage XML, Passacaglia XML, Bach Prelude XML) in the library hook, saving 41,000+ lines of redundant content. Updated course lesson URLs to prevent broken references.
   - *Date*: 2026-07-06
+- **[task-016] Course 15: Classical Sonatas & Symphonies**
+  - *Details*: Added a structured 5-lesson curriculum covering symphonic piano reductions, classical sonata structures, dynamic contrast, and classical precision, binding authentic masterwork files (Moonlight Sonata 1st Mvt, Schubert's Serenade, Pathetique Sonata Adagio, Rondo alla Turca, and Beethoven's Symphony No. 5).
+  - *Date*: 2026-07-06
+- **[task-018] Visual Metronome Pendulum Indicator**
+  - *Details*: Developed a floating visual metronome indicator in the sheet music stave viewport. Destructured current beat progress from the rhythm engine and rendered pulsing downbeat/upbeat indicator lights (rose/emerald) alongside a swinging physical pendulum that pulses synchronously to the beat.
+  - *Date*: 2026-07-06
 
 ---
 

@@ -2949,6 +2949,58 @@ export const courses: Course[] = [
                 presetId: 'preset-brahms-hungarian5'
             }
         ]
+    },
+    {
+        id: "virtuoso-conservatory",
+        name: "Course 20: Virtuoso Conservatory Level 2",
+        order: 20,
+        description: "The ultimate advanced piano curriculum. Conquer Chopin's lyricism, Liszt's sweep, and Bach's polyphonic counterpoint.",
+        lessons: [
+            {
+                id: 'c20-l1', bpm: 90, courseId: "virtuoso-conservatory",
+                name: "Song: Arabesque (Burgmüller)",
+                description: "Play Burgmüller's rapid, flowing Romantic study in A minor.",
+                focus: "Practice rapid, even five-finger patterns and dynamic left-hand accompaniment.",
+                instruction: "Keep your wrists flexible. Accentuate the sudden shifts between minor mystery and major light.",
+                type: 'song', topic: 'both', xpReward: 250, requiredXp: 35000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/arabesque_burgmuller.musicxml',
+                presetId: 'preset-burgmuller-arabesque'
+            },
+            {
+                id: 'c20-l2', bpm: 80, courseId: "virtuoso-conservatory",
+                name: "Song: Waltz in C# Minor (Chopin)",
+                description: "Perform Chopin's melancholic, elegant, and complex late Romantic masterpiece.",
+                focus: "Master the rapid right-hand running themes and coordination of wide left-hand bass-chord jumps.",
+                instruction: "Let the tempo breathe (rubato) during the lyrical melodies. Keep the running theme completely even.",
+                type: 'song', topic: 'both', xpReward: 350, requiredXp: 35500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Waltz_Opus_64_No._2_in_C_Minor.mxl',
+                presetId: 'preset-chopin-waltz-csharp'
+            },
+            {
+                id: 'c20-l3', bpm: 70, courseId: "virtuoso-conservatory",
+                name: "Song: Liebestraum No. 3 (Liszt)",
+                description: "Navigate Franz Liszt's famous, soaring romantic dream of love.",
+                focus: "Coordinate the cross-hand accompaniment lines and broad, arpeggiated rolls.",
+                instruction: "Voicing is critical: bring out the inner melody in the thumbs. Play arpeggios gracefully.",
+                type: 'song', topic: 'both', xpReward: 400, requiredXp: 36000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Liebestraum_No._3_in_A_Major.mxl',
+                presetId: 'preset-liszt-liebestraum'
+            },
+            {
+                id: 'c20-l4', bpm: 80, courseId: "virtuoso-conservatory",
+                name: "Song: Toccata & Fugue in D Minor (Bach) [Grand Capstone]",
+                description: "The ultimate peak of the conservatory. Play Bach's dramatic, thundering organ masterwork.",
+                focus: "Coordinate massive, thundering double-hand block chords, rapid runs, and dramatic pauses.",
+                instruction: "Play with immense, thundering power. Articulate every run with crisp baroque clarity.",
+                type: 'song', topic: 'both', xpReward: 500, requiredXp: 37000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Bach_Toccata_and_Fugue_in_D_Minor_Piano_solo.mxl',
+                presetId: 'preset-bach-toccata'
+            }
+        ]
     }
 ];
 export const getLessonById = (id: string): Lesson | undefined => {

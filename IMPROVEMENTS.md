@@ -43,6 +43,15 @@ This file is automatically updated by the autonomous conservatory developer agen
 - **[task-010] Arpeggios & Broken Triads (Course 12)**
   - *Details*: Added a structured 5-lesson course covering sweeping major and minor triads, dominant seventh chords (Cmaj7 & G7), and multi-octave arpeggio runs with thumb-tuck wrist-rotation instructions.
   - *Date*: 2026-07-06
+- **[task-011] Real-Time Progress & Accuracy Chart**
+  - *Details*: Upgraded the Conservatory Diagnostics panel to render a custom responsive SVG line chart of chronological accuracy over time with hoverable detail tooltips. Added a practice statistics grid (average accuracy, total practice time, attempt count, and practice day streaks) and a note-by-note proficiency breakdown.
+  - *Date*: 2026-07-06
+- **[task-012] Live Microphone Tuner Overlay**
+  - *Details*: Mounted a floating live tuner and microphone decibel gauge overlay in the sheet music stave viewport. Exposed the raw detected pitch frequency (Hz) and note name from the PitchDetector worker, updating in real-time.
+  - *Date*: 2026-07-06
+- **[task-013] Chord Parser & Visual Reference Helper**
+  - *Details*: Built a real-time chord recognizer that parses active notes in the current step (including inversions) and displays the chord name, spelling (notes), and recommended finger placements directly above the virtual keyboard overlay.
+  - *Date*: 2026-07-06
 
 ---
 

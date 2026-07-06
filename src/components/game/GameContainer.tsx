@@ -455,6 +455,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                         timeSignature={gameLogic.currentLesson?.constraints?.timeSignature}
                         showFingering={preferences.showFingering}
                         noteLabelType={preferences.noteLabelType}
+                        noteheadTheme={preferences.noteheadTheme}
                     />
                     {/* Rhythm Playhead */}
                     {isRhythmMode && (

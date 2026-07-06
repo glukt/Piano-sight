@@ -359,6 +359,22 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                             <option value="solfege">Solfege (La, Si, Do)</option>
                         </select>
                     </div>
+
+                    {/* Notehead Coloring Theme Selection */}
+                    <div className="flex items-center justify-between mt-4">
+                        <div>
+                            <span className="text-gray-600 dark:text-gray-300 font-medium block">Notehead Color Theme</span>
+                            <span className="text-xs text-gray-400">Standard monochrome notes vs pitch-based Rainbow colors</span>
+                        </div>
+                        <select
+                            value={preferences.noteheadTheme}
+                            onChange={(e) => updatePreference('noteheadTheme', e.target.value as 'standard' | 'rainbow')}
+                            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm font-bold text-gray-700 dark:text-gray-200 outline-none focus:border-indigo-500"
+                        >
+                            <option value="standard">Standard (Monochrome)</option>
+                            <option value="rainbow">Rainbow (Pitch-Colored)</option>
+                        </select>
+                    </div>
                 </div>
 
                 {/* Metronome Soundscapes */}

@@ -15,6 +15,7 @@ export interface Preferences {
     metronomeVolume: number; // 0 to 1
     reverbDecay: number; // 0.1 to 5.0
     reverbWet: number; // 0 to 1
+    noteheadTheme: 'standard' | 'rainbow';
 }
 
 const DEFAULT_PREFERENCES: Preferences = {
@@ -32,6 +33,7 @@ const DEFAULT_PREFERENCES: Preferences = {
     metronomeVolume: 0.8,
     reverbDecay: 1.8,
     reverbWet: 0.22,
+    noteheadTheme: 'standard',
 };
 
 interface PreferencesContextType {

@@ -28,6 +28,7 @@ interface MusicDisplayProps {
     showFingering?: boolean;
     keySignature?: string;
     timeSignature?: string;
+    noteheadTheme?: 'standard' | 'rainbow';
 }
 
 const VF = Vex.Flow;
@@ -227,7 +228,8 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
     keySignature,
     timeSignature,
     gameMode = 'both',
-    noteLabelType = 'scientific'
+    noteLabelType = 'scientific',
+    noteheadTheme = 'standard'
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -448,12 +450,45 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                 const dimColor = isDarkMode ? "#1e293b" : "#cbd5e1";
                 const noteColor = isHandPracticed ? foregroundColor : dimColor;
 
-                staveNote.setStyle({ fillStyle: noteColor, strokeStyle: noteColor });
-                n.keys.forEach((_, keyIndex) => {
-                    staveNote.setKeyStyle(keyIndex, { fillStyle: noteColor, strokeStyle: noteColor });
-                });
+                const getKeyColor = (keyStr: string) => {
+                    const parts = keyStr.split('/');
+                    if (parts.length === 0) return noteColor;
+                    const noteName = parts[0].toLowerCase();
+                    const pitchColors: Record<string, string> = {
+                        'c': '#ef4444',   // Red
+                        'c#': '#f97316',  // Orange
+                        'db': '#f97316',
+                        'd': '#eab308',   // Yellow
+                        'd#': '#f59e0b',  // Amber
+                        'eb': '#f59e0b',
+                        'e': '#22c55e',   // Green
+                        'f': '#10b981',   // Emerald
+                        'f#': '#06b6d4',  // Teal
+                        'gb': '#06b6d4',
+                        'g': '#3b82f6',   // Blue
+                        'g#': '#6366f1',  // Indigo
+                        'ab': '#6366f1',
+                        'a': '#8b5cf6',   // Violet
+                        'a#': '#a855f7',  // Purple
+                        'bb': '#a855f7',
+                        'b': '#ec4899'    // Pink
+                    };
+                    return pitchColors[noteName] || noteColor;
+                };
 
                 const isRest = n.duration.endsWith('r');
+
+                if (isHandPracticed && noteheadTheme === 'rainbow' && !isRest) {
+                    n.keys.forEach((keyStr, keyIndex) => {
+                        const rColor = getKeyColor(keyStr);
+                        staveNote.setKeyStyle(keyIndex, { fillStyle: rColor, strokeStyle: rColor });
+                    });
+                } else {
+                    staveNote.setStyle({ fillStyle: noteColor, strokeStyle: noteColor });
+                    n.keys.forEach((_, keyIndex) => {
+                        staveNote.setKeyStyle(keyIndex, { fillStyle: noteColor, strokeStyle: noteColor });
+                    });
+                }
 
                 if (staffCursorIndex !== undefined && !isRest && isHandPracticed) {
                     if (i === staffCursorIndex) {

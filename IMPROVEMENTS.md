@@ -58,6 +58,9 @@ This file is automatically updated by the autonomous conservatory developer agen
 - **[task-015] Course 14: Romantic Lyricism & Impressionism**
   - *Details*: Added a structured 4-lesson curriculum covering Debussy's impressionist textures, Einaudi's contemporary minimalism, and Chopin's late-romantic phrasing, binding authentic masterwork files (Nuvole Bianche, Debussy's Arabesque No. 1, Chopin's Waltz in C# Minor, and Clair de Lune).
   - *Date*: 2026-07-06
+- **[task-021] Redundant Library & Presets Consolidation**
+  - *Details*: Resolved duplicate score files (Greensleeves, Nuvole Bianche) in the public assets and cleaned up 4 redundant preset definitions (Minuet G traditional, Autumn Voyage XML, Passacaglia XML, Bach Prelude XML) in the library hook, saving 41,000+ lines of redundant content. Updated course lesson URLs to prevent broken references.
+  - *Date*: 2026-07-06
 
 ---
 

@@ -24,6 +24,17 @@ This file is automatically updated by the autonomous conservatory developer agen
 - **[task-005] Weak Measure Auto-Looping Helper**
   - *Details*: Added measure-level mistake tracking to lessons. Enabled metronome click and playhead wrapping in the rhythm engine inside loop boundaries. Added a **⚡ Loop Weak Measures** button to the scorecard results.
   - *Date*: 2026-07-06
+- **[task-006] Automatic Tempo Adaptability**
+  - *Details*: Added `tempoMultiplier` to the lesson engine. Implemented consecutive failures tracking; if a user fails a lesson twice in a row, they are automatically prompted to retry at 75% speed. Passing the lesson at a reduced tempo enables a gradual speed-ramp path (+15% tempo increase per pass) back to 100% full speed.
+  - *Date*: 2026-07-06
+
+### Milestone 3: Deep Classical & Sight-Reading Curriculum
+- **[task-007] Reading Musical Intervals Course (Course 9)**
+  - *Details*: Added a structured 5-lesson curriculum mapping melodic and harmonic seconds, thirds, fourths, and fifths with targeted distance constraints, climaxing in an Intervals Capstone lesson.
+  - *Date*: 2026-07-06
+- **[task-008] Classical Conservatory Level 1 (Course 10)**
+  - *Details*: Added a premium classical course binding authentic scores for Ode to Joy, Bach's Minuet in G, Für Elise, Bach's C Major Prelude, and Chopin's Waltz in A Minor.
+  - *Date*: 2026-07-06
 
 ---
 

@@ -91,6 +91,9 @@ This file is automatically updated by the autonomous conservatory developer agen
 - **[task-026] Metronome Soundscapes & Volume Controls**
   - *Details*: Extended global state and preferences to support toggleable audio metronome click instruments (Digital, Woodblock, Rimshot, Mechanical Tick) alongside a dedicated volume slider (0 to 100%) in the settings panel.
   - *Date*: 2026-07-06
+- **[task-027] Course 20: Virtuoso Conservatory Level 2**
+  - *Details*: Created the ultimate advanced capstone curriculum, binding authentic masterwork files (Burgmüller's Arabesque, Chopin's C# Minor Waltz, Liszt's Liebestraum No. 3, and Bach's Toccata & Fugue in D Minor).
+  - *Date*: 2026-07-06
 
 ---
 

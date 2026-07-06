@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { audio } from '../audio/Synth';
+import { usePreferences } from './usePreferences';
 
 export const useRhythmEngine = (
     bpm: number = 60,
@@ -8,6 +9,7 @@ export const useRhythmEngine = (
     timeSignature: string = "4/4",
     loopRange?: { startBeat: number; endBeat: number } | null
 ) => {
+    const { preferences } = usePreferences();
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentBeat, setCurrentBeat] = useState(0);
     const requestRef = useRef<number>();
@@ -54,7 +56,16 @@ export const useRhythmEngine = (
         const currentBeatVal = Math.floor(elapsed / beatDuration);
         if (currentBeatVal > lastBeatRef.current) {
             const isDownbeat = (currentBeatVal % beatsPerMeasure === 0);
-            audio.playMetronomeClick(isDownbeat);
+            
+            // Confidence Mode Auto-Mute Logic (2 measures on, 2 measures off)
+            const currentMeasure = Math.floor(currentBeatVal / beatsPerMeasure);
+            const isMutedBar = preferences.metronomeConfidenceMode && (currentMeasure % 4 >= 2);
+            
+            // Never mute during lead-in (negative beat indices)
+            if (!isMutedBar || currentBeatVal < 0) {
+                audio.playMetronomeClick(isDownbeat);
+            }
+            
             lastBeatRef.current = currentBeatVal;
             setCurrentBeat(currentBeatVal);
         }

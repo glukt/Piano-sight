@@ -343,6 +343,22 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                             <option value={0}>Off (No Hints)</option>
                         </select>
                     </div>
+
+                    {/* Note Naming System Selection */}
+                    <div className="flex items-center justify-between mt-4">
+                        <div>
+                            <span className="text-gray-600 dark:text-gray-300 font-medium block">Note Syllable System</span>
+                            <span className="text-xs text-gray-400">Scientific Pitch letters vs Do-Re-Mi Solfege syllables</span>
+                        </div>
+                        <select
+                            value={preferences.noteLabelType}
+                            onChange={(e) => updatePreference('noteLabelType', e.target.value as 'scientific' | 'solfege')}
+                            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm font-bold text-gray-700 dark:text-gray-200 outline-none focus:border-indigo-500"
+                        >
+                            <option value="scientific">Scientific (A, B, C)</option>
+                            <option value="solfege">Solfege (La, Si, Do)</option>
+                        </select>
+                    </div>
                 </div>
 
                 {/* Danger Zone */}

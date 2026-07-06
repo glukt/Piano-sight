@@ -10,6 +10,7 @@ export interface Preferences {
     hintDelay: number; // in milliseconds (e.g. 3000, 5000, 10000, 0 for off)
     soundType: 'synth' | 'samples';
     inputMode: 'instrument' | 'touch';
+    noteLabelType: 'scientific' | 'solfege';
 }
 
 const DEFAULT_PREFERENCES: Preferences = {
@@ -22,6 +23,7 @@ const DEFAULT_PREFERENCES: Preferences = {
     hintDelay: 3000,
     soundType: 'synth',
     inputMode: 'instrument',
+    noteLabelType: 'scientific',
 };
 
 interface PreferencesContextType {

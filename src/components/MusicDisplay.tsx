@@ -14,6 +14,7 @@ interface MusicDisplayProps {
     width?: number;
     height?: number;
     showLabels?: boolean;
+    noteLabelType?: 'scientific' | 'solfege';
     cursorIndex?: number;
     trebleCursorIndex?: number;
     bassCursorIndex?: number;
@@ -225,7 +226,8 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
     showFingering = true,
     keySignature,
     timeSignature,
-    gameMode = 'both'
+    gameMode = 'both',
+    noteLabelType = 'scientific'
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -607,19 +609,40 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                 return 160 - stepDiff * 5;
             };
 
+            const getNoteLabelText = (k: string, type: 'scientific' | 'solfege') => {
+                const rawNote = k.split('/')[0].toUpperCase();
+                if (type === 'solfege') {
+                    const solfegeMap: Record<string, string> = {
+                        'C': 'Do',
+                        'D': 'Re',
+                        'E': 'Mi',
+                        'F': 'Fa',
+                        'G': 'Sol',
+                        'A': 'La',
+                        'B': 'Si'
+                    };
+                    const baseNote = rawNote[0];
+                    const rest = rawNote.slice(1);
+                    const solfegeBase = solfegeMap[baseNote] || baseNote;
+                    const mapped = solfegeBase + rest;
+                    return mapped.replace(/#/g, '♯').replace(/b/g, '♭');
+                }
+                return rawNote.replace(/#/g, '♯').replace(/b/g, '♭');
+            };
+
             if (showLabels) {
                 finalTrebleNotes.forEach((tNote, i) => {
                     const x = treblePositions[i];
                     if (x !== undefined && tNote && tNote.keys && tNote.keys[0] !== 'b/4' && !tNote.duration.endsWith('r')) {
                         tNote.keys.forEach(k => {
-                            const noteName = k.split('/')[0].toUpperCase();
+                            const noteText = getNoteLabelText(k, noteLabelType);
                             const y = getTrebleY(k);
 
                             const badge = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                             badge.setAttribute("class", "custom-watermark");
                             badge.setAttribute("cx", x.toString());
                             badge.setAttribute("cy", y.toString());
-                            badge.setAttribute("r", "7.5");
+                            badge.setAttribute("r", noteLabelType === 'solfege' ? "10" : "7.5");
                             badge.setAttribute("fill", isDarkMode ? "#4f46e5" : "#6366f1");
                             badge.setAttribute("stroke", "#ffffff");
                             badge.setAttribute("stroke-width", "1");
@@ -627,13 +650,13 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
 
                             const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
                             label.setAttribute("class", "custom-watermark");
-                            label.textContent = noteName.replace(/#/g, '♯').replace(/b/g, '♭');
+                            label.textContent = noteText;
                             label.setAttribute("x", x.toString());
                             label.setAttribute("y", (y + 3.5).toString());
                             label.setAttribute("fill", "#ffffff");
                             label.setAttribute("font-family", "Outfit, sans-serif");
                             label.setAttribute("font-weight", "900");
-                            label.setAttribute("font-size", "10");
+                            label.setAttribute("font-size", noteLabelType === 'solfege' ? "8.5" : "10");
                             label.setAttribute("text-anchor", "middle");
                             label.setAttribute("pointer-events", "none");
 
@@ -647,14 +670,14 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                     const x = bassPositions[i];
                     if (x !== undefined && bNote && bNote.keys && bNote.keys[0] !== 'd/3' && !bNote.duration.endsWith('r')) {
                         bNote.keys.forEach(k => {
-                            const noteName = k.split('/')[0].toUpperCase();
+                            const noteText = getNoteLabelText(k, noteLabelType);
                             const y = getBassY(k);
 
                             const badge = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                             badge.setAttribute("class", "custom-watermark");
                             badge.setAttribute("cx", x.toString());
                             badge.setAttribute("cy", y.toString());
-                            badge.setAttribute("r", "7.5");
+                            badge.setAttribute("r", noteLabelType === 'solfege' ? "10" : "7.5");
                             badge.setAttribute("fill", isDarkMode ? "#0d9488" : "#10b981"); // Teal/emerald for bass clef distinction
                             badge.setAttribute("stroke", "#ffffff");
                             badge.setAttribute("stroke-width", "1");
@@ -662,13 +685,13 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
 
                             const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
                             label.setAttribute("class", "custom-watermark");
-                            label.textContent = noteName.replace(/#/g, '♯').replace(/b/g, '♭');
+                            label.textContent = noteText;
                             label.setAttribute("x", x.toString());
                             label.setAttribute("y", (y + 3.5).toString());
                             label.setAttribute("fill", "#ffffff");
                             label.setAttribute("font-family", "Outfit, sans-serif");
                             label.setAttribute("font-weight", "900");
-                            label.setAttribute("font-size", "10");
+                            label.setAttribute("font-size", noteLabelType === 'solfege' ? "8.5" : "10");
                             label.setAttribute("text-anchor", "middle");
                             label.setAttribute("pointer-events", "none");
 

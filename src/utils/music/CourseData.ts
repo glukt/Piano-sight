@@ -2719,6 +2719,69 @@ export const courses: Course[] = [
                 presetId: 'preset-beethoven-symphony5'
             }
         ]
+    },
+    {
+        id: "pop-standards",
+        name: "Course 16: Pop, Folk, & Ragtime Standards",
+        order: 16,
+        description: "Explore contemporary pop structures, lively ragtime syncopations, and iconic folk and game music.",
+        lessons: [
+            {
+                id: 'c16-l1', bpm: 75, courseId: "pop-standards",
+                name: "Song: Canon in D (Pachelbel)",
+                description: "Perform Pachelbel's famous ground-bass classical-pop crossover standard.",
+                focus: "Practice coordinating repeating left-hand chord progressions with flowing right-hand scales.",
+                instruction: "Keep your left hand extremely steady as the right hand builds complexity.",
+                type: 'song', topic: 'both', xpReward: 250, requiredXp: 26000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Canon_in_D.mxl',
+                presetId: 'preset-canon'
+            },
+            {
+                id: 'c16-l2', bpm: 110, courseId: "pop-standards",
+                name: "Song: Sea Shanty 2 (RuneScape)",
+                description: "Perform Jagex's nostalgic maritime track from RuneScape.",
+                focus: "Practice driving syncopated melodies and jumping chords at a brisk, dancing tempo.",
+                instruction: "Focus on clean hand coordination and articulation to bring out the bright folk texture.",
+                type: 'song', topic: 'both', xpReward: 300, requiredXp: 26500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Sea_Shanty_2_-_Runescape.mxl',
+                presetId: 'preset-runescape-shanty'
+            },
+            {
+                id: 'c16-l3', bpm: 80, courseId: "pop-standards",
+                name: "Song: Always Remember Us This Way (Lady Gaga)",
+                description: "Play Lady Gaga's emotional piano ballad from A Star Is Born.",
+                focus: "Practice playing lyrical pop syncopations, block chord changes, and rubato phrasing.",
+                instruction: "Listen closely to lead-in beats and keep the melodic vocal phrasing expressive.",
+                type: 'song', topic: 'both', xpReward: 350, requiredXp: 27000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Always_remember_us_this_way__Lady_Gaga.mxl',
+                presetId: 'preset-ladygaga'
+            },
+            {
+                id: 'c16-l4', bpm: 75, courseId: "pop-standards",
+                name: "Song: Let Her Go (Passenger)",
+                description: "Play Passenger's beautiful acoustic-folk guitar transition standard.",
+                focus: "Practice arpeggiated pop chords and smooth, singing right-hand runs.",
+                instruction: "Keep the tempo flowing and use a gentle touch for the accompaniment register.",
+                type: 'song', topic: 'both', xpReward: 380, requiredXp: 27500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Let_Her_Go_Passenger.mxl',
+                presetId: 'preset-passenger'
+            },
+            {
+                id: 'c16-l5', bpm: 85, courseId: "pop-standards",
+                name: "Song: The Entertainer (Joplin)",
+                description: "The ultimate ragtime capstone. Perform Scott Joplin's famous syncopation.",
+                focus: "Coordinate the stride left-hand bass jumps with syncopated right-hand octaves.",
+                instruction: "Do not play too fast. Keep the ragtime swing rhythm light and strictly in time.",
+                type: 'song', topic: 'both', xpReward: 450, requiredXp: 28000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/The_Entertainer_-_Scott_Joplin.mxl',
+                presetId: 'preset-joplin-entertainer'
+            }
+        ]
     }
 ];
 export const getLessonById = (id: string): Lesson | undefined => {

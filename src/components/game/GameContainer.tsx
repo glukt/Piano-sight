@@ -89,7 +89,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         trebleCursorIndex, bassCursorIndex,
         isTrebleOnset, isBassOnset,
         isDemoPlaying,
-        isRhythmMode, isRhythmPlaying, currentBeat, beatsPerMeasure, countDown, streak, lastHitType,
+        isRhythmMode, isRhythmPlaying, currentBeat, beatsPerMeasure, noteVelocities, countDown, streak, lastHitType,
         setNotePositions,
         showNoteLabels, setShowNoteLabels,
         showStaff, setShowStaff,
@@ -589,6 +589,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                             expectedNotes={expectedNotes}
                             showLabels={showNoteLabels}
                             showStaff={showStaff}
+                            activeNoteVelocities={noteVelocities}
                         />
                     </div>
                 </div>

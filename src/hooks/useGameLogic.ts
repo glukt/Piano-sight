@@ -355,7 +355,7 @@ export const useGameLogic = (
     });
 
     // MIDI & Mic
-    const { activeNotes, isEnabled: isMidiEnabled, inputs: midiInputs } = useMidi({
+    const { activeNotes, noteVelocities, isEnabled: isMidiEnabled, inputs: midiInputs } = useMidi({
         onNoteOn: (n, v) => onNoteOn.current(n, v),
         onNoteOff: (n) => onNoteOff.current(n)
     });
@@ -1315,6 +1315,7 @@ export const useGameLogic = (
         hitStats,
         errorStats,
         currentBeat,
-        beatsPerMeasure
+        beatsPerMeasure,
+        noteVelocities
     };
 };

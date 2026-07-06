@@ -2834,6 +2834,69 @@ export const courses: Course[] = [
                 presetId: 'preset-mariagedamour'
             }
         ]
+    },
+    {
+        id: "virtuoso-drama",
+        name: "Course 18: Virtuoso Showpieces & Drama",
+        order: 18,
+        description: "Develop technical finger dexterity, deep emotional expression, and handle rapid chromatic runs.",
+        lessons: [
+            {
+                id: 'c18-l1', bpm: 60, courseId: "virtuoso-drama",
+                name: "Song: Gnossienne No. 1 (Satie)",
+                description: "Perform Satie's hauntingly mystical, rhythmic Gnossienne.",
+                focus: "Practice coordinating the block left-hand chords with the exotic, free-flowing right-hand melody.",
+                instruction: "Keep the tempo completely open and free-flowing. Let the silences ring.",
+                type: 'song', topic: 'both', xpReward: 250, requiredXp: 30500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Gnossienne_No._1.mxl',
+                presetId: 'preset-satie'
+            },
+            {
+                id: 'c18-l2', bpm: 70, courseId: "virtuoso-drama",
+                name: "Song: Swan Lake (Tchaikovsky)",
+                description: "Play Tchaikovsky's legendary, dramatic orchestral theme on piano.",
+                focus: "Practice large dynamic swells (crescendo/decrescendo) and coordinate thick chordal textures.",
+                instruction: "Play with intense dramatic weight. Make the theme soar in the right hand.",
+                type: 'song', topic: 'both', xpReward: 300, requiredXp: 31000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Swan_Lake.mxl',
+                presetId: 'preset-tchaikovsky-swanlake'
+            },
+            {
+                id: 'c18-l3', bpm: 75, courseId: "virtuoso-drama",
+                name: "Song: Dance of the Sugar Plum Fairy (Tchaikovsky)",
+                description: "Play the whimsical and syncopated winter holiday theme.",
+                focus: "Master crisp, staccato articulation and quick right-hand jumps.",
+                instruction: "Keep your fingers light and bouncy to evoke the sound of the celeste.",
+                type: 'song', topic: 'both', xpReward: 350, requiredXp: 31500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Dance_of_the_sugar_plum_fairy.mxl',
+                presetId: 'preset-sugarplum'
+            },
+            {
+                id: 'c18-l4', bpm: 60, courseId: "virtuoso-drama",
+                name: "Song: Lacrimosa (Mozart)",
+                description: "Perform the tragic, chorale-textured Lacrimosa from Mozart's Requiem.",
+                focus: "Coordinate the weeping violin string pattern and full four-voice vocal chord structures.",
+                instruction: "Keep the tempo slow and heavy. Voicing must sound warm and vocal.",
+                type: 'song', topic: 'both', xpReward: 400, requiredXp: 32000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Lacrimosa_-_Requiem.mxl',
+                presetId: 'preset-mozart-lacrimosa'
+            },
+            {
+                id: 'c18-l5', bpm: 120, courseId: "virtuoso-drama",
+                name: "Song: Flight of the Bumblebee (Rimsky-Korsakov)",
+                description: "The ultimate capstone showpiece. Navigate rapid chromatic runs.",
+                focus: "Practice rapid, continuous sixteenth note chromatic runs and quick hand interchanges.",
+                instruction: "Start extremely slow. Build speed only when your fingers are completely relaxed.",
+                type: 'song', topic: 'both', xpReward: 500, requiredXp: 32500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Flight_of_the_Bumblebee.mxl',
+                presetId: 'preset-bumblebee'
+            }
+        ]
     }
 ];
 export const getLessonById = (id: string): Lesson | undefined => {

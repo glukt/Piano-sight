@@ -12,6 +12,7 @@ interface VirtualKeyboardProps {
     interactive?: boolean;
     onNoteOn?: (midi: number) => void;
     onNoteOff?: (midi: number) => void;
+    activeNoteVelocities?: Map<number, number>;
 }
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -32,7 +33,8 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
     showStaff = false,
     interactive = false,
     onNoteOn,
-    onNoteOff
+    onNoteOff,
+    activeNoteVelocities = new Map()
 }) => {
     const { width: windowWidth } = useWindowSize();
     const isMobile = windowWidth < 768;
@@ -214,8 +216,23 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
                 }
 
                 const isPressed = isPlayback || isUser;
+                const velocity = activeNoteVelocities.get(key.midi) ?? 80;
+                const opacity = 0.2 + (velocity / 127) * 0.6;
+                const blurRadius = 5 + (velocity / 127) * 15;
+                const spreadRadius = 1 + (velocity / 127) * 3;
+
+                const glowStyle = isPressed ? {
+                    boxShadow: `inset 0 -10px 20px rgba(255,255,255,${opacity * 0.3}), 0 0 ${blurRadius}px ${spreadRadius}px ${
+                        isExpected 
+                            ? 'rgba(34,197,94,' + opacity + ')' 
+                            : isPlayback 
+                                ? 'rgba(59,130,246,' + opacity + ')' 
+                                : 'rgba(234,179,8,' + opacity + ')'
+                    }`
+                } : {};
+
                 const pressedClass = isPressed 
-                    ? 'translate-y-[3px] border-b-[2px] border-b-gray-400 dark:border-b-gray-600 shadow-inner' 
+                    ? 'translate-y-[3px] border-b-[2px] border-b-gray-400 dark:border-b-gray-600' 
                     : 'border-b-[6px] border-b-gray-300 dark:border-b-gray-500 active:translate-y-[3px] active:border-b-[2px] active:shadow-inner hover:bg-gray-50';
 
                 return (
@@ -224,7 +241,7 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
                         className={`virtual-key-white flex-1 h-full border border-gray-400 dark:border-gray-600 rounded-b-md relative transition-all duration-75 shadow-sm
                              ${bgColor} ${interactive ? 'cursor-pointer' : ''} ${pressedClass}
                         `}
-                        style={{ zIndex: 1 }}
+                        style={{ zIndex: 1, ...glowStyle }}
                         onMouseDown={interactive ? (e) => handleKeyDown(key.midi, e) : undefined}
                         onMouseUp={interactive ? (e) => handleKeyUp(key.midi, e) : undefined}
                         onMouseLeave={interactive ? (e) => handleKeyUp(key.midi, e) : undefined}
@@ -274,8 +291,23 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
                     const widthPercent = (1 / whiteKeyCount) * 100 * keyWidthRatio;
 
                     const isPressed = isPlayback || isUser;
+                    const velocity = activeNoteVelocities.get(key.midi) ?? 80;
+                    const opacity = 0.2 + (velocity / 127) * 0.6;
+                    const blurRadius = 4 + (velocity / 127) * 12;
+                    const spreadRadius = 0.5 + (velocity / 127) * 2.5;
+
+                    const glowStyle = isPressed ? {
+                        boxShadow: `inset 0 -5px 10px rgba(255,255,255,${opacity * 0.2}), 0 0 ${blurRadius}px ${spreadRadius}px ${
+                            isExpected 
+                                ? 'rgba(34,197,94,' + opacity + ')' 
+                                : isPlayback 
+                                    ? 'rgba(59,130,246,' + opacity + ')' 
+                                    : 'rgba(234,179,8,' + opacity + ')'
+                        }`
+                    } : {};
+
                     const pressedClass = isPressed
-                        ? 'translate-y-[2px] border-b-[2px] shadow-inner'
+                        ? 'translate-y-[2px] border-b-[2px]'
                         : 'border-b-[5px] border-b-gray-950 active:translate-y-[2px] active:border-b-[2px] active:shadow-inner';
 
                     return (
@@ -286,7 +318,8 @@ const VirtualKeyboard: React.FC<VirtualKeyboardProps> = ({
                              `}
                             style={{
                                 left: `${leftPercent}%`,
-                                width: `${widthPercent}%`
+                                width: `${widthPercent}%`,
+                                ...glowStyle
                             }}
                             onMouseDown={interactive ? (e) => handleKeyDown(key.midi, e) : undefined}
                             onMouseUp={interactive ? (e) => handleKeyUp(key.midi, e) : undefined}

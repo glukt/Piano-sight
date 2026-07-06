@@ -11,6 +11,7 @@ export function useMidi({ onNoteOn, onNoteOff }: UseMidiProps = {}) {
     const [outputs, setOutputs] = useState<WebMidi.MIDIOutput[]>([]);
     const [activeNotes, setActiveNotes] = useState<Set<number>>(new Set());
     const [isEnabled, setIsEnabled] = useState(false);
+    const [noteVelocities, setNoteVelocities] = useState<Map<number, number>>(new Map());
     const [error, setError] = useState<string | null>(null);
 
     // Refs for callbacks to avoid effect dependencies
@@ -34,11 +35,21 @@ export function useMidi({ onNoteOn, onNoteOff }: UseMidiProps = {}) {
                     next.add(note);
                     return next;
                 });
+                setNoteVelocities(prev => {
+                    const next = new Map(prev);
+                    next.set(note, velocity);
+                    return next;
+                });
                 onNoteOnRef.current?.(note, velocity);
             } else {
                 // Velocity 0 is often used as Note Off
                 setActiveNotes(prev => {
                     const next = new Set(prev);
+                    next.delete(note);
+                    return next;
+                });
+                setNoteVelocities(prev => {
+                    const next = new Map(prev);
                     next.delete(note);
                     return next;
                 });
@@ -50,6 +61,11 @@ export function useMidi({ onNoteOn, onNoteOff }: UseMidiProps = {}) {
         if (command >= 128 && command <= 143) {
             setActiveNotes(prev => {
                 const next = new Set(prev);
+                next.delete(note);
+                return next;
+            });
+            setNoteVelocities(prev => {
+                const next = new Map(prev);
                 next.delete(note);
                 return next;
             });
@@ -134,5 +150,5 @@ export function useMidi({ onNoteOn, onNoteOff }: UseMidiProps = {}) {
         };
     }, [handleMidiMessage]);
 
-    return { inputs, outputs, activeNotes, isEnabled, error };
+    return { inputs, outputs, activeNotes, noteVelocities, isEnabled, error };
 }

@@ -2782,6 +2782,58 @@ export const courses: Course[] = [
                 presetId: 'preset-joplin-entertainer'
             }
         ]
+    },
+    {
+        id: "contemporary-neoclassical",
+        name: "Course 17: Contemporary Neo-Classical & Ballads",
+        order: 17,
+        description: "Master modern minimalist patterns, rich left-hand arpeggios, and expressive cinematic themes.",
+        lessons: [
+            {
+                id: 'c17-l1', bpm: 70, courseId: "contemporary-neoclassical",
+                name: "Song: Kiss the Rain (Yiruma)",
+                description: "Play Yiruma's famous warm and lyrical contemporary piano ballad.",
+                focus: "Practice smooth weight transfers and singing right-hand phrasing with rolled chords.",
+                instruction: "Focus on legato connections and keeping the emotional melody prominent.",
+                type: 'song', topic: 'both', xpReward: 250, requiredXp: 28500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Kiss_the_Rain_-_Yiruma.mxl',
+                presetId: 'preset-yiruma'
+            },
+            {
+                id: 'c17-l2', bpm: 75, courseId: "contemporary-neoclassical",
+                name: "Song: Sunlight (Andrea Vanzo)",
+                description: "Perform Andrea Vanzo's beautiful, flowing neo-classical composition.",
+                focus: "Practice maintaining a constant, flowing eighth note left-hand arpeggiated movement.",
+                instruction: "Focus on absolute rhythmic evenness and a light, singing tone.",
+                type: 'song', topic: 'both', xpReward: 300, requiredXp: 29000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/sunlight-andrea-vanzo.mxl',
+                presetId: 'preset-vanzo'
+            },
+            {
+                id: 'c17-l3', bpm: 80, courseId: "contemporary-neoclassical",
+                name: "Song: Comptine d'un autre été (Yann Tiersen)",
+                description: "Play the famous theme from Amélie. Master structured minimalist phrasing.",
+                focus: "Practice the repeating left-hand chordal pattern while building right-hand themes.",
+                instruction: "Keep your left hand extremely steady and use subtle dynamic waves to shape the piece.",
+                type: 'song', topic: 'both', xpReward: 350, requiredXp: 29500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/comptine_tiersen.musicxml',
+                presetId: 'preset-tiersen-comptine'
+            },
+            {
+                id: 'c17-l4', bpm: 75, courseId: "contemporary-neoclassical",
+                name: "Song: Mariage d'Amour (Clayderman)",
+                description: "The contemporary capstone. Perform this beloved romantic piano standard.",
+                focus: "Coordinate wide-spanning left-hand runs with syncopated right-hand octaves and turns.",
+                instruction: "Perform with expressive phrasing (rubato) and keep the middle-register voicing clean.",
+                type: 'song', topic: 'both', xpReward: 400, requiredXp: 30000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Mariage_dAmour.mxl',
+                presetId: 'preset-mariagedamour'
+            }
+        ]
     }
 ];
 export const getLessonById = (id: string): Lesson | undefined => {

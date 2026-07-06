@@ -52,6 +52,9 @@ This file is automatically updated by the autonomous conservatory developer agen
 - **[task-013] Chord Parser & Visual Reference Helper**
   - *Details*: Built a real-time chord recognizer that parses active notes in the current step (including inversions) and displays the chord name, spelling (notes), and recommended finger placements directly above the virtual keyboard overlay.
   - *Date*: 2026-07-06
+- **[task-014] Course 13: Baroque Polyphony & Chopin Etudes**
+  - *Details*: Added a structured 5-lesson curriculum covering baroque polyphonic voicing and romantic expression, binding authentic masterwork files (Minuet in G Minor, Chopin's Waltz in A Minor, Fugue No. 1 in C Major, Chopin's Eb Nocturne, and Bach's Toccata & Fugue in D Minor).
+  - *Date*: 2026-07-06
 
 ---
 

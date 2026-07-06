@@ -183,10 +183,51 @@ class AudioEngine {
         this.sustainedNotes.clear();
     }
 
+    private metronomeSoundType: 'digital' | 'woodblock' | 'rimshot' | 'tick' = 'digital';
+
+    setMetronomeSoundType(type: 'digital' | 'woodblock' | 'rimshot' | 'tick') {
+        this.metronomeSoundType = type;
+    }
+
+    setMetronomeVolume(volume: number) {
+        if (!this.metronomeSynth) return;
+        const db = volume === 0 ? -99 : 20 * Math.log10(volume);
+        this.metronomeSynth.volume.value = db;
+    }
+
     playMetronomeClick(isDownbeat: boolean) {
         if (!this.isInitialized || !this.metronomeSynth) return;
-        const note = isDownbeat ? "C6" : "C5";
-        this.metronomeSynth.triggerAttackRelease(note, "32n", Tone.now());
+        
+        if (this.metronomeSoundType === 'woodblock') {
+            this.metronomeSynth.set({
+                oscillator: { type: "triangle" },
+                envelope: { decay: 0.08, release: 0.08 }
+            });
+            const note = isDownbeat ? "A5" : "E5";
+            this.metronomeSynth.triggerAttackRelease(note, "32n", Tone.now());
+        } else if (this.metronomeSoundType === 'tick') {
+            this.metronomeSynth.set({
+                oscillator: { type: "square" },
+                envelope: { decay: 0.02, release: 0.02 }
+            });
+            const note = isDownbeat ? "C6" : "C5";
+            this.metronomeSynth.triggerAttackRelease(note, "32n", Tone.now());
+        } else if (this.metronomeSoundType === 'rimshot') {
+            this.metronomeSynth.set({
+                oscillator: { type: "sawtooth" },
+                envelope: { decay: 0.015, release: 0.015 }
+            });
+            const note = isDownbeat ? "C4" : "G3";
+            this.metronomeSynth.triggerAttackRelease(note, "32n", Tone.now());
+        } else {
+            // digital (default)
+            this.metronomeSynth.set({
+                oscillator: { type: "sine" },
+                envelope: { decay: 0.04, release: 0.04 }
+            });
+            const note = isDownbeat ? "C6" : "C5";
+            this.metronomeSynth.triggerAttackRelease(note, "32n", Tone.now());
+        }
     }
 
     releaseAll() {

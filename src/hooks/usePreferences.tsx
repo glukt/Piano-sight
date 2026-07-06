@@ -11,6 +11,8 @@ export interface Preferences {
     soundType: 'synth' | 'samples';
     inputMode: 'instrument' | 'touch';
     noteLabelType: 'scientific' | 'solfege';
+    metronomeSoundType: 'digital' | 'woodblock' | 'rimshot' | 'tick';
+    metronomeVolume: number; // 0 to 1
 }
 
 const DEFAULT_PREFERENCES: Preferences = {
@@ -24,6 +26,8 @@ const DEFAULT_PREFERENCES: Preferences = {
     soundType: 'synth',
     inputMode: 'instrument',
     noteLabelType: 'scientific',
+    metronomeSoundType: 'digital',
+    metronomeVolume: 0.8,
 };
 
 interface PreferencesContextType {

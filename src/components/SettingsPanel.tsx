@@ -361,6 +361,46 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     </div>
                 </div>
 
+                {/* Metronome Soundscapes */}
+                <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-4">Metronome Soundscapes</h3>
+
+                    {/* Metronome Sound Select */}
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <span className="text-gray-600 dark:text-gray-300 font-medium block">Metronome Click Sound</span>
+                            <span className="text-xs text-gray-400">Select click waveform instrument profile</span>
+                        </div>
+                        <select
+                            value={preferences.metronomeSoundType}
+                            onChange={(e) => updatePreference('metronomeSoundType', e.target.value as 'digital' | 'woodblock' | 'rimshot' | 'tick')}
+                            className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm font-bold text-gray-700 dark:text-gray-200 outline-none focus:border-indigo-500"
+                        >
+                            <option value="digital">Digital Beep (Sine)</option>
+                            <option value="woodblock">Classic Woodblock</option>
+                            <option value="tick">Mechanical Tick</option>
+                            <option value="rimshot">Snare Rimshot</option>
+                        </select>
+                    </div>
+
+                    {/* Metronome Volume Slider */}
+                    <div>
+                        <div className="flex justify-between text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                            <span>Metronome Volume</span>
+                            <span className="font-mono">{Math.round(preferences.metronomeVolume * 100)}%</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.05"
+                            value={preferences.metronomeVolume}
+                            onChange={(e) => updatePreference('metronomeVolume', Number(e.target.value))}
+                            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-650"
+                        />
+                    </div>
+                </div>
+
                 {/* Danger Zone */}
                 <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800">
                     <h3 className="font-bold text-red-700 dark:text-red-300 mb-2">Danger Zone</h3>

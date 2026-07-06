@@ -9,6 +9,7 @@ export const useRhythmEngine = (
     loopRange?: { startBeat: number; endBeat: number } | null
 ) => {
     const [isPlaying, setIsPlaying] = useState(false);
+    const [currentBeat, setCurrentBeat] = useState(0);
     const requestRef = useRef<number>();
     const startTimeRef = useRef<number>(0);
     const elapsedTimeRef = useRef<number>(0);
@@ -50,11 +51,12 @@ export const useRhythmEngine = (
         elapsedTimeRef.current = elapsed;
 
         // Click generator
-        const currentBeat = Math.floor(elapsed / beatDuration);
-        if (currentBeat > lastBeatRef.current) {
-            const isDownbeat = (currentBeat % beatsPerMeasure === 0);
+        const currentBeatVal = Math.floor(elapsed / beatDuration);
+        if (currentBeatVal > lastBeatRef.current) {
+            const isDownbeat = (currentBeatVal % beatsPerMeasure === 0);
             audio.playMetronomeClick(isDownbeat);
-            lastBeatRef.current = currentBeat;
+            lastBeatRef.current = currentBeatVal;
+            setCurrentBeat(currentBeatVal);
         }
 
         // Progress can be negative during lead-in
@@ -82,6 +84,7 @@ export const useRhythmEngine = (
 
     const stop = useCallback(() => {
         setIsPlaying(false);
+        setCurrentBeat(0);
         if (requestRef.current) cancelAnimationFrame(requestRef.current);
     }, []);
 
@@ -91,5 +94,5 @@ export const useRhythmEngine = (
         };
     }, []);
 
-    return { isPlaying, elapsedTimeRef, start, stop };
+    return { isPlaying, elapsedTimeRef, start, stop, currentBeat, beatsPerMeasure };
 };

@@ -89,7 +89,7 @@ export const GameContainer: React.FC<GameContainerProps> = ({
         trebleCursorIndex, bassCursorIndex,
         isTrebleOnset, isBassOnset,
         isDemoPlaying,
-        isRhythmMode, countDown, streak, lastHitType,
+        isRhythmMode, isRhythmPlaying, currentBeat, beatsPerMeasure, countDown, streak, lastHitType,
         setNotePositions,
         showNoteLabels, setShowNoteLabels,
         showStaff, setShowStaff,
@@ -368,6 +368,43 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                             </div>
                         </div>
                     )}
+
+                    {/* Visual Metronome */}
+                    {isRhythmMode && isRhythmPlaying && (
+                        <div className="flex items-center justify-center gap-3 py-2 bg-slate-900/60 backdrop-blur rounded-lg border border-slate-800/80 mb-3 px-4 shadow-inner max-w-sm mx-auto">
+                            <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest font-mono">
+                                Beat { (currentBeat % beatsPerMeasure) + 1 }
+                            </div>
+                            <div className="flex gap-2.5">
+                                {Array.from({ length: beatsPerMeasure }).map((_, idx) => {
+                                    const isActive = (currentBeat % beatsPerMeasure) === idx;
+                                    const isFirst = idx === 0;
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className={`w-4 h-4 rounded-full transition-all duration-75 shadow-sm ${
+                                                isActive
+                                                    ? isFirst
+                                                        ? 'bg-rose-500 scale-125 shadow-[0_0_12px_#f43f5e]'
+                                                        : 'bg-emerald-400 scale-125 shadow-[0_0_12px_#34d399]'
+                                                    : 'bg-slate-800 border border-slate-700/50'
+                                            }`}
+                                        />
+                                    );
+                                })}
+                            </div>
+                            {/* Pendulum Swing animation */}
+                            <div className="relative w-8 h-4 overflow-hidden flex items-center justify-center border-l border-slate-800/80 pl-3">
+                                <div 
+                                    className="w-1.5 h-4 bg-indigo-400 rounded-full transition-transform duration-300 origin-bottom"
+                                    style={{
+                                        transform: `rotate(${(currentBeat % 2 === 0) ? '-30deg' : '30deg'})`,
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )}
+
                     <MusicDisplay
                         gameMode={gameMode}
                         trebleNotes={paddedLevelData.treble}

@@ -2656,6 +2656,69 @@ export const courses: Course[] = [
                 presetId: 'preset-clairlune'
             }
         ]
+    },
+    {
+        id: "classical-sonatas",
+        name: "Course 15: Classical Sonatas & Symphonies",
+        order: 15,
+        description: "Master symphonic reductions, classical sonata structures, dynamic contrast, and classical precision.",
+        lessons: [
+            {
+                id: 'c15-l1', bpm: 60, courseId: "classical-sonatas",
+                name: "Song: Moonlight Sonata (Beethoven)",
+                description: "Perform the famous triplet-driven Adagio Sostenuto first movement.",
+                focus: "Keep the triplet accompaniment completely quiet while projecting the dotted melody line.",
+                instruction: "Focus on long-held bass octaves and slow, singing melody voicing.",
+                type: 'song', topic: 'both', xpReward: 250, requiredXp: 23500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Sonate_No._14_Moonlight_1st_Movement.mxl',
+                presetId: 'preset-beethoven-moonlight1'
+            },
+            {
+                id: 'c15-l2', bpm: 65, courseId: "classical-sonatas",
+                name: "Song: Ständchen / Serenade (Schubert)",
+                description: "Play Liszt's famous piano transcription of Schubert's vocal Serenade.",
+                focus: "Practice coordinating the alternating chord accompaniment with the vocal melody.",
+                instruction: "Focus on singing tone quality and steady triplet pulse coordination.",
+                type: 'song', topic: 'both', xpReward: 300, requiredXp: 24000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Schubert_Serenade_-_Standchen_-_By_Lizst.mxl',
+                presetId: 'preset-schubert-serenade'
+            },
+            {
+                id: 'c15-l3', bpm: 60, courseId: "classical-sonatas",
+                name: "Song: Pathetique Sonata - Adagio (Beethoven)",
+                description: "Navigate the expressive slow movement from Beethoven's Pathetique Sonata.",
+                focus: "Voicing is critical: separate the melody, middle-register accompaniment, and bass lines.",
+                instruction: "Keep your wrists completely relaxed to achieve a warm, singing piano tone.",
+                type: 'song', topic: 'both', xpReward: 350, requiredXp: 24500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Sonate_No._8_Pathetique_2nd_Movement.mxl',
+                presetId: 'preset-beethoven-pathetique2'
+            },
+            {
+                id: 'c15-l4', bpm: 80, courseId: "classical-sonatas",
+                name: "Song: Rondo alla Turca (Mozart)",
+                description: "Play Mozart's famous Turkish March theme from Sonata K. 331.",
+                focus: "Master quick sixteenth note runs, ornamentation, and clean rolled left-hand chords.",
+                instruction: "Maintain a light, crisp, and driving classical articulation throughout.",
+                type: 'song', topic: 'both', xpReward: 400, requiredXp: 25000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Piano_Sonata_No._11_K._331_3rd_Movement_Rondo_alla_Turca.mxl',
+                presetId: 'preset-mozart-rondo'
+            },
+            {
+                id: 'c15-l5', bpm: 90, courseId: "classical-sonatas",
+                name: "Song: Symphony No. 5 (Beethoven)",
+                description: "The ultimate sonata capstone. Perform the dramatic opening movement.",
+                focus: "Coordinate the famous four-note opening motif and manage rapid symphonic-style leaps.",
+                instruction: "Perform with massive dramatic power and absolute rhythmic precision.",
+                type: 'song', topic: 'both', xpReward: 450, requiredXp: 25500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Beethoven_Symphony_No._5_1st_movement_Piano_solo.mxl',
+                presetId: 'preset-beethoven-symphony5'
+            }
+        ]
     }
 ];
 export const getLessonById = (id: string): Lesson | undefined => {

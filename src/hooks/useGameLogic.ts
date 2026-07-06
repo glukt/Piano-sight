@@ -706,7 +706,7 @@ export const useGameLogic = (
     const lessonTimeSignature = currentLesson?.constraints?.timeSignature || "4/4";
     const lessonBeatsPerMeasure = Number(lessonTimeSignature.split('/')[0]) || 4;
 
-    const { isPlaying: isRhythmPlaying, elapsedTimeRef, start: startRhythm, stop: stopRhythm } = useRhythmEngine(
+    const { isPlaying: isRhythmPlaying, elapsedTimeRef, start: startRhythm, stop: stopRhythm, currentBeat, beatsPerMeasure } = useRhythmEngine(
         BPM,
         Math.ceil(calculateDuration(levelData.treble) / lessonBeatsPerMeasure),
         onAnimateRhythm,
@@ -1243,7 +1243,7 @@ export const useGameLogic = (
         isTrebleOnset: alignedSteps[cursorIndex]?.isTrebleOnset ?? false,
         isBassOnset: alignedSteps[cursorIndex]?.isBassOnset ?? false,
         isDemoPlaying,
-        isRhythmMode, countDown, streak, maxStreak, lastHitType,
+        isRhythmMode, isRhythmPlaying, countDown, streak, maxStreak, lastHitType,
         notePositions, setNotePositions,
         showNoteLabels, setShowNoteLabels,
         showStaff, setShowStaff,
@@ -1313,6 +1313,8 @@ export const useGameLogic = (
 
         // Stats
         hitStats,
-        errorStats
+        errorStats,
+        currentBeat,
+        beatsPerMeasure
     };
 };

@@ -5,6 +5,7 @@ export interface StaveNoteData {
     keys: string[];
     duration: string;
     tied?: boolean;
+    fingers?: number[];
 }
 
 interface MusicDisplayProps {
@@ -405,18 +406,34 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                     }
                 }
 
-                // Add fingering annotations if enabled and mapped
-                if (showFingering && highlights && !n.duration.endsWith('r')) {
-                    n.keys.forEach((key, keyIndex) => {
-                        const info = highlights[key];
-                        if (info) {
-                            const justify = clef === 'bass' ? VF.Annotation.VerticalJustify.BOTTOM : VF.Annotation.VerticalJustify.TOP;
-                            staveNote.addModifier(
-                                new VF.Annotation(String(info.finger)).setVerticalJustification(justify),
-                                keyIndex
-                            );
-                        }
-                    });
+                // Add finger numbers if defined explicitly on the note or mapped via handPosition
+                if (!n.duration.endsWith('r')) {
+                    if (n.fingers && n.fingers.length > 0) {
+                        n.fingers.forEach((fingerNum, keyIndex) => {
+                            if (fingerNum !== undefined && keyIndex < n.keys.length) {
+                                const justify = clef === 'bass' ? VF.Annotation.VerticalJustify.BOTTOM : VF.Annotation.VerticalJustify.TOP;
+                                staveNote.addModifier(
+                                    new VF.Annotation(String(fingerNum))
+                                        .setFont("sans-serif", 9, "bold")
+                                        .setVerticalJustification(justify),
+                                    keyIndex
+                                );
+                            }
+                        });
+                    } else if (showFingering && highlights) {
+                        n.keys.forEach((key, keyIndex) => {
+                            const info = highlights[key];
+                            if (info) {
+                                const justify = clef === 'bass' ? VF.Annotation.VerticalJustify.BOTTOM : VF.Annotation.VerticalJustify.TOP;
+                                staveNote.addModifier(
+                                    new VF.Annotation(String(info.finger))
+                                        .setFont("sans-serif", 9, "bold")
+                                        .setVerticalJustification(justify),
+                                    keyIndex
+                                );
+                            }
+                        });
+                    }
                 }
 
                 // Apply Theme Styles (Default notes)

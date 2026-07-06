@@ -85,6 +85,9 @@ This file is automatically updated by the autonomous conservatory developer agen
 - **[task-024] Velocity-Sensitive Visual Keypress Glow**
   - *Details*: Added Web MIDI velocity byte extraction. Designed and implemented a dynamic React glow styling system on the virtual keyboard keys that dynamically adjusts neon box-shadow radii, spread, and color opacities based on key striking velocity.
   - *Date*: 2026-07-06
+- **[task-025] Course 19: Epic Film, Gaming, & Holiday Masterworks**
+  - *Details*: Added a structured 4-lesson curriculum covering dramatic cinematic themes, nostalgic game music, and intense classical dances, binding authentic masterwork files (Bella Ciao, Autumn Voyage, Carol of the Bells, and Hungarian Dance No. 5).
+  - *Date*: 2026-07-06
 
 ---
 

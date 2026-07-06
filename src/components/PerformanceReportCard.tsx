@@ -16,6 +16,8 @@ interface PerformanceReportCardProps {
     passed?: boolean;
     requiredAccuracy?: number;
     isCapstone?: boolean;
+    tempoMultiplier?: number;
+    onTempoChange?: (multiplier: number) => void;
 }
 
 export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
@@ -32,7 +34,9 @@ export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
     isDarkMode,
     passed,
     requiredAccuracy = 80,
-    isCapstone = false
+    isCapstone = false,
+    tempoMultiplier = 1.0,
+    onTempoChange
 }) => {
     const hasPassed = passed !== undefined ? passed : true;
 
@@ -142,6 +146,11 @@ export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
                                     {hasPassed ? 'Mastered!' : `Min: ${requiredAccuracy}%`}
                                 </span>
                             )}
+                            {tempoMultiplier < 1.0 && (
+                                <span className="text-[9px] font-extrabold text-amber-500 dark:text-amber-400 mt-1.5 uppercase tracking-wider">
+                                    🐢 {Math.round(tempoMultiplier * 100)}% Speed
+                                </span>
+                            )}
                         </div>
                     </div>
 
@@ -205,13 +214,36 @@ export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
                                 ⚡ Loop Weak Measures ({Object.keys(errorMeasures).length})
                             </button>
                         )}
+                        {onTempoChange && !hasPassed && tempoMultiplier === 1.0 && (
+                            <button
+                                onClick={() => {
+                                    onTempoChange(0.75);
+                                    onRetry();
+                                }}
+                                className="flex-grow flex-shrink py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-amber-500 to-orange-550 text-white shadow-lg shadow-amber-500/25 hover:from-amber-600 hover:to-orange-650 transition active:scale-98"
+                            >
+                                🐢 Retry at 75% Speed
+                            </button>
+                        )}
+                        {onTempoChange && hasPassed && tempoMultiplier < 1.0 && (
+                            <button
+                                onClick={() => {
+                                    const nextTempo = Math.min(1.0, tempoMultiplier + 0.15);
+                                    onTempoChange(nextTempo);
+                                    onRetry();
+                                }}
+                                className="flex-grow flex-shrink py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-650 text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-600 hover:to-teal-750 transition active:scale-98"
+                            >
+                                🚀 Speed Up to {Math.round(Math.min(1.0, tempoMultiplier + 0.15) * 100)}% Speed
+                            </button>
+                        )}
                         <button
                             onClick={onRetry}
                             className="flex-grow flex-shrink py-3 px-4 rounded-xl font-bold text-sm bg-gray-200 dark:bg-gray-750 text-gray-800 dark:text-gray-250 hover:bg-gray-300 dark:hover:bg-gray-650 transition active:scale-98 animate-none"
                         >
                             🔄 Practice Whole Lesson
                         </button>
-                        {onNext && hasPassed && (
+                        {onNext && hasPassed && tempoMultiplier >= 1.0 && (
                             <button
                                 onClick={onNext}
                                 className="flex-grow flex-shrink py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-600 hover:to-teal-700 transition active:scale-98"

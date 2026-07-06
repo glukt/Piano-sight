@@ -221,6 +221,8 @@ export const useGameLogic = (
     const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
     const [notesCorrect, setNotesCorrect] = useState(0);
     const [notesMissed, setNotesMissed] = useState(0);
+    const [tempoMultiplier, setTempoMultiplier] = useState(1.0);
+    const consecutiveFailuresRef = useRef(0);
 
     const [errorMeasures, setErrorMeasures] = useState<Record<number, number>>({});
     const [loopRange, setLoopRange] = useState<{ startStep: number, endStep: number, startBeat: number, endBeat: number, measures: number[] } | null>(null);
@@ -624,7 +626,7 @@ export const useGameLogic = (
     }, [alignedSteps, cursorIndex, gameMode]);
 
     // Rhythm Engine with refs for low-latency visual-only DOM playhead updates
-    const BPM = currentLesson?.bpm || 80;
+    const BPM = (currentLesson?.bpm || 80) * tempoMultiplier;
     const bpmRef = useRef(BPM);
     useEffect(() => { bpmRef.current = BPM; }, [BPM]);
     const RHYTHM_LEAD_IN = 2;
@@ -864,6 +866,8 @@ export const useGameLogic = (
 
     const loadLesson = useCallback((lesson: Lesson) => {
         setCurrentLesson(lesson);
+        setTempoMultiplier(1.0);
+        consecutiveFailuresRef.current = 0;
         startTimeRef.current = Date.now();
         // Switch hand mode based on topic
         if (lesson.topic === 'treble') setGameMode('treble');
@@ -959,6 +963,15 @@ export const useGameLogic = (
                     setLessonPassed(passed);
 
                     if (passed) {
+                        consecutiveFailuresRef.current = 0;
+                    } else {
+                        consecutiveFailuresRef.current += 1;
+                        if (consecutiveFailuresRef.current >= 2 && tempoMultiplier === 1.0) {
+                            setTempoMultiplier(0.75);
+                        }
+                    }
+
+                    if (passed) {
                         handleAddXp(50); // only award completion XP if passed!
                         if (saveHighScore) {
                             let finalRank = 'Bronze';
@@ -978,7 +991,7 @@ export const useGameLogic = (
                             notesCorrect,
                             notesMissed,
                             gameMode === 'treble' ? 'right' : (gameMode === 'bass' ? 'left' : 'both'),
-                            1.0,
+                            tempoMultiplier,
                             errorMeasures,
                             durationSeconds
                         );
@@ -1283,6 +1296,10 @@ export const useGameLogic = (
         // Looping and Weak Measures
         errorMeasures,
         loopRange,
-        startLoopPractice
+        startLoopPractice,
+
+        // Tempo Adaptability
+        tempoMultiplier,
+        setTempoMultiplier
     };
 };

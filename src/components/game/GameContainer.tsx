@@ -389,6 +389,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                         passed={gameLogic.lessonPassed}
                         requiredAccuracy={gameLogic.requiredAccuracy}
                         isCapstone={gameLogic.isCapstone}
+                        tempoMultiplier={gameLogic.tempoMultiplier}
+                        onTempoChange={gameLogic.setTempoMultiplier}
                     />
                 );
             })()}

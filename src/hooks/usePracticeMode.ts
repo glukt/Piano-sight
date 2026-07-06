@@ -144,6 +144,7 @@ export function usePracticeMode({
     useEffect(() => {
         if (playbackEngine) {
             playbackEngine.practicedHand = practicedHand;
+            playbackEngine.mutePracticedHand = (practicedHand !== 'both');
         }
     }, [playbackEngine, practicedHand]);
 

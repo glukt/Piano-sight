@@ -224,7 +224,8 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
     handPosition,
     showFingering = true,
     keySignature,
-    timeSignature
+    timeSignature,
+    gameMode = 'both'
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -437,14 +438,22 @@ export const MusicDisplay: React.FC<MusicDisplayProps> = ({
                 }
 
                 // Apply Theme Styles (Default notes)
-                staveNote.setStyle({ fillStyle: foregroundColor, strokeStyle: foregroundColor });
+                const isHandPracticed = 
+                    gameMode === 'both' ||
+                    (gameMode === 'treble' && clef === 'treble') ||
+                    (gameMode === 'bass' && clef === 'bass');
+
+                const dimColor = isDarkMode ? "#1e293b" : "#cbd5e1";
+                const noteColor = isHandPracticed ? foregroundColor : dimColor;
+
+                staveNote.setStyle({ fillStyle: noteColor, strokeStyle: noteColor });
                 n.keys.forEach((_, keyIndex) => {
-                    staveNote.setKeyStyle(keyIndex, { fillStyle: foregroundColor, strokeStyle: foregroundColor });
+                    staveNote.setKeyStyle(keyIndex, { fillStyle: noteColor, strokeStyle: noteColor });
                 });
 
                 const isRest = n.duration.endsWith('r');
 
-                if (staffCursorIndex !== undefined && !isRest) {
+                if (staffCursorIndex !== undefined && !isRest && isHandPracticed) {
                     if (i === staffCursorIndex) {
                         if (isOnset) {
                             // Color current note based on input status

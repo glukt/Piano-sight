@@ -2541,6 +2541,69 @@ export const courses: Course[] = [
                 constraints: { trebleRange: ["c/4", "e/4", "g/4", "b/4", "c/5", "e/5", "g/5", "b/5"], bassRange: ["c/3", "e/3", "g/3", "b/3", "c/4", "e/4", "g/4", "b/4"], rhythms: ["q", "h", "8"], maxJumps: 4, chordsAllowed: true, numNotes: 64 }
             }
         ]
+    },
+    {
+        id: "baroque-chopin",
+        name: "Course 13: Baroque Polyphony & Chopin Etudes",
+        order: 13,
+        description: "Master two-part contrapuntal voicing, rubato expression, and complex romantic arpeggiated accompaniments.",
+        lessons: [
+            {
+                id: 'c13-l1', bpm: 80, courseId: "baroque-chopin",
+                name: "Song: Minuet in G Minor (Bach)",
+                description: "Navigate Bach's beautiful G minor minuet with counterpoint lines.",
+                focus: "Keep both hands independent. Remember to flat B and E notes according to the key signature.",
+                instruction: "Focus on voice leading: listen to how treble and bass voices interact.",
+                type: 'song', topic: 'both', xpReward: 250, requiredXp: 19000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/bach_minuet_g_minor.musicxml',
+                presetId: 'preset-bach-minuet-g-minor'
+            },
+            {
+                id: 'c13-l2', bpm: 80, courseId: "baroque-chopin",
+                name: "Song: Waltz in A Minor (Chopin)",
+                description: "Embellish Chopin's nostalgic romantic waltz theme.",
+                focus: "Coordinate left-hand bass jumps with right-hand triplets and expressive trills.",
+                instruction: "Focus on phrasing and slight tempo flexibility (rubato) for romantic styling.",
+                type: 'song', topic: 'both', xpReward: 280, requiredXp: 19500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Waltz_in_A_MinorChopin.mxl',
+                presetId: 'preset-chopin-waltz-aminor'
+            },
+            {
+                id: 'c13-l3', bpm: 75, courseId: "baroque-chopin",
+                name: "Song: Fugue No. 1 in C Major (Bach)",
+                description: "Practice the opening portion of Bach's C Major Fugue from the Well-Tempered Clavier.",
+                focus: "Polyphony requires voicing: project the main fugal subject whenever it enters in a new voice.",
+                instruction: "Maintain a completely steady pulse. Bach's fugues require absolute precision.",
+                type: 'song', topic: 'both', xpReward: 320, requiredXp: 20000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Fugue_I_in_C_major_BWV_846_-_Well_Tempered_Clavier_First_Book.mxl',
+                presetId: 'preset-bach-fugue'
+            },
+            {
+                id: 'c13-l4', bpm: 70, courseId: "baroque-chopin",
+                name: "Song: Nocturne in Eb Major (Chopin)",
+                description: "Perform Chopin's famous lyrical Nocturne Op. 9 No. 2.",
+                focus: "Navigate the wide-spanning left-hand arpeggios that support the expressive right-hand melody.",
+                instruction: "Voicing is key. Keep the accompaniment soft while the melody sings out.",
+                type: 'song', topic: 'both', xpReward: 350, requiredXp: 20500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Chopin_-_Nocturne_Op_9_No_2_E_Flat_Major.mxl',
+                presetId: 'preset-chopin-nocturne92'
+            },
+            {
+                id: 'c13-l5', bpm: 70, courseId: "baroque-chopin",
+                name: "Song: Toccata & Fugue in D Minor (Bach)",
+                description: "The ultimate baroque capstone. Coordinate counterpoint and rapid runs.",
+                focus: "Manage dramatic voicing shifts and coordinate polyphonic textures across both hands.",
+                instruction: "Perform with power and precision. Coordinate the dramatic thematic returns.",
+                type: 'song', topic: 'both', xpReward: 400, requiredXp: 21000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Bach_Toccata_and_Fugue_in_D_Minor_Piano_solo.mxl',
+                presetId: 'preset-bach-toccata'
+            }
+        ]
     }
 ];
 export const getLessonById = (id: string): Lesson | undefined => {

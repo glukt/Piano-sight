@@ -450,13 +450,13 @@ export class PlaybackEngine {
             // Play the note in Tone.js with the scheduled startTime if not muted
             if (!isNoteMuted) {
                 if (this.shouldPlayWithPedal()) {
-                    audio.playNote(midi, 85, undefined, startTime);
+                    audio.playDemoNote(midi, 85, undefined, startTime);
                     const releaseTimeout = window.setTimeout(() => {
                         audio.releaseNote(midi);
                     }, (noteDuration + lookahead) * 1000);
                     this.noteTimeouts.push(releaseTimeout);
                 } else {
-                    audio.playNote(midi, 85, noteDuration, startTime);
+                    audio.playDemoNote(midi, 85, noteDuration, startTime);
                 }
             }
         });
@@ -708,7 +708,7 @@ export class PlaybackEngine {
                 
                 const noteDuration = note.Length.RealValue * (240 / this.bpm);
                 // Play accompaniment note quietly
-                audio.playNote(midi, 35, noteDuration, startTime);
+                audio.playDemoNote(midi, 35, noteDuration, startTime);
             }
         });
     }

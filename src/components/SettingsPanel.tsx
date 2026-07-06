@@ -416,6 +416,23 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                         />
                     </div>
 
+                    {/* Accompaniment/Demo Volume Slider */}
+                    <div className="mt-4">
+                        <div className="flex justify-between text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1">
+                            <span>Accompaniment (Demo) Volume</span>
+                            <span className="font-mono">{Math.round(preferences.accompanimentVolume * 100)}%</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.05"
+                            value={preferences.accompanimentVolume}
+                            onChange={(e) => updatePreference('accompanimentVolume', Number(e.target.value))}
+                            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-indigo-650"
+                        />
+                    </div>
+
                     {/* Metronome Confidence Mode Toggle */}
                     <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200/50 dark:border-gray-700/30">
                         <div>

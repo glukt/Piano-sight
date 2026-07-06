@@ -72,6 +72,97 @@ interface GameContainerProps {
     onExitLesson?: () => void;
 }
 
+interface MicWaveformVisualizerProps {
+    volume: number;
+    frequency: number | null;
+    sensitivity: number;
+}
+
+const MicWaveformVisualizer: React.FC<MicWaveformVisualizerProps> = ({
+    volume,
+    frequency,
+    sensitivity
+}) => {
+    const canvasRef = React.useRef<HTMLCanvasElement>(null);
+    const phaseRef = React.useRef(0);
+
+    React.useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        let animationFrameId: number;
+
+        const draw = () => {
+            if (!canvas || !ctx) return;
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+
+            // Calculate height of the wave
+            const normalizedVol = Math.min(volume / (sensitivity * 4), 1);
+            const amplitude = normalizedVol * (h / 2.5);
+
+            // Calculate frequency representation
+            const baseFreq = frequency ? Math.min(Math.max((frequency - 100) / 800, 0.2), 3) : 0.5;
+            
+            phaseRef.current += 0.15;
+
+            ctx.beginPath();
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = frequency ? '#10b981' : '#6366f1';
+
+            for (let x = 0; x < w; x++) {
+                const t = x / w;
+                const fade = Math.sin(t * Math.PI);
+                const y = h / 2 + Math.sin(x * (0.1 * baseFreq) + phaseRef.current) * amplitude * fade;
+
+                if (x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+
+            // Dual soft out-of-phase wave
+            ctx.beginPath();
+            ctx.lineWidth = 0.8;
+            ctx.strokeStyle = frequency ? 'rgba(16, 185, 129, 0.4)' : 'rgba(99, 102, 241, 0.4)';
+            for (let x = 0; x < w; x++) {
+                const t = x / w;
+                const fade = Math.sin(t * Math.PI);
+                const y = h / 2 + Math.sin(x * (0.08 * baseFreq) - phaseRef.current * 0.8) * (amplitude * 0.7) * fade;
+
+                if (x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+
+            animationFrameId = requestAnimationFrame(draw);
+        };
+
+        draw();
+
+        return () => {
+            cancelAnimationFrame(animationFrameId);
+        };
+    }, [volume, frequency, sensitivity]);
+
+    return (
+        <canvas 
+            ref={canvasRef} 
+            width={64} 
+            height={24} 
+            className="w-16 h-6 bg-slate-950/60 rounded border border-slate-800/40 shadow-inner ml-2 animate-in fade-in"
+        />
+    );
+};
+
 export const GameContainer: React.FC<GameContainerProps> = ({
     gameLogic,
     windowWidth,
@@ -366,6 +457,11 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                                     <span className="text-gray-400 font-medium mt-0.5">Listening...</span>
                                 )}
                             </div>
+                            <MicWaveformVisualizer 
+                                volume={gameLogic.micVolume} 
+                                frequency={gameLogic.micFrequency} 
+                                sensitivity={gameLogic.micSensitivity} 
+                            />
                         </div>
                     )}
 

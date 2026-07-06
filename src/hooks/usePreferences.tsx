@@ -17,6 +17,7 @@ export interface Preferences {
     reverbWet: number; // 0 to 1
     noteheadTheme: 'standard' | 'rainbow';
     metronomeConfidenceMode: boolean;
+    accompanimentVolume: number; // 0 to 1
 }
 
 const DEFAULT_PREFERENCES: Preferences = {
@@ -36,6 +37,7 @@ const DEFAULT_PREFERENCES: Preferences = {
     reverbWet: 0.22,
     noteheadTheme: 'standard',
     metronomeConfidenceMode: false,
+    accompanimentVolume: 0.8,
 };
 
 interface PreferencesContextType {

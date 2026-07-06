@@ -217,7 +217,8 @@ export const useGameLogic = (
         audio.setMetronomeVolume(preferences.metronomeVolume);
         audio.setReverbDecay(preferences.reverbDecay);
         audio.setReverbWet(preferences.reverbWet);
-    }, [preferences.metronomeSoundType, preferences.metronomeVolume, preferences.reverbDecay, preferences.reverbWet]);
+        audio.setAccompanimentVolume(preferences.accompanimentVolume);
+    }, [preferences.metronomeSoundType, preferences.metronomeVolume, preferences.reverbDecay, preferences.reverbWet, preferences.accompanimentVolume]);
 
     // Muting & Completion
     const [isMutedKeys, setIsMutedKeys] = useState(false);
@@ -779,7 +780,7 @@ export const useGameLogic = (
             }
 
             notesToPlay.forEach(n => {
-                audio.playNote(n, 100);
+                audio.playDemoNote(n, 100);
                 demoActiveNotesRef.current.push(n);
             });
 

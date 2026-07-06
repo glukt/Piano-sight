@@ -207,6 +207,17 @@ class AudioEngine {
         }
     }
 
+    private accompanimentVolume: number = 0.8;
+
+    setAccompanimentVolume(volume: number) {
+        this.accompanimentVolume = volume;
+    }
+
+    playDemoNote(midiNote: number, velocity: number = 100, duration?: number, startTime?: number) {
+        const scaledVelocity = velocity * this.accompanimentVolume;
+        this.playNote(midiNote, scaledVelocity, duration, startTime);
+    }
+
     playMetronomeClick(isDownbeat: boolean) {
         if (!this.isInitialized || !this.metronomeSynth) return;
         

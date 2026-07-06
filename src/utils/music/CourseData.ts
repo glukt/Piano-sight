@@ -2604,6 +2604,58 @@ export const courses: Course[] = [
                 presetId: 'preset-bach-toccata'
             }
         ]
+    },
+    {
+        id: "romantic-impressionism",
+        name: "Course 14: Romantic Lyricism & Impressionism",
+        order: 14,
+        description: "Master Debussy's impressionist textures, Einaudi's modern minimalism, and Chopin's late-romantic phrasing.",
+        lessons: [
+            {
+                id: 'c14-l1', bpm: 80, courseId: "romantic-impressionism",
+                name: "Song: Nuvole Bianche (Einaudi)",
+                description: "Play Einaudi's famous contemporary minimalist masterwork.",
+                focus: "Practice maintaining a constant flowing left-hand pattern with right-hand syncopation.",
+                instruction: "Focus on even tempo and lyrical phrasing of the repeating motifs.",
+                type: 'song', topic: 'both', xpReward: 250, requiredXp: 21500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Nuvole_Bianche.mxl',
+                presetId: 'preset-nuvole-bianche-easy'
+            },
+            {
+                id: 'c14-l2', bpm: 75, courseId: "romantic-impressionism",
+                name: "Song: Arabesque No. 1 (Debussy)",
+                description: "Navigate Debussy's beautiful impressionist Arabesque in E Major.",
+                focus: "Practice playing polyrhythms (3 against 2) smoothly between hands.",
+                instruction: "Keep your touch light and airy to evoke Debussy's impressionist textures.",
+                type: 'song', topic: 'both', xpReward: 300, requiredXp: 22000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Arabesque_L._66_No._1_in_E_Major.mxl',
+                presetId: 'preset-debussy-arabesque1'
+            },
+            {
+                id: 'c14-l3', bpm: 75, courseId: "romantic-impressionism",
+                name: "Song: Waltz in C# Minor (Chopin)",
+                description: "Play Chopin's famous lyrical C# minor waltz (Op. 64 No. 2).",
+                focus: "Practice the syncopated tempo change (più lento) and rapid runs.",
+                instruction: "Listen to the voice leading of the inner lines in the waltz accompaniment.",
+                type: 'song', topic: 'both', xpReward: 350, requiredXp: 22500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Waltz_Opus_64_No._2_in_C_Minor.mxl',
+                presetId: 'preset-chopin-waltz-csharp'
+            },
+            {
+                id: 'c14-l4', bpm: 70, courseId: "romantic-impressionism",
+                name: "Song: Clair de Lune (Debussy)",
+                description: "The ultimate impressionist masterpiece. Perform Clair de Lune.",
+                focus: "Practice wide hand stretches, compound time signature (9/8), and delicate dynamics.",
+                instruction: "Focus on color and atmosphere. Keep the accompaniment extremely soft.",
+                type: 'song', topic: 'both', xpReward: 400, requiredXp: 23000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Clair_de_Lune__Debussy.mxl',
+                presetId: 'preset-clairlune'
+            }
+        ]
     }
 ];
 export const getLessonById = (id: string): Lesson | undefined => {

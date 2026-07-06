@@ -2304,9 +2304,129 @@ export const courses: Course[] = [
                     }
                 }
             },        ]
+    },
+    {
+        id: "reading-intervals",
+        name: "Course 9: Reading Musical Intervals",
+        order: 9,
+        description: "Master the visual shapes and physical transitions of seconds, thirds, fourths, fifths, and octaves.",
+        lessons: [
+            {
+                id: 'c9-l1', bpm: 80, courseId: "reading-intervals",
+                name: "Melodic & Harmonic Seconds",
+                description: "Identify and play seconds (steps next to each other on the staff).",
+                focus: "Seconds transition directly from a line to an adjacent space (or space to line).",
+                instruction: "Play stepwise motions up and down the C position.",
+                type: 'exercise', topic: 'both', xpReward: 100, requiredXp: 12500,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4"], bassRange: ["c/3", "d/3", "e/3", "f/3", "g/3"], rhythms: ["q", "h"], maxJumps: 1, chordsAllowed: false, numNotes: 20 }
+            },
+            {
+                id: 'c9-l2', bpm: 80, courseId: "reading-intervals",
+                name: "Melodic & Harmonic Thirds",
+                description: "Identify and play thirds (skips on the staff).",
+                focus: "Thirds skip a note, going from line to line, or space to space.",
+                instruction: "Skip over fingers smoothly. Recognize the parallel visual shape.",
+                type: 'exercise', topic: 'both', xpReward: 100, requiredXp: 12700,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["c/4", "e/4", "g/4"], bassRange: ["c/3", "e/3", "g/3"], rhythms: ["q", "h"], maxJumps: 2, chordsAllowed: false, numNotes: 20 }
+            },
+            {
+                id: 'c9-l3', bpm: 80, courseId: "reading-intervals",
+                name: "Melodic & Harmonic Fourths",
+                description: "Identify and play fourths (three-step leaps).",
+                focus: "Fourths leap from a line to a space, skipping two staff degrees.",
+                instruction: "Keep your hand relaxed as you leap fingers. Watch the line-to-space shift.",
+                type: 'exercise', topic: 'both', xpReward: 100, requiredXp: 12900,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["c/4", "f/4", "g/4"], bassRange: ["c/3", "f/3", "g/3"], rhythms: ["q", "h"], maxJumps: 3, chordsAllowed: false, numNotes: 24 }
+            },
+            {
+                id: 'c9-l4', bpm: 80, courseId: "reading-intervals",
+                name: "Melodic & Harmonic Fifths",
+                description: "Identify and play fifths (wide leaps line-to-line or space-to-space).",
+                focus: "Fifths anchor basic triads. Look for the parallel shape.",
+                instruction: "Stretch your hand to reach the 5th interval cleanly.",
+                type: 'exercise', topic: 'both', xpReward: 100, requiredXp: 13100,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["c/4", "g/4"], bassRange: ["c/3", "g/3"], rhythms: ["q", "h"], maxJumps: 4, chordsAllowed: false, numNotes: 24 }
+            },
+            {
+                id: 'c9-l5', bpm: 80, courseId: "reading-intervals",
+                name: "Intervals Capstone",
+                description: "Test your visual recognition of all intervals up to an octave.",
+                focus: "Identify leaps and steps quickly without hesitation.",
+                instruction: "The ultimate intervals test. Maintain even finger weight.",
+                type: 'exercise', topic: 'both', xpReward: 200, requiredXp: 13300,
+                handPosition: 'GRAND_C_POS',
+                constraints: { trebleRange: ["c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5"], bassRange: ["c/3", "d/3", "e/3", "f/3", "g/3", "a/3", "b/3", "c/4"], rhythms: ["q", "h", "8"], maxJumps: 7, chordsAllowed: true, numNotes: 32 }
+            }
+        ]
+    },
+    {
+        id: "classical-conservatory-1",
+        name: "Course 10: Classical Conservatory Level 1",
+        order: 10,
+        description: "Dive into authentic classical masterworks. Practice reading accidentals, key signatures, and polyphony.",
+        lessons: [
+            {
+                id: 'c10-l1', bpm: 80, courseId: "classical-conservatory-1",
+                name: "Song: Ode to Joy (Beethoven)",
+                description: "Play the famous theme from Beethoven's Ninth Symphony.",
+                focus: "Master stepwise movement and rhythm in both hands.",
+                instruction: "Coordinate both hands together to play this masterpiece.",
+                type: 'song', topic: 'both', xpReward: 200, requiredXp: 13500,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Ode_to_Joy.musicxml',
+                presetId: 'preset-ode-to-joy'
+            },
+            {
+                id: 'c10-l2', bpm: 80, courseId: "classical-conservatory-1",
+                name: "Song: Minuet in G (Bach)",
+                description: "Play Bach's famous keyboard piece in G Major.",
+                focus: "Practice the G Major key signature (F#). Keep eighth notes even.",
+                instruction: "Play the elegant Bach melody. Remember to sharp all F notes.",
+                type: 'song', topic: 'both', xpReward: 250, requiredXp: 13800,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Minuet_in_G.musicxml',
+                presetId: 'preset-minuet-g'
+            },
+            {
+                id: 'c10-l3', bpm: 80, courseId: "classical-conservatory-1",
+                name: "Song: Für Elise (Beethoven - Simplified)",
+                description: "Play a beautiful simplified arrangement of Beethoven's theme.",
+                focus: "Navigate the chromatic movement and registers smoothly.",
+                instruction: "Practice the Right Hand melody transitions carefully.",
+                type: 'song', topic: 'both', xpReward: 300, requiredXp: 14100,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Fur_Elise_Simplified.musicxml',
+                presetId: 'preset-fur-elise-simple'
+            },
+            {
+                id: 'c10-l4', bpm: 80, courseId: "classical-conservatory-1",
+                name: "Song: Prelude in C Major (Bach)",
+                description: "Play Bach's legendary arpeggiated prelude.",
+                focus: "Play even flowing broken chords. Keep a steady tempo.",
+                instruction: "Focus on finger coordination to keep arpeggios flowing.",
+                type: 'song', topic: 'both', xpReward: 350, requiredXp: 14400,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Prelude_No._1_in_C_Major_BWV_846_with_finger_suggestions_-_Johann_Sebastian_Bach.mxl',
+                presetId: 'preset-bach-prelude'
+            },
+            {
+                id: 'c10-l5', bpm: 80, courseId: "classical-conservatory-1",
+                name: "Song: Waltz in A Minor (Chopin)",
+                description: "Play Chopin's expressive romantic waltz.",
+                focus: "Practice the 3/4 waltz rhythm. Emphasize the romantic styling.",
+                instruction: "Combine Right Hand melody with Left Hand bass-chord accompaniment.",
+                type: 'song', topic: 'both', xpReward: 500, requiredXp: 15000,
+                handPosition: 'GRAND_C_POS',
+                songUrl: '/scores/Waltz_in_A_MinorChopin.mxl',
+                presetId: 'preset-chopin-waltz'
+            }
+        ]
     }
 ];
-
 export const getLessonById = (id: string): Lesson | undefined => {
     for (const course of courses) {
         const found = course.lessons.find((l) => l.id === id);

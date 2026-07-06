@@ -4,7 +4,7 @@ import urllib.request
 import urllib.error
 import os
 
-def call_ollama(prompt, system_prompt, model="qwen2.5", host="http://localhost:11434"):
+def call_ollama(prompt, system_prompt, model="qwen2.5-coder:latest", host="http://127.0.0.1:11434"):
     url = f"{host}/api/chat"
     data = {
         "model": model,
@@ -36,8 +36,8 @@ def main():
     parser.add_argument("--instruction", required=True, help="Instructions for editing the file")
     parser.add_argument("--start-line", type=int, help="Optional start line range (1-indexed)")
     parser.add_argument("--end-line", type=int, help="Optional end line range (1-indexed)")
-    parser.add_argument("--model", default="qwen2.5", help="Ollama model name")
-    parser.add_argument("--host", default="http://localhost:11434", help="Ollama host URL")
+    parser.add_argument("--model", default="qwen2.5-coder:latest", help="Ollama model name")
+    parser.add_argument("--host", default="http://127.0.0.1:11434", help="Ollama host URL")
     
     args = parser.parse_args()
     

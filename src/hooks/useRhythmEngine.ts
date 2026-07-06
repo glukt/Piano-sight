@@ -5,7 +5,8 @@ export const useRhythmEngine = (
     bpm: number = 60,
     measures: number = 2,
     onAnimate?: (elapsed: number) => void,
-    timeSignature: string = "4/4"
+    timeSignature: string = "4/4",
+    loopRange?: { startBeat: number; endBeat: number } | null
 ) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const requestRef = useRef<number>();
@@ -31,7 +32,21 @@ export const useRhythmEngine = (
     const animate = useCallback((time: number) => {
         if (!startTimeRef.current) startTimeRef.current = time;
 
-        const elapsed = (time - startTimeRef.current) / 1000; // seconds
+        let elapsed = (time - startTimeRef.current) / 1000; // seconds
+
+        // If loop is active, wrap elapsed seconds inside loop range
+        if (loopRange) {
+            const startSec = loopRange.startBeat * beatDuration;
+            const endSec = loopRange.endBeat * beatDuration;
+            const rangeSec = endSec - startSec;
+            if (elapsed >= endSec) {
+                const overflow = (elapsed - startSec) % rangeSec;
+                elapsed = startSec + overflow;
+                startTimeRef.current = time - (elapsed * 1000);
+                lastBeatRef.current = Math.floor(elapsed / beatDuration) - 1;
+            }
+        }
+
         elapsedTimeRef.current = elapsed;
 
         // Click generator
@@ -53,7 +68,7 @@ export const useRhythmEngine = (
         } else {
             setIsPlaying(false);
         }
-    }, [totalDuration, beatDuration, beatsPerMeasure]);
+    }, [totalDuration, beatDuration, beatsPerMeasure, loopRange]);
 
     const start = useCallback((leadInSeconds: number = 0) => {
         setIsPlaying(true);

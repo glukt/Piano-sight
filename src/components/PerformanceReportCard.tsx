@@ -6,6 +6,7 @@ interface PerformanceReportCardProps {
     onClose: () => void;
     onRetry: () => void;
     onNext?: () => void;
+    onLoopPractice?: (weakMeasures: number[]) => void;
     songTitle: string;
     notesCorrect: number;
     notesMissed: number;
@@ -22,6 +23,7 @@ export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
     onClose,
     onRetry,
     onNext,
+    onLoopPractice,
     songTitle,
     notesCorrect,
     notesMissed,
@@ -192,11 +194,22 @@ export const PerformanceReportCard: React.FC<PerformanceReportCardProps> = ({
 
                     {/* Action Buttons */}
                     <div className="flex flex-col sm:flex-row gap-3 z-10 relative">
+                        {onLoopPractice && Object.keys(errorMeasures).length > 0 && (
+                            <button
+                                onClick={() => {
+                                    const weakMeasures = Object.keys(errorMeasures).map(Number);
+                                    onLoopPractice(weakMeasures);
+                                }}
+                                className="flex-grow flex-shrink py-3 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/25 hover:from-amber-600 hover:to-orange-700 transition active:scale-98"
+                            >
+                                ⚡ Loop Weak Measures ({Object.keys(errorMeasures).length})
+                            </button>
+                        )}
                         <button
                             onClick={onRetry}
                             className="flex-grow flex-shrink py-3 px-4 rounded-xl font-bold text-sm bg-gray-200 dark:bg-gray-750 text-gray-800 dark:text-gray-250 hover:bg-gray-300 dark:hover:bg-gray-650 transition active:scale-98 animate-none"
                         >
-                            🔄 Practice Again
+                            🔄 Practice Whole Lesson
                         </button>
                         {onNext && hasPassed && (
                             <button

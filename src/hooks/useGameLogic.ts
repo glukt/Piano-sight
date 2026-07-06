@@ -218,8 +218,97 @@ export const useGameLogic = (
         isMutedKeysRef.current = isMutedKeys;
     }, [isMutedKeys]);
 
+    const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
     const [notesCorrect, setNotesCorrect] = useState(0);
     const [notesMissed, setNotesMissed] = useState(0);
+
+    const [errorMeasures, setErrorMeasures] = useState<Record<number, number>>({});
+    const [loopRange, setLoopRange] = useState<{ startStep: number, endStep: number, startBeat: number, endBeat: number, measures: number[] } | null>(null);
+    const loopRangeRef = useRef(loopRange);
+    useEffect(() => { loopRangeRef.current = loopRange; }, [loopRange]);
+
+    const currentLessonRef = useRef(currentLesson);
+    useEffect(() => { currentLessonRef.current = currentLesson; }, [currentLesson]);
+
+    const lastElapsedSecondsRef = useRef(0);
+
+    const recordMiss = useCallback((idx: number) => {
+        setNotesMissed(prev => prev + 1);
+        const step = alignedStepsRef.current[idx];
+        if (step) {
+            const timeSig = currentLessonRef.current?.constraints?.timeSignature || "4/4";
+            const parts = timeSig.split('/');
+            const num = parseInt(parts[0]) || 4;
+            const den = parseInt(parts[1]) || 4;
+            const bpmUnit = num * (4 / den);
+            const measure = Math.floor(step.time / bpmUnit) + 1;
+            setErrorMeasures(prev => ({
+                ...prev,
+                [measure]: (prev[measure] || 0) + 1
+            }));
+        }
+    }, []);
+
+    const advanceCursor = useCallback(() => {
+        setCursorIndex(prev => {
+            const next = prev + 1;
+            const limit = loopRangeRef.current ? loopRangeRef.current.endStep : alignedStepsRef.current.length;
+            if (next >= limit) {
+                if (loopRangeRef.current) {
+                    return loopRangeRef.current.startStep;
+                }
+                return limit;
+            }
+            return next;
+        });
+    }, []);
+
+    const startLoopPractice = useCallback((weakMeasures: number[]) => {
+        if (!weakMeasures || weakMeasures.length === 0) {
+            setLoopRange(null);
+            setCursorIndex(0);
+            return;
+        }
+
+        const sorted = weakMeasures.slice().sort((a, b) => a - b);
+        const startMeasure = sorted[0];
+        const endMeasure = sorted[sorted.length - 1];
+
+        const timeSig = currentLessonRef.current?.constraints?.timeSignature || "4/4";
+        const parts = timeSig.split('/');
+        const num = parseInt(parts[0]) || 4;
+        const den = parseInt(parts[1]) || 4;
+        const bpmUnit = num * (4 / den);
+
+        const startBeat = (startMeasure - 1) * bpmUnit;
+        const endBeat = endMeasure * bpmUnit;
+
+        // Find startStep and endStep in alignedStepsRef
+        let startStep = 0;
+        let endStep = alignedStepsRef.current.length;
+
+        for (let i = 0; i < alignedStepsRef.current.length; i++) {
+            if (alignedStepsRef.current[i].time >= startBeat) {
+                startStep = i;
+                break;
+            }
+        }
+        for (let i = 0; i < alignedStepsRef.current.length; i++) {
+            if (alignedStepsRef.current[i].time >= endBeat) {
+                endStep = i;
+                break;
+            }
+        }
+
+        setLoopRange({ startStep, endStep, startBeat, endBeat, measures: sorted });
+        
+        // Reset state for loop practice
+        setCursorIndex(startStep);
+        setNotesCorrect(0);
+        setNotesMissed(0);
+        setErrorMeasures({});
+        setIsLessonComplete(false);
+    }, []);
 
     // Stats & Achievements Hooks
     const { state: gameState, addXp, levelUp, clearLevelUp } = useGamification();
@@ -472,7 +561,6 @@ export const useGameLogic = (
 
     // Level
     const [difficulty, setDifficulty] = useState<Difficulty>(Difficulty.NOVICE);
-    const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
     const [levelData, setLevelData] = useState<{ treble: StaveNoteData[], bass: StaveNoteData[] }>(
         LevelGenerator.generate(Difficulty.NOVICE, errorStats)
     );
@@ -553,6 +641,22 @@ export const useGameLogic = (
     const isRhythmPlayingRef = useRef(false);
 
     const onAnimateRhythm = useCallback((elapsed: number) => {
+        // Handle playhead wrapping back in loop practice
+        if (loopRangeRef.current) {
+            const endSec = loopRangeRef.current.endBeat * (60 / bpmRef.current);
+            if (elapsed < lastElapsedSecondsRef.current && elapsed < endSec) {
+                let startStep = 0;
+                for (let i = 0; i < alignedStepsRef.current.length; i++) {
+                    if (alignedStepsRef.current[i].time >= loopRangeRef.current.startBeat) {
+                        startStep = i;
+                        break;
+                    }
+                }
+                setCursorIndex(startStep);
+            }
+        }
+        lastElapsedSecondsRef.current = elapsed;
+
         // 1. Direct visual DOM playhead update
         const playhead = document.getElementById('rhythm-playhead');
         if (playhead) {
@@ -563,7 +667,7 @@ export const useGameLogic = (
         // 2. Perform Timing Miss Checks at 60Hz (does not render unless a miss actually occurs)
         if (isRhythmMode && isRhythmPlayingRef.current) {
             const currentIdx = cursorIndexRef.current;
-            const levelLength = alignedStepsRef.current.length;
+            const levelLength = loopRangeRef.current ? loopRangeRef.current.endStep : alignedStepsRef.current.length;
             if (currentIdx >= levelLength) return;
 
             const noteDuration = 60 / BPM;
@@ -583,17 +687,17 @@ export const useGameLogic = (
                 }
 
                 if (requiredNotes.size === 0) {
-                    setCursorIndex(prev => prev + 1);
+                    advanceCursor();
                 } else {
-                    setCursorIndex(prev => prev + 1);
+                    advanceCursor();
                     setInputStatus('incorrect');
                     setStreak(0);
                     setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
-                    setNotesMissed(prev => prev + 1);
+                    recordMiss(currentIdx);
                 }
             }
         }
-    }, [isRhythmMode]);
+    }, [isRhythmMode, BPM, recordMiss, advanceCursor]);
 
     const lessonTimeSignature = currentLesson?.constraints?.timeSignature || "4/4";
     const lessonBeatsPerMeasure = Number(lessonTimeSignature.split('/')[0]) || 4;
@@ -602,7 +706,8 @@ export const useGameLogic = (
         BPM,
         Math.ceil(calculateDuration(levelData.treble) / lessonBeatsPerMeasure),
         onAnimateRhythm,
-        lessonTimeSignature
+        lessonTimeSignature,
+        loopRange
     );
 
     useEffect(() => {
@@ -874,7 +979,7 @@ export const useGameLogic = (
                             notesMissed,
                             gameMode === 'treble' ? 'right' : (gameMode === 'bass' ? 'left' : 'both'),
                             1.0,
-                            {},
+                            errorMeasures,
                             durationSeconds
                         );
                     }
@@ -925,13 +1030,13 @@ export const useGameLogic = (
             if (requiredNotes.size === 0) {
                 if (!isRhythmMode) {
                     lastProcessedIndex.current = cursorIndex;
-                    setCursorIndex(prev => prev + 1);
+                    advanceCursor();
                 } else if (currentNewlyPressedActiveNotes.length > 0) {
                     // Penalize off-beat keys pressed during rest in rhythm mode
                     if (inputStatus !== 'incorrect') {
                         setInputStatus('incorrect');
                         setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
-                        setNotesMissed(prev => prev + 1);
+                        recordMiss(cursorIndex);
                         setStreak(0);
                     }
                 }
@@ -963,7 +1068,7 @@ export const useGameLogic = (
                     if (inputStatus !== 'incorrect') {
                         setInputStatus('incorrect');
                         setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
-                        setNotesMissed(prev => prev + 1);
+                        recordMiss(cursorIndex);
                         setStreak(0);
                         currentNewlyPressedActiveNotes.filter(n => !requiredNotes.has(n)).forEach(n => {
                             const name = midiToNoteName(n);
@@ -1001,7 +1106,7 @@ export const useGameLogic = (
                         handleAddXp(2);
                     }
                     if (streak + 1 > maxStreak) setMaxStreak(streak + 1);
-                    setCursorIndex(prev => prev + 1);
+                    advanceCursor();
                     return;
                 }
 
@@ -1017,7 +1122,7 @@ export const useGameLogic = (
                 }
 
                 lastProcessedIndex.current = cursorIndex;
-                setCursorIndex(prev => prev + 1);
+                advanceCursor();
                 setInputStatus('waiting');
                 return;
             }
@@ -1027,7 +1132,7 @@ export const useGameLogic = (
                 if (inputStatus !== 'incorrect') {
                     setInputStatus('incorrect');
                     setScore(s => ({ ...s, incorrect: s.incorrect + 1 }));
-                    setNotesMissed(prev => prev + 1);
+                    recordMiss(cursorIndex);
                     setStreak(0);
                     currentNewlyPressedActiveNotes.filter(n => !requiredNotes.has(n)).forEach(n => {
                         const name = midiToNoteName(n);
@@ -1137,7 +1242,7 @@ export const useGameLogic = (
         activeMicLabel,
         changeMicrophone,
         midiInputs, // Exposed to SettingsPanel for device name display
-        score, difficulty, levelData, paddedLevelData,
+        score, difficulty, levelData, paddedLevelData, alignedSteps,
         playheadX: 20, // Playhead position is updated directly in visual DOM playhead
         isMutedKeys,
         isLessonComplete,
@@ -1173,6 +1278,11 @@ export const useGameLogic = (
         },
 
         // Progression
-        awardXp: handleAddXp
+        awardXp: handleAddXp,
+
+        // Looping and Weak Measures
+        errorMeasures,
+        loopRange,
+        startLoopPractice
     };
 };

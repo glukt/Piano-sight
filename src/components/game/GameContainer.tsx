@@ -354,29 +354,44 @@ export const GameContainer: React.FC<GameContainerProps> = ({
             />
 
             {/* Performance Report Card Modal */}
-            <PerformanceReportCard
-                isOpen={gameLogic.isLessonComplete}
-                onClose={() => {
-                    gameLogic.setIsLessonComplete(false);
-                    if (onExitLesson) {
-                        onExitLesson();
-                    }
-                }}
-                onRetry={() => {
-                    gameLogic.setIsLessonComplete(false);
-                    gameLogic.generateNewLevel(difficulty, false, gameLogic.currentLesson);
-                }}
-                onNext={onNextLesson}
-                songTitle={gameLogic.currentLesson?.name || 'Exercise'}
-                notesCorrect={gameLogic.notesCorrect}
-                notesMissed={gameLogic.notesMissed}
-                errorMeasures={{}}
-                totalMeasures={0}
-                isDarkMode={isDarkMode}
-                passed={gameLogic.lessonPassed}
-                requiredAccuracy={gameLogic.requiredAccuracy}
-                isCapstone={gameLogic.isCapstone}
-            />
+            {(() => {
+                const timeSig = gameLogic.currentLesson?.constraints?.timeSignature || "4/4";
+                const parts = timeSig.split('/');
+                const num = parseInt(parts[0]) || 4;
+                const den = parseInt(parts[1]) || 4;
+                const beatsPerMeasure = num * (4 / den);
+                const lastStep = gameLogic.alignedSteps[gameLogic.alignedSteps.length - 1];
+                const totalMeasures = lastStep ? Math.max(1, Math.ceil((lastStep.time + lastStep.duration) / beatsPerMeasure)) : 4;
+
+                return (
+                    <PerformanceReportCard
+                        isOpen={gameLogic.isLessonComplete}
+                        onClose={() => {
+                            gameLogic.setIsLessonComplete(false);
+                            if (onExitLesson) {
+                                onExitLesson();
+                            }
+                        }}
+                        onRetry={() => {
+                            gameLogic.setIsLessonComplete(false);
+                            gameLogic.generateNewLevel(difficulty, false, gameLogic.currentLesson);
+                        }}
+                        onLoopPractice={(weakMeasures) => {
+                            gameLogic.startLoopPractice(weakMeasures);
+                        }}
+                        onNext={onNextLesson}
+                        songTitle={gameLogic.currentLesson?.name || 'Exercise'}
+                        notesCorrect={gameLogic.notesCorrect}
+                        notesMissed={gameLogic.notesMissed}
+                        errorMeasures={gameLogic.errorMeasures}
+                        totalMeasures={totalMeasures}
+                        isDarkMode={isDarkMode}
+                        passed={gameLogic.lessonPassed}
+                        requiredAccuracy={gameLogic.requiredAccuracy}
+                        isCapstone={gameLogic.isCapstone}
+                    />
+                );
+            })()}
 
             {/* Sticky Bottom Keyboard Overlay */}
             {preferences.showKeyboard && (

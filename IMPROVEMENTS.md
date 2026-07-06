@@ -55,6 +55,9 @@ This file is automatically updated by the autonomous conservatory developer agen
 - **[task-014] Course 13: Baroque Polyphony & Chopin Etudes**
   - *Details*: Added a structured 5-lesson curriculum covering baroque polyphonic voicing and romantic expression, binding authentic masterwork files (Minuet in G Minor, Chopin's Waltz in A Minor, Fugue No. 1 in C Major, Chopin's Eb Nocturne, and Bach's Toccata & Fugue in D Minor).
   - *Date*: 2026-07-06
+- **[task-015] Course 14: Romantic Lyricism & Impressionism**
+  - *Details*: Added a structured 4-lesson curriculum covering Debussy's impressionist textures, Einaudi's contemporary minimalism, and Chopin's late-romantic phrasing, binding authentic masterwork files (Nuvole Bianche, Debussy's Arabesque No. 1, Chopin's Waltz in C# Minor, and Clair de Lune).
+  - *Date*: 2026-07-06
 
 ---
 

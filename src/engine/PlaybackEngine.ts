@@ -259,10 +259,14 @@ export class PlaybackEngine {
                     }
                 }
 
-                result.push({
-                    midi: note.Pitch.getHalfTone() + 12,
-                    isTied: isTied
-                });
+                try {
+                    result.push({
+                        midi: note.Pitch.getHalfTone() + 12,
+                        isTied: isTied
+                    });
+                } catch {
+                    // Skip unpitched/percussion notes whose FundamentalNote is not in NoteEnum
+                }
             }
         });
         return result;
@@ -402,11 +406,16 @@ export class PlaybackEngine {
             if (note.isRest()) return;
 
             let midi = 0;
-            if (note.halfTone !== undefined) {
-                midi = note.halfTone + 12;
-            } else if (note.Pitch) {
-                midi = note.Pitch.getHalfTone() + 12;
-            } else {
+            try {
+                if (note.halfTone !== undefined) {
+                    midi = note.halfTone + 12;
+                } else if (note.Pitch) {
+                    midi = note.Pitch.getHalfTone() + 12;
+                } else {
+                    return;
+                }
+            } catch {
+                // Skip unpitched/percussion notes (NoteEnum FundamentalNote undefined)
                 return;
             }
 

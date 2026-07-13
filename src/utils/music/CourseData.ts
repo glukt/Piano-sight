@@ -3001,6 +3001,278 @@ export const courses: Course[] = [
                 presetId: 'preset-bach-toccata'
             }
         ]
+    },
+    {
+        id: "jazz-standards-blues",
+        name: "Course 21: Jazz Standards & Blues",
+        order: 21,
+        description: "Explore the soulful world of jazz and blues: swing rhythms, 7th chord voicings, walking bass lines, and authentic blues phrasing.",
+        lessons: [
+            {
+                id: 'c21-l1', bpm: 72, courseId: "jazz-standards-blues",
+                name: "Exercise: 12-Bar Blues in C",
+                description: "Learn the foundational 12-bar blues chord progression in C major with a walking left-hand bass line.",
+                focus: "Internalize the I-IV-V chord progression: C7, F7, G7. Let the left hand walk steadily while the right hand plays the blues scale.",
+                instruction: "The 12-bar blues is the backbone of jazz and blues music. Bars 1-4 stay on C7, bars 5-6 move to F7, bar 7-8 return to C7, bar 9 is G7, bar 10 is F7, and bars 11-12 resolve to C7. Feel the groove — lean slightly on beats 2 and 4 for that authentic swing feel. Keep your wrist loose and let your fingers snap off the keys cleanly.",
+                type: 'exercise', topic: 'both', xpReward: 180, requiredXp: 38000,
+                handPosition: 'GRAND_C_POS',
+                constraints: {
+                    trebleRange: ["c/4", "d/4", "eb/4", "e/4", "g/4", "bb/4", "c/5", "d/5", "eb/5", "g/5"],
+                    bassRange: ["c/3", "e/3", "g/3", "bb/3", "f/3", "a/3", "g/3"],
+                    rhythms: ["q", "8", "h"],
+                    maxJumps: 3,
+                    chordsAllowed: true,
+                    numNotes: 48,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["c/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["bb/4"], duration: "q" },
+                            { keys: ["c/5"], duration: "h" }, { keys: ["bb/4"], duration: "q" }, { keys: ["g/4"], duration: "q" },
+                            { keys: ["f/4"], duration: "q" }, { keys: ["a/4"], duration: "q" }, { keys: ["c/5"], duration: "q" }, { keys: ["eb/5"], duration: "q" },
+                            { keys: ["f/5"], duration: "h" }, { keys: ["eb/5"], duration: "q" }, { keys: ["c/5"], duration: "q" },
+                            { keys: ["c/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["bb/4"], duration: "q" },
+                            { keys: ["c/5"], duration: "h" }, { keys: ["g/4"], duration: "h" },
+                            { keys: ["g/4"], duration: "q" }, { keys: ["b/4"], duration: "q" }, { keys: ["d/5"], duration: "q" }, { keys: ["f/5"], duration: "q" },
+                            { keys: ["f/4"], duration: "q" }, { keys: ["a/4"], duration: "q" }, { keys: ["c/5"], duration: "q" }, { keys: ["eb/5"], duration: "q" },
+                            { keys: ["c/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["bb/4"], duration: "q" },
+                            { keys: ["c/5"], duration: "h" }, { keys: ["bb/4"], duration: "q" }, { keys: ["g/4"], duration: "q" },
+                            { keys: ["c/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["bb/4"], duration: "q" },
+                            { keys: ["c/5"], duration: "w" }
+                        ],
+                        bass: [
+                            { keys: ["c/3"], duration: "q" }, { keys: ["e/3"], duration: "q" }, { keys: ["g/3"], duration: "q" }, { keys: ["bb/3"], duration: "q" },
+                            { keys: ["c/3"], duration: "q" }, { keys: ["g/3"], duration: "q" }, { keys: ["e/3"], duration: "q" }, { keys: ["c/3"], duration: "q" },
+                            { keys: ["f/3"], duration: "q" }, { keys: ["a/3"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["eb/4"], duration: "q" },
+                            { keys: ["f/3"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["a/3"], duration: "q" }, { keys: ["f/3"], duration: "q" },
+                            { keys: ["c/3"], duration: "q" }, { keys: ["e/3"], duration: "q" }, { keys: ["g/3"], duration: "q" }, { keys: ["bb/3"], duration: "q" },
+                            { keys: ["c/3"], duration: "q" }, { keys: ["bb/3"], duration: "q" }, { keys: ["g/3"], duration: "q" }, { keys: ["e/3"], duration: "q" },
+                            { keys: ["g/2"], duration: "q" }, { keys: ["b/2"], duration: "q" }, { keys: ["d/3"], duration: "q" }, { keys: ["f/3"], duration: "q" },
+                            { keys: ["f/2"], duration: "q" }, { keys: ["a/2"], duration: "q" }, { keys: ["c/3"], duration: "q" }, { keys: ["eb/3"], duration: "q" },
+                            { keys: ["c/3"], duration: "q" }, { keys: ["e/3"], duration: "q" }, { keys: ["g/3"], duration: "q" }, { keys: ["bb/3"], duration: "q" },
+                            { keys: ["c/3"], duration: "q" }, { keys: ["g/3"], duration: "q" }, { keys: ["e/3"], duration: "q" }, { keys: ["c/3"], duration: "q" },
+                            { keys: ["c/3"], duration: "q" }, { keys: ["e/3"], duration: "q" }, { keys: ["g/3"], duration: "q" }, { keys: ["bb/3"], duration: "q" },
+                            { keys: ["c/3"], duration: "w" }
+                        ]
+                    }
+                }
+            },
+            {
+                id: 'c21-l2', bpm: 76, courseId: "jazz-standards-blues",
+                name: "Exercise: Autumn Leaves Melody",
+                description: "Play the iconic melody of 'Autumn Leaves' — a jazz standard using the ii-V-I chord progression through two keys.",
+                focus: "Navigate the descending diatonic melody smoothly. Aim for a legato, singing tone in the right hand while the left hand provides simple root position chord comping.",
+                instruction: "Autumn Leaves is the perfect jazz standard to study. The melody descends gracefully through the ii-V-I progression — first in G major (Am7-D7-Gmaj7-Cmaj7), then in Bb major (Cm7-F7-Bbmaj7-Ebmaj7). Pay attention to the half-step resolution from the 7th to the 3rd of each chord. Use your 3rd finger on the melodic high notes for better tone. Let the notes ring with a warm, rounded touch — jazz piano values depth of tone over speed.",
+                type: 'exercise', topic: 'both', xpReward: 220, requiredXp: 38500,
+                handPosition: 'GRAND_C_POS',
+                constraints: {
+                    trebleRange: ["b/3", "c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5", "d/5", "e/5", "f/5", "g/5"],
+                    bassRange: ["g/2", "a/2", "b/2", "c/3", "d/3", "e/3", "f/3", "g/3", "a/3"],
+                    rhythms: ["q", "8", "h", "hd"],
+                    maxJumps: 4,
+                    chordsAllowed: false,
+                    numNotes: 56,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["b/3"], duration: "q" }, { keys: ["a/3"], duration: "q" }, { keys: ["g/3"], duration: "q" }, { keys: ["e/4"], duration: "q" },
+                            { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["b/3"], duration: "h" },
+                            { keys: ["c/4"], duration: "q" }, { keys: ["b/3"], duration: "q" }, { keys: ["a/3"], duration: "q" }, { keys: ["f/4"], duration: "q" },
+                            { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "h" },
+                            { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["b/3"], duration: "q" }, { keys: ["g/4"], duration: "q" },
+                            { keys: ["f/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "h" },
+                            { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["a/4"], duration: "q" },
+                            { keys: ["g/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["e/4"], duration: "h" },
+                            { keys: ["f/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["b/4"], duration: "q" },
+                            { keys: ["a/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["f/4"], duration: "h" },
+                            { keys: ["g/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["c/5"], duration: "q" },
+                            { keys: ["b/4"], duration: "q" }, { keys: ["a/4"], duration: "q" }, { keys: ["g/4"], duration: "h" },
+                            { keys: ["a/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["d/5"], duration: "q" },
+                            { keys: ["c/5"], duration: "q" }, { keys: ["b/4"], duration: "q" }, { keys: ["a/4"], duration: "h" },
+                            { keys: ["b/4"], duration: "q" }, { keys: ["a/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["e/5"], duration: "q" },
+                            { keys: ["d/5"], duration: "q" }, { keys: ["c/5"], duration: "q" }, { keys: ["b/4"], duration: "h" }
+                        ],
+                        bass: [
+                            { keys: ["a/2"], duration: "h" }, { keys: ["d/3"], duration: "h" },
+                            { keys: ["g/2"], duration: "h" }, { keys: ["c/3"], duration: "h" },
+                            { keys: ["c/3"], duration: "h" }, { keys: ["f/3"], duration: "h" },
+                            { keys: ["b/2"], duration: "h" }, { keys: ["e/3"], duration: "h" },
+                            { keys: ["e/3"], duration: "h" }, { keys: ["a/3"], duration: "h" },
+                            { keys: ["d/3"], duration: "h" }, { keys: ["g/2"], duration: "h" },
+                            { keys: ["c/3"], duration: "h" }, { keys: ["f/3"], duration: "h" },
+                            { keys: ["g/2"], duration: "h" }, { keys: ["g/2"], duration: "h" },
+                            { keys: ["a/2"], duration: "h" }, { keys: ["d/3"], duration: "h" },
+                            { keys: ["g/2"], duration: "h" }, { keys: ["c/3"], duration: "h" },
+                            { keys: ["c/3"], duration: "h" }, { keys: ["f/3"], duration: "h" },
+                            { keys: ["b/2"], duration: "h" }, { keys: ["e/3"], duration: "h" },
+                            { keys: ["e/3"], duration: "h" }, { keys: ["a/3"], duration: "h" },
+                            { keys: ["d/3"], duration: "h" }, { keys: ["g/2"], duration: "h" }
+                        ]
+                    }
+                }
+            },
+            {
+                id: 'c21-l3', bpm: 68, courseId: "jazz-standards-blues",
+                name: "Exercise: Summertime (Gershwin)",
+                description: "Perform the dreamy, gospel-blues melody of George Gershwin's iconic Summertime from Porgy and Bess.",
+                focus: "Summertime lives in the space between the notes. Practice the gentle, swaying lullaby melody with a soft, warm tone. Let the bass provide a rocking drone.",
+                instruction: "Summertime is written in D minor and uses a gentle 4/4 rocking feel. The right hand carries a long, singing melody with lots of held notes and blue notes (F# bending to F natural). The left hand provides a steady D-A bass pedal, creating a dark, gospel-tinged foundation. Focus on voicing: the melody must always sing above the accompaniment. Use the sustain pedal to blend the bass notes. Play with deep, deliberate keystrokes — let every note resonate fully before moving to the next. This is about feel, not speed.",
+                type: 'exercise', topic: 'both', xpReward: 250, requiredXp: 39000,
+                handPosition: 'GRAND_C_POS',
+                constraints: {
+                    trebleRange: ["d/4", "e/4", "f/4", "f#/4", "g/4", "a/4", "bb/4", "b/4", "c/5", "d/5", "e/5", "f/5"],
+                    bassRange: ["d/3", "a/3", "d/2", "a/2", "f/3", "c/3"],
+                    rhythms: ["q", "h", "hd", "w", "8"],
+                    maxJumps: 3,
+                    chordsAllowed: false,
+                    numNotes: 52,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["d/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["a/4"], duration: "q" }, { keys: ["a/4"], duration: "q" },
+                            { keys: ["a/4"], duration: "h" }, { keys: ["f/4"], duration: "q" }, { keys: ["a/4"], duration: "q" },
+                            { keys: ["b/4"], duration: "q" }, { keys: ["a/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["d/4"], duration: "q" },
+                            { keys: ["d/4"], duration: "hd" }, { keys: ["d/4"], duration: "q" },
+                            { keys: ["d/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["a/4"], duration: "q" }, { keys: ["bb/4"], duration: "q" },
+                            { keys: ["c/5"], duration: "h" }, { keys: ["a/4"], duration: "q" }, { keys: ["f/4"], duration: "q" },
+                            { keys: ["e/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["d/4"], duration: "q" },
+                            { keys: ["a/4"], duration: "h" }, { keys: ["d/4"], duration: "h" },
+                            { keys: ["d/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["a/4"], duration: "q" }, { keys: ["a/4"], duration: "q" },
+                            { keys: ["bb/4"], duration: "h" }, { keys: ["a/4"], duration: "q" }, { keys: ["f/4"], duration: "q" },
+                            { keys: ["e/4"], duration: "q" }, { keys: ["d/5"], duration: "q" }, { keys: ["c/5"], duration: "q" }, { keys: ["a/4"], duration: "q" },
+                            { keys: ["f/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["a/3"], duration: "q" },
+                            { keys: ["d/4"], duration: "h" }, { keys: ["e/4"], duration: "q" }, { keys: ["f/4"], duration: "q" },
+                            { keys: ["a/4"], duration: "h" }, { keys: ["f/4"], duration: "q" }, { keys: ["d/4"], duration: "q" },
+                            { keys: ["d/4"], duration: "hd" }, { keys: ["d/4"], duration: "q" },
+                            { keys: ["d/4"], duration: "w" }
+                        ],
+                        bass: [
+                            { keys: ["d/3"], duration: "h" }, { keys: ["a/3"], duration: "h" },
+                            { keys: ["d/3"], duration: "h" }, { keys: ["a/3"], duration: "h" },
+                            { keys: ["d/3"], duration: "h" }, { keys: ["a/3"], duration: "h" },
+                            { keys: ["d/3"], duration: "h" }, { keys: ["a/3"], duration: "h" },
+                            { keys: ["f/3"], duration: "h" }, { keys: ["c/4"], duration: "h" },
+                            { keys: ["d/3"], duration: "h" }, { keys: ["a/3"], duration: "h" },
+                            { keys: ["g/2"], duration: "h" }, { keys: ["d/3"], duration: "h" },
+                            { keys: ["d/3"], duration: "h" }, { keys: ["a/3"], duration: "h" },
+                            { keys: ["d/3"], duration: "h" }, { keys: ["a/3"], duration: "h" },
+                            { keys: ["d/3"], duration: "h" }, { keys: ["a/3"], duration: "h" },
+                            { keys: ["bb/2"], duration: "h" }, { keys: ["f/3"], duration: "h" },
+                            { keys: ["g/2"], duration: "h" }, { keys: ["d/3"], duration: "h" },
+                            { keys: ["d/3"], duration: "h" }, { keys: ["a/3"], duration: "h" },
+                            { keys: ["g/2"], duration: "h" }, { keys: ["a/2"], duration: "h" },
+                            { keys: ["d/3"], duration: "w" }
+                        ]
+                    }
+                }
+            },
+            {
+                id: 'c21-l4', bpm: 60, courseId: "jazz-standards-blues",
+                name: "Exercise: St. James Infirmary Blues",
+                description: "Learn the mournful, soulful melody of the traditional New Orleans blues anthem St. James Infirmary.",
+                focus: "Master the slow, deliberate blues feel in A minor. Emphasize the half-step ornaments and wide interval leaps that define this dark, emotional melody.",
+                instruction: "St. James Infirmary is one of the oldest blues songs in the jazz tradition. It is played with a heavy, funeral-march feel in a slow 4/4. The melody uses the A natural minor scale with occasional chromatic passing tones. The left hand walks a steady Am chord with open bass fifths for that hollow, eerie sound. Focus on the emotional weight of each note — this is not a piece to rush. Hold each long note fully and let it decay naturally before moving on. The climax comes on the high E where the melody reaches its peak anguish. Feel every note from your heart downward through your arms and fingers.",
+                type: 'exercise', topic: 'both', xpReward: 270, requiredXp: 39500,
+                handPosition: 'GRAND_C_POS',
+                constraints: {
+                    trebleRange: ["a/3", "b/3", "c/4", "d/4", "e/4", "f/4", "g/4", "a/4", "b/4", "c/5", "d/5", "e/5"],
+                    bassRange: ["a/2", "e/3", "a/3", "c/3", "g/2", "d/3"],
+                    rhythms: ["q", "h", "hd", "w"],
+                    maxJumps: 5,
+                    chordsAllowed: false,
+                    numNotes: 48,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["a/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["e/4"], duration: "h" },
+                            { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "h" },
+                            { keys: ["c/4"], duration: "q" }, { keys: ["b/3"], duration: "q" }, { keys: ["a/3"], duration: "q" }, { keys: ["b/3"], duration: "q" },
+                            { keys: ["c/4"], duration: "h" }, { keys: ["a/3"], duration: "h" },
+                            { keys: ["a/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["e/4"], duration: "h" },
+                            { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["b/3"], duration: "h" },
+                            { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["g/4"], duration: "q" },
+                            { keys: ["a/4"], duration: "w" },
+                            { keys: ["e/5"], duration: "h" }, { keys: ["d/5"], duration: "q" }, { keys: ["c/5"], duration: "q" },
+                            { keys: ["b/4"], duration: "q" }, { keys: ["a/4"], duration: "q" }, { keys: ["g/4"], duration: "h" },
+                            { keys: ["e/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["d/4"], duration: "q" },
+                            { keys: ["c/4"], duration: "h" }, { keys: ["a/3"], duration: "h" },
+                            { keys: ["a/4"], duration: "h" }, { keys: ["g/4"], duration: "q" }, { keys: ["e/4"], duration: "q" },
+                            { keys: ["d/4"], duration: "q" }, { keys: ["c/4"], duration: "q" }, { keys: ["b/3"], duration: "h" },
+                            { keys: ["c/4"], duration: "q" }, { keys: ["d/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["f/4"], duration: "q" },
+                            { keys: ["a/3"], duration: "w" }
+                        ],
+                        bass: [
+                            { keys: ["a/2"], duration: "h" }, { keys: ["e/3"], duration: "h" },
+                            { keys: ["a/2"], duration: "h" }, { keys: ["e/3"], duration: "h" },
+                            { keys: ["g/2"], duration: "h" }, { keys: ["d/3"], duration: "h" },
+                            { keys: ["a/2"], duration: "h" }, { keys: ["e/3"], duration: "h" },
+                            { keys: ["a/2"], duration: "h" }, { keys: ["e/3"], duration: "h" },
+                            { keys: ["a/2"], duration: "h" }, { keys: ["e/3"], duration: "h" },
+                            { keys: ["d/3"], duration: "h" }, { keys: ["a/3"], duration: "h" },
+                            { keys: ["a/2"], duration: "w" },
+                            { keys: ["c/3"], duration: "h" }, { keys: ["g/2"], duration: "h" },
+                            { keys: ["a/2"], duration: "h" }, { keys: ["e/3"], duration: "h" },
+                            { keys: ["g/2"], duration: "h" }, { keys: ["d/3"], duration: "h" },
+                            { keys: ["a/2"], duration: "h" }, { keys: ["e/3"], duration: "h" },
+                            { keys: ["a/2"], duration: "h" }, { keys: ["e/3"], duration: "h" },
+                            { keys: ["a/2"], duration: "h" }, { keys: ["e/3"], duration: "h" },
+                            { keys: ["d/3"], duration: "h" }, { keys: ["e/3"], duration: "h" },
+                            { keys: ["a/2"], duration: "w" }
+                        ]
+                    }
+                }
+            },
+            {
+                id: 'c21-l5', bpm: 80, courseId: "jazz-standards-blues",
+                name: "Exercise: Jazz Comping — Swing Rhythm Chords",
+                description: "Master jazz comping: playing syncopated, swung chord voicings in your left hand while improvising a simple blues melody with your right.",
+                focus: "Lock in the swing rhythm feel: long-short-long-short. Jazz comping is about placing chords slightly off the beat to create that irresistible forward momentum.",
+                instruction: "Jazz comping means accompanying yourself or a soloist with swinging chord stabs placed on offbeats. In this exercise, the left hand comps Am7, D7, Gmaj7 chords in a swing pattern: anticipate beat 3 by hitting on the '+' of 2, and anticipate beat 1 of the next bar on the '+' of 4. The right hand walks a blues scale melody over the top. The golden rule of jazz: NEVER play straight 8th notes — always swing them (play the first 8th long and the second 8th short, in a 2:1 ratio). Relax your wrist; stiff wrists kill the swing feel. This exercise will take many repetitions to truly feel natural, so be patient with yourself.",
+                type: 'exercise', topic: 'both', xpReward: 300, requiredXp: 40000,
+                handPosition: 'GRAND_C_POS',
+                constraints: {
+                    trebleRange: ["c/4", "eb/4", "e/4", "f/4", "g/4", "bb/4", "c/5", "eb/5", "e/5", "g/5"],
+                    bassRange: ["a/2", "c/3", "e/3", "g/3", "d/3", "f/3", "b/2"],
+                    rhythms: ["q", "8", "h"],
+                    maxJumps: 3,
+                    chordsAllowed: true,
+                    numNotes: 64,
+                    presetMelody: {
+                        treble: [
+                            { keys: ["c/4"], duration: "8" }, { keys: ["eb/4"], duration: "8" }, { keys: ["e/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["g/4"], duration: "q" },
+                            { keys: ["bb/4"], duration: "8" }, { keys: ["g/4"], duration: "8" }, { keys: ["e/4"], duration: "q" }, { keys: ["c/4"], duration: "h" },
+                            { keys: ["e/4"], duration: "8" }, { keys: ["f/4"], duration: "8" }, { keys: ["g/4"], duration: "q" }, { keys: ["bb/4"], duration: "q" }, { keys: ["g/4"], duration: "q" },
+                            { keys: ["f/4"], duration: "8" }, { keys: ["e/4"], duration: "8" }, { keys: ["eb/4"], duration: "q" }, { keys: ["c/4"], duration: "h" },
+                            { keys: ["c/4"], duration: "8" }, { keys: ["eb/4"], duration: "8" }, { keys: ["e/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["c/5"], duration: "q" },
+                            { keys: ["c/5"], duration: "8" }, { keys: ["bb/4"], duration: "8" }, { keys: ["g/4"], duration: "q" }, { keys: ["e/4"], duration: "h" },
+                            { keys: ["e/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["bb/4"], duration: "q" }, { keys: ["c/5"], duration: "q" },
+                            { keys: ["eb/5"], duration: "8" }, { keys: ["c/5"], duration: "8" }, { keys: ["g/4"], duration: "q" }, { keys: ["e/4"], duration: "h" },
+                            { keys: ["c/4"], duration: "8" }, { keys: ["eb/4"], duration: "8" }, { keys: ["e/4"], duration: "q" }, { keys: ["f/4"], duration: "q" }, { keys: ["g/4"], duration: "q" },
+                            { keys: ["bb/4"], duration: "8" }, { keys: ["g/4"], duration: "8" }, { keys: ["e/4"], duration: "q" }, { keys: ["c/4"], duration: "h" },
+                            { keys: ["g/4"], duration: "q" }, { keys: ["bb/4"], duration: "q" }, { keys: ["c/5"], duration: "q" }, { keys: ["eb/5"], duration: "q" },
+                            { keys: ["e/5"], duration: "8" }, { keys: ["eb/5"], duration: "8" }, { keys: ["c/5"], duration: "q" }, { keys: ["g/4"], duration: "h" },
+                            { keys: ["c/4"], duration: "8" }, { keys: ["eb/4"], duration: "8" }, { keys: ["e/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["bb/4"], duration: "q" },
+                            { keys: ["c/5"], duration: "8" }, { keys: ["bb/4"], duration: "8" }, { keys: ["g/4"], duration: "q" }, { keys: ["e/4"], duration: "h" },
+                            { keys: ["c/4"], duration: "q" }, { keys: ["g/4"], duration: "q" }, { keys: ["e/4"], duration: "q" }, { keys: ["c/4"], duration: "q" },
+                            { keys: ["c/4"], duration: "w" }
+                        ],
+                        bass: [
+                            { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "q" }, { keys: ["a/2"], duration: "q" }, { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "q" }, { keys: ["a/2"], duration: "q" },
+                            { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "q" }, { keys: ["a/2"], duration: "q" }, { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "h" },
+                            { keys: ["d/3", "f/3", "a/3", "c/4"], duration: "q" }, { keys: ["d/3"], duration: "q" }, { keys: ["d/3", "f/3", "a/3", "c/4"], duration: "q" }, { keys: ["d/3"], duration: "q" },
+                            { keys: ["d/3", "f/3", "a/3", "c/4"], duration: "q" }, { keys: ["d/3"], duration: "q" }, { keys: ["d/3", "f/3", "a/3", "c/4"], duration: "h" },
+                            { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "q" }, { keys: ["a/2"], duration: "q" }, { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "q" }, { keys: ["a/2"], duration: "q" },
+                            { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "q" }, { keys: ["a/2"], duration: "q" }, { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "h" },
+                            { keys: ["e/3", "g/3", "b/3", "d/4"], duration: "q" }, { keys: ["e/3"], duration: "q" }, { keys: ["d/3", "f/3", "a/3", "c/4"], duration: "q" }, { keys: ["d/3"], duration: "q" },
+                            { keys: ["e/3", "g/3", "b/3", "d/4"], duration: "q" }, { keys: ["e/3"], duration: "q" }, { keys: ["e/3", "g/3", "b/3", "d/4"], duration: "h" },
+                            { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "q" }, { keys: ["a/2"], duration: "q" }, { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "q" }, { keys: ["a/2"], duration: "q" },
+                            { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "q" }, { keys: ["a/2"], duration: "q" }, { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "h" },
+                            { keys: ["d/3", "f/3", "a/3", "c/4"], duration: "q" }, { keys: ["d/3"], duration: "q" }, { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "q" }, { keys: ["a/2"], duration: "q" },
+                            { keys: ["e/3", "g/3", "b/3", "d/4"], duration: "q" }, { keys: ["e/3"], duration: "q" }, { keys: ["d/3", "f/3", "a/3", "c/4"], duration: "h" },
+                            { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "q" }, { keys: ["a/2"], duration: "q" }, { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "q" }, { keys: ["a/2"], duration: "q" },
+                            { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "q" }, { keys: ["a/2"], duration: "q" }, { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "h" },
+                            { keys: ["e/3", "g/3", "b/3", "d/4"], duration: "q" }, { keys: ["d/3", "f/3", "a/3", "c/4"], duration: "q" }, { keys: ["a/2", "c/3", "e/3", "g/3"], duration: "h" },
+                            { keys: ["a/2"], duration: "w" }
+                        ]
+                    }
+                }
+            }
+        ]
     }
 ];
 export const getLessonById = (id: string): Lesson | undefined => {

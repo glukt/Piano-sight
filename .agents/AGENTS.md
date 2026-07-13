@@ -56,3 +56,33 @@ This file is automatically loaded by the agent framework at the beginning of eac
 - `src/engine/` - Level generation and VexFlow alignment utils
 - `src/hooks/` - useGameLogic, useRhythmEngine, usePracticeMode
 - `src/utils/` - CourseData, key signatures, constants
+
+---
+
+## 4. Automation Agent Rules
+
+### 4.1 Wakeup Schedule
+- Wake up every **30 minutes** via the `/schedule` system.
+- Each wakeup should complete **2-3 tasks** from the backlog.
+- Stability audit runs **once per calendar day** (check `auto_state.json → lastStabilityAuditDate`), not every 9 wakeups.
+
+### 4.2 Model Selection Strategy
+- **Primary**: `gemini-2.5-flash` for all tasks.
+- **Fallback**: `claude-sonnet-4-6` (Claude Sonnet 4.6 with thinking) when Gemini token quota is exhausted.
+- **Local LLM**: Route boilerplate code generation (new lesson data, repetitive TypeScript interfaces, JSON data) to `qwen2.5-coder:latest` via Ollama at `http://localhost:11434` to conserve cloud tokens.
+- **Ollama invocation**: Call `POST http://localhost:11434/api/generate` with `{"model":"qwen2.5-coder:latest","prompt":"...","stream":false}`.
+
+### 4.3 Priority Routing
+- **#1 Priority**: Wait Mode overhaul (tasks 040-042 and future Wait Mode bugs).
+- Audit iterations must focus improvement discovery on rhythm/wait mode UX before other areas.
+- State file: `auto_state.json → priorities.topPriority`.
+
+### 4.4 OSMD & Note Parsing Guards
+- All `note.Pitch.getHalfTone()` calls must be wrapped in try/catch to guard against `NoteEnum[j.FundamentalNote] is undefined` errors from percussion/unpitched MXL tracks.
+- OSMD constructor must include `percussionOneLinedStaves: false` and `skipOutputWhenFaceValueNull: true`.
+
+### 4.5 Wait Mode Architecture
+- **Hand filter**: In `gameMode='treble'`, only accept notes that are in `requiredNotes` OR in `trebleRangeMidi` AND have MIDI >= 48. Do NOT use raw `trebleRangeMidi.has(n)` alone — that set contains MIDI numbers from the whole song and can include bass-range notes.
+- **Rest steps in Wait Mode**: Immediately call `advanceCursor()` synchronously when `requiredNotes.size === 0 && !isRhythmMode` — do NOT start a polling interval for rest notes.
+- **Loop practice**: The loop start/end is stored in `loopRange` state; `advanceCursor()` wraps back to `loopRange.startStep` when it exceeds `loopRange.endStep`.
+- **PreHeld guard**: After a cursor advance, `notesActiveAtStepStart` is reset to the current active notes to prevent the same held note from counting as the next note press.

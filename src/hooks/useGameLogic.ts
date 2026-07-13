@@ -1022,6 +1022,7 @@ export const useGameLogic = (
         const targetTime = step ? step.time * noteDuration : 0;
         const timeWindow = 0.35;
 
+        // Build the set of notes the player must hit for this step, respecting gameMode
         const requiredNotes = new Set<number>();
         if (gameMode !== 'bass' && step && step.isTrebleOnset) {
             step.trebleKeys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
@@ -1030,19 +1031,30 @@ export const useGameLogic = (
             step.bassKeys.forEach(k => requiredNotes.add(parseKeyToMidi(k)));
         }
 
+        // --- Wait Mode: Immediate rest auto-advance ---
+        // If there are no required notes for this step (rest or hand not in use),
+        // auto-advance immediately WITHOUT starting a polling interval.
+        if (requiredNotes.size === 0 && !isRhythmMode) {
+            lastProcessedIndex.current = cursorIndex;
+            advanceCursor();
+            return;
+        }
+
         const checkInterval = setInterval(() => {
+            // Use MIDI pitch threshold to determine hand, not note-set membership.
+            // This prevents a bass note that also appears in treble from being counted as treble input.
             const currentRelevantActiveNotes = new Set<number>();
             activeNotesRef.current.forEach(n => {
                 if (gameMode === 'both') {
                     currentRelevantActiveNotes.add(n);
                 } else if (gameMode === 'treble') {
-                    // Dynamic clef validation using notes present in treble signature, falling back to Middle C threshold
-                    if (trebleRangeMidi.size > 0 ? trebleRangeMidi.has(n) : n >= 60) {
+                    // Treble: notes >= MIDI 60 (Middle C), or exactly matching required treble notes
+                    if (requiredNotes.has(n) || (trebleRangeMidi.size > 0 ? trebleRangeMidi.has(n) && n >= 48 : n >= 60)) {
                         currentRelevantActiveNotes.add(n);
                     }
                 } else if (gameMode === 'bass') {
-                    // Dynamic clef validation using notes present in bass signature, falling back to Middle C threshold
-                    if (bassRangeMidi.size > 0 ? bassRangeMidi.has(n) : n < 60) {
+                    // Bass: notes < MIDI 60 (Middle C), or exactly matching required bass notes
+                    if (requiredNotes.has(n) || (bassRangeMidi.size > 0 ? bassRangeMidi.has(n) && n < 72 : n < 60)) {
                         currentRelevantActiveNotes.add(n);
                     }
                 }
@@ -1052,12 +1064,9 @@ export const useGameLogic = (
                 n => !notesActiveAtStepStart.current.has(n)
             );
 
-            // If it's a rest note, auto-advance if not in rhythm mode
+            // If it's a rest note in rhythm mode, penalize extra note presses
             if (requiredNotes.size === 0) {
-                if (!isRhythmMode) {
-                    lastProcessedIndex.current = cursorIndex;
-                    advanceCursor();
-                } else if (currentNewlyPressedActiveNotes.length > 0) {
+                if (isRhythmMode && currentNewlyPressedActiveNotes.length > 0) {
                     // Penalize off-beat keys pressed during rest in rhythm mode
                     if (inputStatus !== 'incorrect') {
                         setInputStatus('incorrect');
@@ -1136,7 +1145,7 @@ export const useGameLogic = (
                     return;
                 }
 
-                // Normal Mode
+                // Normal Wait Mode
                 if (!hasIncorrect) {
                     setScore(s => ({ ...s, correct: s.correct + 1 }));
                     setNotesCorrect(prev => prev + 1);
@@ -1173,13 +1182,14 @@ export const useGameLogic = (
             }
 
             if (inputStatus !== 'incorrect' && inputStatus !== 'waiting') setInputStatus('waiting');
-        }, 50);
+        }, 30); // Increased polling rate from 50ms to 30ms for more responsive feel
 
         return () => {
             clearInterval(checkInterval);
         };
 
     }, [cursorIndex, alignedSteps, audioStarted, difficulty, gameMode, isRhythmMode, inputStatus, preHeld, streak, maxStreak, addXp, handleAddXp, levelUp, generateNewLevel, notesCorrect, notesMissed, saveHighScore, currentLesson, isLessonComplete, isDemoPlaying, trebleRangeMidi, bassRangeMidi]);
+
 
 
     const goToNextLesson = useCallback(() => {

@@ -607,6 +607,8 @@ export const GameContainer: React.FC<GameContainerProps> = ({
                 currentLesson={gameLogic.currentLesson}
                 showKeyboard={preferences.showKeyboard}
                 onToggleKeyboard={(show) => updatePreference('showKeyboard', show)}
+                tempoMultiplier={gameLogic.tempoMultiplier}
+                setTempoMultiplier={gameLogic.setTempoMultiplier}
             />
 
             {/* Performance Report Card Modal */}

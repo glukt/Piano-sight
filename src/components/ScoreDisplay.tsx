@@ -156,7 +156,10 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             backend: "svg",
             drawingParameters: "compacttight", // Try to fit well
             renderSingleHorizontalStaffline: layoutMode === 'scrolling',
-        });
+            // Suppress unpitched/percussion note errors (e.g. Kiss the Rain - Yiruma MXL)
+            skipOutputWhenFaceValueNull: true,
+            percussionOneLinedStaves: false,
+        } as any);
 
         const loadScore = async () => {
             if (!osmdRef.current) return;

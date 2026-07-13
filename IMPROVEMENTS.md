@@ -103,6 +103,12 @@ This file is automatically updated by the autonomous conservatory developer agen
 - **[task-030] Metronome Confidence Mode (Auto-Mute)**
   - *Details*: Engineered a "confidence practice" metronome coach option that automatically silences click audio during alternating measures (2 bars audible, 2 bars muted) to train the pianist's inner rhythmic pulse.
   - *Date*: 2026-07-06
+- **[task-031] Real-time Mic Waveform/Decibel Visualizer**
+  - *Details*: Designed a Siri-style dual-oscillator HTML5 canvas sine-wave visualizer next to the mic pitch tuner, mapping decibel loudness to wave amplitudes and detected frequencies to wave tight/wide rates.
+  - *Date*: 2026-07-06
+- **[task-032] Accompaniment Mixer Volume Control**
+  - *Details*: Created a dedicated Accompaniment (Demo) Volume slider (0 to 100%) in settings, mapping independent velocity scaling to demo and play-along notes.
+  - *Date*: 2026-07-06
 
 ---
 

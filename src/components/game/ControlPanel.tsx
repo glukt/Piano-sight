@@ -22,6 +22,8 @@ interface ControlPanelProps {
     currentLesson?: Lesson | null;
     showKeyboard: boolean;
     onToggleKeyboard: (show: boolean) => void;
+    tempoMultiplier?: number;
+    setTempoMultiplier?: (v: number) => void;
 }
 
 export const ControlPanel: React.FC<ControlPanelProps> = ({
@@ -43,7 +45,9 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
     setShowStaff,
     currentLesson,
     showKeyboard,
-    onToggleKeyboard
+    onToggleKeyboard,
+    tempoMultiplier = 1.0,
+    setTempoMultiplier
 }) => {
     const isLessonActive = !!currentLesson;
     const lessonTopic = currentLesson?.topic;
@@ -119,6 +123,41 @@ export const ControlPanel: React.FC<ControlPanelProps> = ({
                         <div className="text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-905/30 dark:bg-gray-900/50 p-2 rounded border border-gray-100 dark:border-gray-800/80 line-clamp-3">
                             <span className="font-bold text-indigo-500">Focus:</span> {currentLesson?.focus || currentLesson?.description}
                         </div>
+                        {setTempoMultiplier && (
+                            <div className="mt-1">
+                                <div className="flex justify-between items-center mb-1">
+                                    <label className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">⏱ Practice Tempo</label>
+                                    <span className={`text-[10px] font-black font-mono px-1.5 py-0.5 rounded ${
+                                        tempoMultiplier < 1.0
+                                            ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'
+                                            : tempoMultiplier > 1.0
+                                                ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400'
+                                                : 'bg-gray-100 text-gray-600 dark:bg-gray-750 dark:text-gray-300'
+                                    }`}>
+                                        {Math.round(tempoMultiplier * 100)}%
+                                        {tempoMultiplier < 1.0 && ' 🐢'}
+                                        {tempoMultiplier > 1.0 && ' 🚀'}
+                                    </span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min={0.5}
+                                    max={1.5}
+                                    step={0.05}
+                                    value={tempoMultiplier}
+                                    onChange={(e) => setTempoMultiplier(parseFloat(e.target.value))}
+                                    className="w-full h-1.5 rounded-full accent-indigo-500 cursor-pointer"
+                                />
+                                <div className="flex justify-between text-[9px] text-gray-400 dark:text-gray-500 mt-0.5">
+                                    <span>50%</span>
+                                    <button
+                                        onClick={() => setTempoMultiplier(1.0)}
+                                        className="text-[9px] font-semibold text-indigo-500 hover:text-indigo-700 transition"
+                                    >Reset</button>
+                                    <span>150%</span>
+                                </div>
+                            </div>
+                        )}
                     </>
                 ) : (
                     <>

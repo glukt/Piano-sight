@@ -442,6 +442,9 @@ export function usePracticeMode({
     const stuckTimerRef = useRef(0);
     const prevExpectedNotesRef = useRef<string>("");
 
+    const [preHeld, setPreHeld] = useState(false);
+    const preHeldRef = useRef(preHeld);
+
     // Active Note Overlapping / Legato Protection for Wait Mode
     const notesActiveAtStepStartRef = useRef<Set<number>>(new Set());
     const lastExpectedStrRef = useRef<string>("");
@@ -480,6 +483,7 @@ export function usePracticeMode({
         retrySectionRef.current = retrySection;
         onNoteCorrectRef.current = onNoteCorrect;
         playModeStartedRef.current = playModeStarted;
+        preHeldRef.current = preHeld;
     });
 
     const startPlayMode = useCallback(() => {
@@ -546,6 +550,10 @@ export function usePracticeMode({
                 notesActiveAtStepStartRef.current = new Set(userActiveNotesRef.current);
                 lastExpectedStrRef.current = currentExpectedStr;
                 stepChanged = true;
+
+                // Initialize preHeld: if user is holding any expected note at step start
+                const isHoldingAny = currentExpectedMidis.some(m => userActiveNotesRef.current.has(m));
+                setPreHeld(isHoldingAny);
             } else {
                 // Keep notesActiveAtStepStartRef in sync with releases
                 const currentActive = userActiveNotesRef.current;
@@ -668,6 +676,23 @@ export function usePracticeMode({
             
             playbackEngine.highlightCurrentNotes(correctSet, incorrectSet);
             setExpectedNotes(currentExpectedMidis);
+
+            // PreHeld Guard: block evaluation if preHeld is true
+            let isPreHeldLocked = preHeldRef.current;
+            if (isPreHeldLocked) {
+                const stillHoldingAll = currentExpectedMidis.length > 0 && currentExpectedMidis.every(m => userActiveNotesRef.current.has(m));
+                const newlyPressed = currentExpectedMidis.filter(m => !notesActiveAtStepStartRef.current.has(m));
+                const pressedNewRequired = newlyPressed.some(m => userActiveNotesRef.current.has(m));
+
+                if (!stillHoldingAll || pressedNewRequired) {
+                    setPreHeld(false);
+                    isPreHeldLocked = false;
+                }
+            }
+
+            if (isPreHeldLocked) {
+                return;
+            }
 
             // Debounce the validation logic (Steps 4, 5, and 6)
             // We only clear/reschedule the timer if user active notes changed (!isFromPoll)

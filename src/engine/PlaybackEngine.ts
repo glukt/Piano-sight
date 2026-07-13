@@ -153,8 +153,13 @@ export class PlaybackEngine {
                         }
                     }
 
-                    // @ts-ignore
-                    const midi = gn.sourceNote.Pitch.getHalfTone() + 12;
+                    let midi = 0;
+                    try {
+                        // @ts-ignore
+                        midi = gn.sourceNote.Pitch.getHalfTone() + 12;
+                    } catch (e) {
+                        midi = 0;
+                    }
                     if (correctSet?.has(midi)) {
                         color = "#10b981"; // Correct: Emerald Green
                     } else if (incorrectSet?.has(midi)) {
@@ -237,13 +242,24 @@ export class PlaybackEngine {
         const result: { midi: number, isTied: boolean }[] = [];
         notes.forEach(note => {
             if (!note.isRest() && note.Pitch) {
-                // Filter by practicedHand clef if selected
-                // Staff index is 1-based. Id === 1 is treble (RH), Id === 2 is bass (LH)
-                if (this.practicedHand === 'right' && note.ParentStaff?.Id !== 1) {
-                    return;
+                let midi = 0;
+                try {
+                    midi = note.Pitch.getHalfTone() + 12;
+                } catch {
+                    midi = 0;
                 }
-                if (this.practicedHand === 'left' && note.ParentStaff?.Id !== 2) {
-                    return;
+
+                // Filter by practicedHand clef if selected, with safety pitch-based fallbacks
+                // Staff index is 1-based. Id === 1 is treble (RH), Id === 2 is bass (LH)
+                if (this.practicedHand === 'right') {
+                    if (note.ParentStaff?.Id !== 1 || (midi > 0 && midi < 55)) {
+                        return;
+                    }
+                }
+                if (this.practicedHand === 'left') {
+                    if (note.ParentStaff?.Id !== 2 || (midi > 0 && midi > 65)) {
+                        return;
+                    }
                 }
 
                 // Check if this note is a tied note (continuation)
@@ -259,13 +275,11 @@ export class PlaybackEngine {
                     }
                 }
 
-                try {
+                if (midi > 0) {
                     result.push({
-                        midi: note.Pitch.getHalfTone() + 12,
+                        midi: midi,
                         isTied: isTied
                     });
-                } catch {
-                    // Skip unpitched/percussion notes whose FundamentalNote is not in NoteEnum
                 }
             }
         });
@@ -393,7 +407,17 @@ export class PlaybackEngine {
                 }
                 return true;
             })
-            .map(n => n.halfTone !== undefined ? n.halfTone + 12 : n.Pitch ? n.Pitch.getHalfTone() + 12 : 0)
+            .map(n => {
+                if (n.halfTone !== undefined) return n.halfTone + 12;
+                if (n.Pitch) {
+                    try {
+                        return n.Pitch.getHalfTone() + 12;
+                    } catch (e) {
+                        return 0;
+                    }
+                }
+                return 0;
+            })
             .filter(n => n > 0);
 
         if (this.onStep) {
@@ -644,7 +668,12 @@ export class PlaybackEngine {
                 if (note.isRest()) return;
                 if (this.practicedHand === 'right' && note.ParentStaff?.Id !== 1) return;
                 if (this.practicedHand === 'left' && note.ParentStaff?.Id !== 2) return;
-                const midi = note.halfTone !== undefined ? note.halfTone + 12 : (note.Pitch ? note.Pitch.getHalfTone() + 12 : 0);
+                let midi = 0;
+                try {
+                    midi = note.halfTone !== undefined ? note.halfTone + 12 : (note.Pitch ? note.Pitch.getHalfTone() + 12 : 0);
+                } catch (e) {
+                    midi = 0;
+                }
                 if (midi > 0) {
                     list.push({
                         midi,
@@ -707,11 +736,15 @@ export class PlaybackEngine {
             
             if (isAccompaniment) {
                 let midi = 0;
-                if (note.halfTone !== undefined) {
-                    midi = note.halfTone + 12;
-                } else if (note.Pitch) {
-                    midi = note.Pitch.getHalfTone() + 12;
-                } else {
+                try {
+                    if (note.halfTone !== undefined) {
+                        midi = note.halfTone + 12;
+                    } else if (note.Pitch) {
+                        midi = note.Pitch.getHalfTone() + 12;
+                    } else {
+                        return;
+                    }
+                } catch (e) {
                     return;
                 }
                 

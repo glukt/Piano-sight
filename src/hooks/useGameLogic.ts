@@ -876,6 +876,7 @@ export const useGameLogic = (
     }, [errorStats, startRhythm, stopRhythm, currentLesson, setIsLessonComplete]); // errorStats? Refactor to ref if causes loop. LevelGenerator is external.
 
     const loadLesson = useCallback((lesson: Lesson) => {
+        stopDemo();
         setCurrentLesson(lesson);
         setTempoMultiplier(1.0);
         consecutiveFailuresRef.current = 0;
@@ -888,7 +889,7 @@ export const useGameLogic = (
         else setGameMode('both');
 
         generateNewLevel(difficulty, false, lesson);
-    }, [difficulty, generateNewLevel]);
+    }, [difficulty, generateNewLevel, stopDemo]);
 
     const handleStartRhythm = useCallback(() => {
         stopDemo();
@@ -1216,6 +1217,7 @@ export const useGameLogic = (
         }
         
         if (nextLesson) {
+            stopDemo();
             setIsLessonComplete(false);
             
             // Set states for next lesson
@@ -1242,10 +1244,20 @@ export const useGameLogic = (
             setNotesMissed(0);
             setInputStatus('waiting');
             stopRhythm();
+            stopDemo();
             return nextLesson;
         }
         return null;
-    }, [currentLesson, difficulty, errorStats, stopRhythm]);
+    }, [currentLesson, difficulty, errorStats, stopRhythm, stopDemo]);
+
+    // Overall cleanup on unmount to prevent audio leaks
+    useEffect(() => {
+        return () => {
+            audio.releaseAll();
+            stopDemo();
+            stopRhythm();
+        };
+    }, [stopDemo, stopRhythm]);
 
     return {
         // State

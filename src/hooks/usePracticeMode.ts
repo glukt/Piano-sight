@@ -1031,6 +1031,15 @@ export function usePracticeMode({
         return () => clearInterval(interval);
     }, [isActive, mode, playbackEngine, saveHighScore, logAttempt, songId, practicedHand, errorMeasures]);
 
+    // Overall cleanup on unmount to prevent background playback leaks
+    useEffect(() => {
+        return () => {
+            if (playbackEngine) {
+                playbackEngine.stop();
+            }
+        };
+    }, [playbackEngine]);
+
     return {
         isActive,
         currentSection,

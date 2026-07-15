@@ -43,6 +43,16 @@ export class PlaybackEngine {
 
         return false;
     }
+
+    private hasMultipleStaves(): boolean {
+        if (!this.osmd.Sheet || !this.osmd.Sheet.Instruments) return false;
+        let count = 0;
+        this.osmd.Sheet.Instruments.forEach(inst => {
+            if (inst.Staves) count += inst.Staves.length;
+        });
+        return count > 1;
+    }
+
     private intervalId: number | null = null;
     private noteTimeouts: number[] = [];
     private bpm: number = 100;
@@ -133,6 +143,8 @@ export class PlaybackEngine {
         // 1. Clear previous highlights
         this.clearHighlights();
 
+        const hasMulti = this.hasMultipleStaves();
+
         // 2. Highlight notes under cursor
         const gNotes = cursor.GNotesUnderCursor();
         gNotes.forEach(gn => {
@@ -143,16 +155,6 @@ export class PlaybackEngine {
                 // Extract MIDI key if structurally present to map to correct/incorrect sets
                 // @ts-ignore
                 if (gn.sourceNote && gn.sourceNote.Pitch) {
-                    if (gn.sourceNote.ParentStaff) {
-                        const staffId = gn.sourceNote.ParentStaff.Id;
-                        if (this.practicedHand === 'right' && staffId !== 1) {
-                            return;
-                        }
-                        if (this.practicedHand === 'left' && staffId !== 2) {
-                            return;
-                        }
-                    }
-
                     let midi = 0;
                     try {
                         // @ts-ignore
@@ -160,6 +162,25 @@ export class PlaybackEngine {
                     } catch (e) {
                         midi = 0;
                     }
+
+                    if (gn.sourceNote.ParentStaff) {
+                        const staffId = gn.sourceNote.ParentStaff.Id;
+                        if (this.practicedHand === 'right') {
+                            if (hasMulti) {
+                                if (staffId !== 1) return;
+                            } else {
+                                if (midi > 0 && midi < 60) return;
+                            }
+                        }
+                        if (this.practicedHand === 'left') {
+                            if (hasMulti) {
+                                if (staffId !== 2) return;
+                            } else {
+                                if (midi > 0 && midi >= 60) return;
+                            }
+                        }
+                    }
+
                     if (correctSet?.has(midi)) {
                         color = "#10b981"; // Correct: Emerald Green
                     } else if (incorrectSet?.has(midi)) {
@@ -240,6 +261,8 @@ export class PlaybackEngine {
         if (!cursor) return [];
         const notes = cursor.NotesUnderCursor();
         const result: { midi: number, isTied: boolean }[] = [];
+        const hasMulti = this.hasMultipleStaves();
+
         notes.forEach(note => {
             if (!note.isRest() && note.Pitch) {
                 let midi = 0;
@@ -252,13 +275,17 @@ export class PlaybackEngine {
                 // Filter by practicedHand clef if selected, with safety pitch-based fallbacks
                 // Staff index is 1-based. Id === 1 is treble (RH), Id === 2 is bass (LH)
                 if (this.practicedHand === 'right') {
-                    if (note.ParentStaff?.Id !== 1 || (midi > 0 && midi < 55)) {
-                        return;
+                    if (hasMulti) {
+                        if (note.ParentStaff?.Id !== 1) return;
+                    } else {
+                        if (midi > 0 && midi < 60) return;
                     }
                 }
                 if (this.practicedHand === 'left') {
-                    if (note.ParentStaff?.Id !== 2 || (midi > 0 && midi > 65)) {
-                        return;
+                    if (hasMulti) {
+                        if (note.ParentStaff?.Id !== 2) return;
+                    } else {
+                        if (midi > 0 && midi >= 60) return;
                     }
                 }
 
@@ -395,15 +422,31 @@ export class PlaybackEngine {
         const cursor = this.getCursor();
         if (!this.isPlaying || !cursor) return;
 
+        const hasMulti = this.hasMultipleStaves();
+
         // 1. Get Notes and Play them immediately with a lookahead to decouple from UI thread blockages
         const notes: Note[] = cursor.NotesUnderCursor();
         const stepMidis = notes
             .filter(note => {
-                if (this.practicedHand === 'right' && note.ParentStaff?.Id !== 1) {
-                    return false;
+                let midi = 0;
+                try {
+                    midi = note.halfTone !== undefined ? note.halfTone + 12 : (note.Pitch ? note.Pitch.getHalfTone() + 12 : 0);
+                } catch {
+                    midi = 0;
                 }
-                if (this.practicedHand === 'left' && note.ParentStaff?.Id !== 2) {
-                    return false;
+                if (this.practicedHand === 'right') {
+                    if (hasMulti) {
+                        if (note.ParentStaff?.Id !== 1) return false;
+                    } else {
+                        if (midi > 0 && midi < 60) return false;
+                    }
+                }
+                if (this.practicedHand === 'left') {
+                    if (hasMulti) {
+                        if (note.ParentStaff?.Id !== 2) return false;
+                    } else {
+                        if (midi > 0 && midi >= 60) return false;
+                    }
                 }
                 return true;
             })
@@ -472,11 +515,19 @@ export class PlaybackEngine {
             // Mute playback for notes on the hand we are practicing!
             let isNoteMuted = this.isMuted;
             if (this.mutePracticedHand) {
-                if (this.practicedHand === 'right' && note.ParentStaff?.Id === 1) {
-                    isNoteMuted = true;
+                if (this.practicedHand === 'right') {
+                    if (hasMulti) {
+                        if (note.ParentStaff?.Id === 1) isNoteMuted = true;
+                    } else {
+                        if (midi >= 60) isNoteMuted = true;
+                    }
                 }
-                if (this.practicedHand === 'left' && note.ParentStaff?.Id === 2) {
-                    isNoteMuted = true;
+                if (this.practicedHand === 'left') {
+                    if (hasMulti) {
+                        if (note.ParentStaff?.Id === 2) isNoteMuted = true;
+                    } else {
+                        if (midi < 60) isNoteMuted = true;
+                    }
                 }
             }
 
@@ -643,10 +694,11 @@ export class PlaybackEngine {
 
         const list: { midi: number; timeOffset: number; duration: number }[] = [];
         let currentRealTime = 0; // Relative seconds from start of loop
+        const hasMulti = this.hasMultipleStaves();
 
         while (!cursor.Iterator.EndReached && cursor.Iterator.currentTimeStamp.RealValue < endTs) {
             const notes = cursor.NotesUnderCursor();
-            const currentBpm = cursor.Iterator.CurrentMeasure?.TempoInBPM || this.bpm;
+            const currentBpm = (cursor.Iterator.CurrentMeasure?.TempoInBPM || this.bpm) * this.tempoMultiplier;
             
             let stepDuration = 0.05;
             try {
@@ -666,8 +718,6 @@ export class PlaybackEngine {
 
             notes.forEach(note => {
                 if (note.isRest()) return;
-                if (this.practicedHand === 'right' && note.ParentStaff?.Id !== 1) return;
-                if (this.practicedHand === 'left' && note.ParentStaff?.Id !== 2) return;
                 let midi = 0;
                 try {
                     midi = note.halfTone !== undefined ? note.halfTone + 12 : (note.Pitch ? note.Pitch.getHalfTone() + 12 : 0);
@@ -675,6 +725,20 @@ export class PlaybackEngine {
                     midi = 0;
                 }
                 if (midi > 0) {
+                    if (this.practicedHand === 'right') {
+                        if (hasMulti) {
+                            if (note.ParentStaff?.Id !== 1) return;
+                        } else {
+                            if (midi < 60) return;
+                        }
+                    }
+                    if (this.practicedHand === 'left') {
+                        if (hasMulti) {
+                            if (note.ParentStaff?.Id !== 2) return;
+                        } else {
+                            if (midi >= 60) return;
+                        }
+                    }
                     list.push({
                         midi,
                         timeOffset: currentRealTime,
@@ -712,7 +776,7 @@ export class PlaybackEngine {
         } catch (e) {
             stepDuration = 0.25;
         }
-        const secondsPerWhole = 240 / this.bpm;
+        const secondsPerWhole = 240 / (this.bpm * this.tempoMultiplier);
         return stepDuration * secondsPerWhole;
     }
 
@@ -722,33 +786,45 @@ export class PlaybackEngine {
         const notes: Note[] = cursor.NotesUnderCursor();
         const lookahead = 0.05; // 50ms lookahead for responsive touch/accompaniment playback
         const startTime = audio.now() + lookahead;
+        const hasMulti = this.hasMultipleStaves();
         
         notes.forEach(note => {
             if (note.isRest()) return;
             
-            let isAccompaniment = false;
-            if (this.practicedHand === 'right' && note.ParentStaff?.Id === 2) {
-                isAccompaniment = true;
+            let midi = 0;
+            try {
+                if (note.halfTone !== undefined) {
+                    midi = note.halfTone + 12;
+                } else if (note.Pitch) {
+                    midi = note.Pitch.getHalfTone() + 12;
+                } else {
+                    return;
+                }
+            } catch (e) {
+                return;
             }
-            if (this.practicedHand === 'left' && note.ParentStaff?.Id === 1) {
-                isAccompaniment = true;
+
+            let isAccompaniment = false;
+            if (hasMulti) {
+                if (this.practicedHand === 'right' && note.ParentStaff?.Id === 2) {
+                    isAccompaniment = true;
+                }
+                if (this.practicedHand === 'left' && note.ParentStaff?.Id === 1) {
+                    isAccompaniment = true;
+                }
+            } else {
+                if (midi > 0) {
+                    if (this.practicedHand === 'right' && midi < 60) {
+                        isAccompaniment = true;
+                    }
+                    if (this.practicedHand === 'left' && midi >= 60) {
+                        isAccompaniment = true;
+                    }
+                }
             }
             
             if (isAccompaniment) {
-                let midi = 0;
-                try {
-                    if (note.halfTone !== undefined) {
-                        midi = note.halfTone + 12;
-                    } else if (note.Pitch) {
-                        midi = note.Pitch.getHalfTone() + 12;
-                    } else {
-                        return;
-                    }
-                } catch (e) {
-                    return;
-                }
-                
-                const noteDuration = note.Length.RealValue * (240 / this.bpm);
+                const noteDuration = note.Length.RealValue * (240 / (this.bpm * this.tempoMultiplier));
                 // Play accompaniment note quietly
                 audio.playDemoNote(midi, 35, noteDuration, startTime);
             }

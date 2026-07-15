@@ -106,7 +106,11 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         tempoMultiplier,
         setTempoMultiplier,
         isSpeedTrainerActive,
-        setIsSpeedTrainerActive
+        setIsSpeedTrainerActive,
+        loopSection,
+        setLoopSection,
+        autoPreview,
+        setAutoPreview
     } = usePracticeMode({
         playbackEngine: playbackRef.current,
         totalMeasures: playbackRef.current?.MeasureCount || 0,
@@ -834,6 +838,10 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                     onStartPlayMode={startPlayMode}
                     totalMeasures={playbackRef.current?.MeasureCount || 0}
                     onChangeSection={setPracticeSection}
+                    loopSection={loopSection}
+                    onToggleLoopSection={setLoopSection}
+                    autoPreview={autoPreview}
+                    onToggleAutoPreview={setAutoPreview}
                 />
             )}
 

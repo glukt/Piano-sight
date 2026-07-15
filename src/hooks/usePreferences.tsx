@@ -18,6 +18,7 @@ export interface Preferences {
     noteheadTheme: 'standard' | 'rainbow';
     metronomeConfidenceMode: boolean;
     accompanimentVolume: number; // 0 to 1
+    autoPreview: boolean;
 }
 
 const DEFAULT_PREFERENCES: Preferences = {
@@ -38,6 +39,7 @@ const DEFAULT_PREFERENCES: Preferences = {
     noteheadTheme: 'standard',
     metronomeConfidenceMode: false,
     accompanimentVolume: 0.8,
+    autoPreview: true,
 };
 
 interface PreferencesContextType {

@@ -15,6 +15,10 @@ interface PracticeOverlayProps {
     onStartPlayMode?: () => void;
     totalMeasures?: number;
     onChangeSection?: (section: { startMeasure: number; endMeasure: number }) => void;
+    loopSection?: boolean;
+    onToggleLoopSection?: (val: boolean) => void;
+    autoPreview?: boolean;
+    onToggleAutoPreview?: (val: boolean) => void;
 }
 
 export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
@@ -30,7 +34,11 @@ export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
     countdown = null,
     onStartPlayMode,
     totalMeasures = 0,
-    onChangeSection
+    onChangeSection,
+    loopSection = true,
+    onToggleLoopSection,
+    autoPreview = true,
+    onToggleAutoPreview
 }) => {
     const [isEditingRange, setIsEditingRange] = React.useState(false);
     const [tempStart, setTempStart] = React.useState(practiceSection.startMeasure + 1);
@@ -63,7 +71,7 @@ export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
                 <div className="flex flex-col items-end">
                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1">
                         Measures
-                        {onChangeSection && totalMeasures > 0 && (
+                        {loopSection && onChangeSection && totalMeasures > 0 && (
                             <button
                                 onClick={() => setIsEditingRange(!isEditingRange)}
                                 className={`transition-all hover:text-sky-400 ${isEditingRange ? 'text-sky-400' : 'text-slate-500'}`}
@@ -74,7 +82,7 @@ export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
                         )}
                     </span>
                     <span className="font-mono font-bold text-sm bg-slate-800/60 px-2 py-0.5 rounded text-sky-400">
-                        {practiceSection.startMeasure + 1} – {practiceSection.endMeasure}
+                        {loopSection ? `${practiceSection.startMeasure + 1} – ${practiceSection.endMeasure}` : `All (1 – ${totalMeasures})`}
                     </span>
                 </div>
             </div>
@@ -132,6 +140,37 @@ export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
                 })}
             </div>
 
+            {/* Range & Preview Settings */}
+            {practiceMode !== 'play' && (
+                <div className="flex gap-2 justify-between items-center text-[10px] bg-slate-950/20 p-1.5 rounded-xl border border-slate-800/40 w-full">
+                    {/* Loop Section Toggle */}
+                    <button
+                        onClick={() => onToggleLoopSection?.(!loopSection)}
+                        className={`flex-grow py-1.5 font-bold rounded-lg border transition-all duration-150 flex items-center justify-center gap-1.5 select-none ${
+                            loopSection
+                                ? 'bg-indigo-600/20 border-indigo-500/30 text-indigo-300'
+                                : 'bg-slate-800/40 border-slate-700/30 text-slate-450 hover:text-slate-200'
+                        }`}
+                        title={loopSection ? "Looping a 2-measure section" : "Practicing the whole song"}
+                    >
+                        <span>🔁</span> {loopSection ? "Section Loop" : "Whole Song"}
+                    </button>
+
+                    {/* Auto Preview Toggle */}
+                    <button
+                        onClick={() => onToggleAutoPreview?.(!autoPreview)}
+                        className={`flex-grow py-1.5 font-bold rounded-lg border transition-all duration-150 flex items-center justify-center gap-1.5 select-none ${
+                            autoPreview
+                                ? 'bg-sky-600/20 border-sky-500/30 text-sky-300'
+                                : 'bg-slate-800/40 border-slate-700/30 text-slate-450 hover:text-slate-200'
+                        }`}
+                        title={autoPreview ? "Auto preview plays section twice before wait mode" : "Auto preview is disabled"}
+                    >
+                        <span>🎧</span> Preview: {autoPreview ? "ON" : "OFF"}
+                    </button>
+                </div>
+            )}
+
             {/* Live Feedback Message */}
             <div className="min-h-12 flex items-center justify-center text-center bg-slate-950/40 rounded-xl px-3 py-2 border border-slate-800/30">
                 <span className="text-sm font-semibold text-slate-200 drop-shadow-sm">
@@ -178,16 +217,18 @@ export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
             ) : (
                 <div className="flex gap-2 justify-between items-center">
                     {/* Previous Section */}
-                    <button
-                        onClick={onPrev}
-                        disabled={!onPrev || practiceSection.startMeasure === 0}
-                        className="p-2.5 bg-slate-800 hover:bg-slate-750 disabled:opacity-30 disabled:hover:bg-slate-800 text-slate-200 rounded-xl transition-all duration-150 active:scale-95 border border-slate-700/40"
-                        title="Previous Section"
-                    >
-                        <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                        </svg>
-                    </button>
+                    {loopSection && (
+                        <button
+                            onClick={onPrev}
+                            disabled={!onPrev || practiceSection.startMeasure === 0}
+                            className="p-2.5 bg-slate-800 hover:bg-slate-750 disabled:opacity-30 disabled:hover:bg-slate-800 text-slate-200 rounded-xl transition-all duration-150 active:scale-95 border border-slate-700/40"
+                            title="Previous Section"
+                        >
+                            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+                            </svg>
+                        </button>
+                    )}
 
                     {/* Replay Section */}
                     <button
@@ -201,15 +242,17 @@ export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
                     </button>
 
                     {/* Next Section */}
-                    <button
-                        onClick={onNext}
-                        className="flex-grow py-2.5 px-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl text-xs font-bold transition-all duration-150 active:scale-95 shadow-md shadow-emerald-950/20 flex items-center justify-center gap-1"
-                    >
-                        Next
-                        <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                            <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                        </svg>
-                    </button>
+                    {loopSection && (
+                        <button
+                            onClick={onNext}
+                            className="flex-grow py-2.5 px-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-xl text-xs font-bold transition-all duration-150 active:scale-95 shadow-md shadow-emerald-950/20 flex items-center justify-center gap-1"
+                        >
+                            Next
+                            <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                            </svg>
+                        </button>
+                    )}
 
                     {/* Exit Practice */}
                     <button

@@ -123,16 +123,42 @@ export function usePracticeMode({
     logAttempt,
     practicedHand = 'both'
 }: UsePracticeModeProps) {
-    const { preferences } = usePreferences();
+    const { preferences, updatePreference } = usePreferences();
     const hintDelay = preferences.hintDelay;
+    const autoPreview = preferences.autoPreview !== false; // default to true
+    
+    const [mode, setMode] = useState<PracticeModeType>('preview');
+    const [feedback, setFeedback] = useState<string | null>(null);
+
+    const setAutoPreview = useCallback((val: boolean) => {
+        updatePreference('autoPreview', val);
+        if (!val && mode === 'preview') {
+            setMode('wait');
+            setFeedback("Now you try! Play the notes.");
+        }
+    }, [updatePreference, mode]);
+
+    const [loopSection, setLoopSectionState] = useState(true);
     const [isActive, setIsActive] = useState(false);
     const [currentSection, setCurrentSection] = useState<PracticeSection>({ startMeasure: 0, endMeasure: 2 });
-    const [mode, setMode] = useState<PracticeModeType>('preview');
     const [accuracy, setAccuracy] = useState(100);
-    const [feedback, setFeedback] = useState<string | null>(null);
     const [previewLoopCount, setPreviewLoopCount] = useState(0);
     const [tempoMultiplier, setTempoMultiplierState] = useState(1.0);
     const [isSpeedTrainerActive, setIsSpeedTrainerActive] = useState(false);
+
+    const setLoopSection = useCallback((val: boolean) => {
+        setLoopSectionState(val);
+        if (!val) {
+            // Whole Song
+            setCurrentSection({ startMeasure: 0, endMeasure: totalMeasures });
+        } else {
+            // Restore to a 2-measure section starting at the current measure
+            const currentMeasure = playbackEngine?.CurrentMeasureNumber || 0;
+            const start = Math.floor(currentMeasure / 2) * 2;
+            const end = Math.min(start + 2, totalMeasures);
+            setCurrentSection({ startMeasure: start, endMeasure: end });
+        }
+    }, [totalMeasures, playbackEngine]);
 
     useEffect(() => {
         if (playbackEngine) {
@@ -212,10 +238,17 @@ export function usePracticeMode({
         isTransitioningRef.current = false;
         setIsActive(true);
         practiceSessionStartTimeRef.current = Date.now();
-        const start = startMeasure !== undefined ? startMeasure : 0;
-        const end = Math.min(start + 2, totalMeasures);
+        
+        let start = startMeasure !== undefined ? startMeasure : 0;
+        let end = Math.min(start + 2, totalMeasures);
+        if (!loopSection) {
+            start = 0;
+            end = totalMeasures;
+        }
+        
         setCurrentSection({ startMeasure: start, endMeasure: end });
-        const finalMode = initialMode || (startMeasure !== undefined ? 'wait' : 'preview');
+        const defaultStartMode = autoPreview ? 'preview' : 'wait';
+        const finalMode = initialMode || (startMeasure !== undefined ? 'wait' : defaultStartMode);
         setMode(finalMode);
         setPreviewLoopCount(0);
         setNotesCorrect(0);
@@ -232,7 +265,7 @@ export function usePracticeMode({
         setIsSongComplete(false);
         lastExpectedStrRef.current = "";
         notesActiveAtStepStartRef.current.clear();
-    }, [totalMeasures]);
+    }, [totalMeasures, loopSection, autoPreview]);
 
     const stopPractice = useCallback(() => {
         if (transitionTimeoutRef.current) {
@@ -275,16 +308,17 @@ export function usePracticeMode({
         playbackEngine?.stop();
 
         setCurrentSection({ startMeasure: nextStart, endMeasure: nextEnd });
-        setMode('preview'); // Reset to preview for new section
+        const defaultStartMode = autoPreview ? 'preview' : 'wait';
+        setMode(defaultStartMode);
         setPreviewLoopCount(0);
         setNotesCorrect(0);
         setNotesMissed(0);
         setLastSuccessfulNotes(new Set());
         heldWrongNotesRef.current.clear();
-        setFeedback("New Section! Listen first.");
+        setFeedback(defaultStartMode === 'wait' ? "New Section! Play the notes." : "New Section! Listen first.");
         lastExpectedStrRef.current = "";
         notesActiveAtStepStartRef.current.clear();
-    }, [currentSection, totalMeasures, playbackEngine]);
+    }, [currentSection, totalMeasures, playbackEngine, autoPreview]);
 
     const retrySection = useCallback(() => {
         if (transitionTimeoutRef.current) {
@@ -334,16 +368,17 @@ export function usePracticeMode({
         playbackEngine?.stop();
 
         setCurrentSection({ startMeasure: prevStart, endMeasure: prevEnd });
-        setMode('preview'); // Reset to preview for new section
+        const defaultStartMode = autoPreview ? 'preview' : 'wait';
+        setMode(defaultStartMode);
         setPreviewLoopCount(0);
         setNotesCorrect(0);
         setNotesMissed(0);
         setLastSuccessfulNotes(new Set());
         heldWrongNotesRef.current.clear();
-        setFeedback("Previous Section! Listen first.");
+        setFeedback(defaultStartMode === 'wait' ? "Previous Section! Play the notes." : "Previous Section! Listen first.");
         lastExpectedStrRef.current = "";
         notesActiveAtStepStartRef.current.clear();
-    }, [currentSection, playbackEngine]);
+    }, [currentSection, playbackEngine, autoPreview, totalMeasures]);
 
     // Effect to handle Mode Transitions & Looping
     useEffect(() => {
@@ -431,12 +466,16 @@ export function usePracticeMode({
     // Safety Effect to update endMeasure when totalMeasures finishes loading asynchronously
     useEffect(() => {
         if (isActive && currentSection.endMeasure === 0 && totalMeasures > 0) {
-            setCurrentSection(prev => ({
-                ...prev,
-                endMeasure: Math.min(prev.startMeasure + 2, totalMeasures)
-            }));
+            if (loopSection) {
+                setCurrentSection(prev => ({
+                    ...prev,
+                    endMeasure: Math.min(prev.startMeasure + 2, totalMeasures)
+                }));
+            } else {
+                setCurrentSection({ startMeasure: 0, endMeasure: totalMeasures });
+            }
         }
-    }, [totalMeasures, isActive, currentSection.endMeasure]);
+    }, [totalMeasures, isActive, currentSection.endMeasure, loopSection]);
 
     const [showHint, setShowHint] = useState(false);
     const stuckTimerRef = useRef(0);
@@ -1071,6 +1110,10 @@ export function usePracticeMode({
         tempoMultiplier,
         setTempoMultiplier: changeTempoMultiplier,
         isSpeedTrainerActive,
-        setIsSpeedTrainerActive
+        setIsSpeedTrainerActive,
+        loopSection,
+        setLoopSection,
+        autoPreview,
+        setAutoPreview
     };
 }

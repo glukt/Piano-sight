@@ -276,6 +276,68 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 
     }, [xmlUrl, xmlContent, file, layoutMode]);
 
+    const updateLoopHighlights = () => {
+        const container = osmdCanvasRef.current?.querySelector('svg');
+        if (!container) return;
+
+        // Clear existing highlights
+        const existing = container.querySelectorAll('.osmd-loop-highlight');
+        existing.forEach(el => el.remove());
+
+        if (!isPracticeActive || !loopSection || !osmdRef.current || !osmdRef.current.GraphicSheet) {
+            return;
+        }
+
+        const unitInPixels = (osmdRef.current as any).unitInPixels;
+        if (isNaN(unitInPixels) || unitInPixels <= 0) return;
+
+        const startM = practiceSection.startMeasure + 1;
+        const endM = practiceSection.endMeasure;
+
+        const highlightGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        highlightGroup.setAttribute('class', 'osmd-loop-highlight');
+        highlightGroup.setAttribute('opacity', '0.08'); // Subtle background tint (8% opacity)
+        
+        try {
+            const pages = osmdRef.current.GraphicSheet.MusicPages;
+            pages.forEach((page: any) => {
+                page.MusicSystems.forEach((system: any) => {
+                    system.StaffLines.forEach((staff: any) => {
+                        staff.Measures.forEach((measure: any) => {
+                            if (measure.ParentMeasure) {
+                                const mNum = measure.ParentMeasure.MeasureNumber;
+                                if (mNum >= startM && mNum <= endM) {
+                                    const bbox = measure.PositionAndShape;
+                                    if (bbox) {
+                                        const x = bbox.AbsolutePosition.x * unitInPixels;
+                                        const y = bbox.AbsolutePosition.y * unitInPixels;
+                                        const w = bbox.Size.width * unitInPixels;
+                                        const h = bbox.Size.height * unitInPixels;
+
+                                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                                        rect.setAttribute('x', x.toString());
+                                        rect.setAttribute('y', y.toString());
+                                        rect.setAttribute('width', w.toString());
+                                        rect.setAttribute('height', h.toString());
+                                        rect.setAttribute('fill', '#3b82f6'); // Sky blue
+                                        rect.setAttribute('rx', '4');
+                                        rect.setAttribute('ry', '4');
+                                        highlightGroup.appendChild(rect);
+                                    }
+                                }
+                            }
+                        });
+                    });
+                });
+            });
+
+            if (highlightGroup.children.length > 0) {
+                container.insertBefore(highlightGroup, container.firstChild);
+            }
+        } catch (e) {
+            console.error("Failed to render loop background highlights:", e);
+        }
+    };
 
     // Combined OSMD styling, rendering, and interaction handler
     useEffect(() => {
@@ -506,10 +568,18 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                     });
                 });
             });
+
+            // Draw loop highlights
+            updateLoopHighlights();
         } catch (e) {
             console.error("Error drawing labels or binding interactions:", e);
         }
     }, [showNoteNames, loading, isDarkMode, layoutMode, practicedHand]);
+
+    // Update loop highlights when boundaries change
+    useEffect(() => {
+        updateLoopHighlights();
+    }, [isPracticeActive, loopSection, practiceSection.startMeasure, practiceSection.endMeasure, loading]);
 
     // Update Highlight Settings when toggled
     useEffect(() => {

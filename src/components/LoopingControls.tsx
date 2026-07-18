@@ -95,8 +95,16 @@ const LoopingControls: React.FC<LoopingControlsProps> = ({
 
     const handleTrackMouseDown = (e: React.MouseEvent) => {
         const ts = getTimestampFromX(e.clientX);
-        // Snapped seek during clicks feels cleaner
         const snapped = getSnappedTimestamp(ts);
+        
+        if (e.shiftKey) {
+            onSetLoopStart(snapped);
+            return;
+        } else if (e.altKey || e.ctrlKey) {
+            onSetLoopEnd(snapped);
+            return;
+        }
+        
         onSeek(snapped);
         setDraggingHandle('progress');
     };
@@ -273,6 +281,21 @@ const LoopingControls: React.FC<LoopingControlsProps> = ({
                             >
                                 {endMeasureNum !== null ? `[B] Bar ${endMeasureNum}` : 'Set [B]'}
                             </button>
+                            {measureTimestamps.length > 0 && (
+                                <button
+                                    onClick={() => {
+                                        const startTs = measureTimestamps[currentMeasure - 1];
+                                        const endTs = measureTimestamps[currentMeasure] !== undefined 
+                                            ? measureTimestamps[currentMeasure] 
+                                            : totalDuration;
+                                        onSetLoopStart(startTs);
+                                        onSetLoopEnd(endTs);
+                                    }}
+                                    className="px-4 py-1.5 bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 dark:bg-sky-950/20 rounded-xl text-xs font-bold transition duration-200 border border-sky-300/40 dark:border-sky-900/60 select-none"
+                                >
+                                    Loop Current Bar ({currentMeasure})
+                                </button>
+                            )}
                             {(loopStart !== null || loopEnd !== null) && (
                                 <button
                                     onClick={onClearLoop}

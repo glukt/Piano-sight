@@ -194,14 +194,10 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                     osmdRef.current.Sheet.Instruments.forEach(instrument => {
                         if (instrument.Staves) {
                             instrument.Staves.forEach(staff => {
-                                if (layoutMode === 'scrolling') {
-                                    if (practicedHand === 'right') {
-                                        staff.Visible = staff.Id === 1;
-                                    } else if (practicedHand === 'left') {
-                                        staff.Visible = staff.Id === 2;
-                                    } else {
-                                        staff.Visible = true;
-                                    }
+                                if (practicedHand === 'right') {
+                                    staff.Visible = staff.Id === 1;
+                                } else if (practicedHand === 'left') {
+                                    staff.Visible = staff.Id === 2;
                                 } else {
                                     staff.Visible = true;
                                 }
@@ -291,14 +287,10 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                 osmdRef.current.Sheet.Instruments.forEach(instrument => {
                     if (instrument.Staves) {
                         instrument.Staves.forEach(staff => {
-                            if (layoutMode === 'scrolling') {
-                                if (practicedHand === 'right') {
-                                    staff.Visible = staff.Id === 1;
-                                } else if (practicedHand === 'left') {
-                                    staff.Visible = staff.Id === 2;
-                                } else {
-                                    staff.Visible = true;
-                                }
+                            if (practicedHand === 'right') {
+                                staff.Visible = staff.Id === 1;
+                            } else if (practicedHand === 'left') {
+                                staff.Visible = staff.Id === 2;
                             } else {
                                 staff.Visible = true;
                             }
@@ -380,6 +372,31 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 
                                         const onClick = () => {
                                             if (note.sourceNote) {
+                                                const pitch = note.sourceNote.Pitch;
+                                                if (pitch) {
+                                                    try {
+                                                        const midiVal = pitch.getHalfTone() + 12;
+                                                        // Audition Note Sound
+                                                        audio.playNote(midiVal, 0.7, 0.5);
+                                                        
+                                                        // Audition Highlight on VirtualKeyboard
+                                                        setActiveNotes(prev => {
+                                                            const newSet = new Set(prev);
+                                                            newSet.add(midiVal);
+                                                            return newSet;
+                                                        });
+                                                        setTimeout(() => {
+                                                            setActiveNotes(prev => {
+                                                                const newSet = new Set(prev);
+                                                                newSet.delete(midiVal);
+                                                                return newSet;
+                                                            });
+                                                        }, 850);
+                                                    } catch (e) {
+                                                        console.warn("Failed to audition note:", e);
+                                                    }
+                                                }
+
                                                 const absTs = note.sourceNote.getAbsoluteTimestamp();
                                                 if (absTs) {
                                                     handleSeek(absTs.RealValue);

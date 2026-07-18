@@ -91,25 +91,27 @@ export const PracticeOverlay: React.FC<PracticeOverlayProps> = ({
                 <div className="flex flex-col gap-2 p-3 bg-slate-950/60 rounded-xl border border-slate-800/50 animate-in slide-in-from-top-2 duration-150">
                     <div className="flex items-center justify-between text-[11px] text-slate-300">
                         <span>Start Measure:</span>
-                        <input
-                            type="number"
-                            min="1"
-                            max={tempEnd}
+                        <select
                             value={tempStart}
-                            onChange={e => setTempStart(Math.max(1, Math.min(totalMeasures, parseInt(e.target.value) || 1)))}
-                            className="w-12 bg-slate-800 border border-slate-700 text-white text-center rounded py-0.5 text-xs font-mono font-bold"
-                        />
+                            onChange={e => setTempStart(parseInt(e.target.value) || 1)}
+                            className="bg-slate-800 border border-slate-700 text-white rounded px-1.5 py-0.5 text-xs font-mono font-bold cursor-pointer outline-none focus:border-sky-500"
+                        >
+                            {Array.from({ length: totalMeasures }, (_, i) => i + 1).map(num => (
+                                <option key={num} value={num}>Bar {num}</option>
+                            ))}
+                        </select>
                     </div>
                     <div className="flex items-center justify-between text-[11px] text-slate-300">
                         <span>End Measure:</span>
-                        <input
-                            type="number"
-                            min={tempStart}
-                            max={totalMeasures}
+                        <select
                             value={tempEnd}
-                            onChange={e => setTempEnd(Math.max(tempStart, Math.min(totalMeasures, parseInt(e.target.value) || totalMeasures)))}
-                            className="w-12 bg-slate-800 border border-slate-700 text-white text-center rounded py-0.5 text-xs font-mono font-bold"
-                        />
+                            onChange={e => setTempEnd(parseInt(e.target.value) || totalMeasures)}
+                            className="bg-slate-800 border border-slate-700 text-white rounded px-1.5 py-0.5 text-xs font-mono font-bold cursor-pointer outline-none focus:border-sky-500"
+                        >
+                            {Array.from({ length: totalMeasures }, (_, i) => i + 1).map(num => (
+                                <option key={num} value={num} disabled={num < tempStart}>Bar {num}</option>
+                            ))}
+                        </select>
                     </div>
                     <button
                         onClick={handleApplyRange}

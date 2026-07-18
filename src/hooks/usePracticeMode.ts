@@ -567,185 +567,176 @@ export function usePracticeMode({
         }
     }, [countdown]);
 
-    // Active Logic for Wait Mode
-    useEffect(() => {
-        if (!isActive || mode !== 'wait' || !playbackEngine) return;
+    // Active Logic for Wait Mode - useCallback hook
+    const checkInput = useCallback((isFromPoll = false) => {
+        if (isTransitioningRef.current || !playbackEngine) return;
+        const currentExpectedObjs = playbackEngine.getNotesAtCurrentPosition();
+        const currentExpectedMidis = currentExpectedObjs.map(n => n.midi);
+        const currentExpectedStr = currentExpectedMidis.slice().sort().join(',');
 
-        const checkInput = (isFromPoll = false) => {
-            if (isTransitioningRef.current) return;
-            const currentExpectedObjs = playbackEngine.getNotesAtCurrentPosition();
-            const currentExpectedMidis = currentExpectedObjs.map(n => n.midi);
-            const currentExpectedStr = currentExpectedMidis.slice().sort().join(',');
+        // Clear auto-advance timer if we have notes the user needs to play
+        if (currentExpectedMidis.length > 0 && autoAdvanceTimerRef.current) {
+            clearTimeout(autoAdvanceTimerRef.current);
+            autoAdvanceTimerRef.current = null;
+        }
 
-            // Clear auto-advance timer if we have notes the user needs to play
-            if (currentExpectedMidis.length > 0 && autoAdvanceTimerRef.current) {
-                clearTimeout(autoAdvanceTimerRef.current);
-                autoAdvanceTimerRef.current = null;
-            }
+        // Detect step change to capture currently held keys as "legato safety"
+        let stepChanged = false;
+        if (currentExpectedStr !== lastExpectedStrRef.current) {
+            notesActiveAtStepStartRef.current = new Set(userActiveNotesRef.current);
+            lastExpectedStrRef.current = currentExpectedStr;
+            stepChanged = true;
 
-            // Detect step change to capture currently held keys as "legato safety"
-            let stepChanged = false;
-            if (currentExpectedStr !== lastExpectedStrRef.current) {
-                notesActiveAtStepStartRef.current = new Set(userActiveNotesRef.current);
-                lastExpectedStrRef.current = currentExpectedStr;
-                stepChanged = true;
+            // Initialize preHeld: if user is holding any expected note at step start
+            const isHoldingAny = currentExpectedMidis.some(m => userActiveNotesRef.current.has(m));
+            setPreHeld(isHoldingAny);
+        } else {
+            // Keep notesActiveAtStepStartRef in sync with releases
+            const currentActive = userActiveNotesRef.current;
+            notesActiveAtStepStartRef.current.forEach(n => {
+                if (!currentActive.has(n)) {
+                    notesActiveAtStepStartRef.current.delete(n);
+                }
+            });
+        }
 
-                // Initialize preHeld: if user is holding any expected note at step start
-                const isHoldingAny = currentExpectedMidis.some(m => userActiveNotesRef.current.has(m));
-                setPreHeld(isHoldingAny);
-            } else {
-                // Keep notesActiveAtStepStartRef in sync with releases
-                const currentActive = userActiveNotesRef.current;
-                notesActiveAtStepStartRef.current.forEach(n => {
-                    if (!currentActive.has(n)) {
-                        notesActiveAtStepStartRef.current.delete(n);
-                    }
-                });
-            }
+        // Check Stuck Timer
+        if (currentExpectedObjs.length > 0) {
+            if (currentExpectedStr === prevExpectedNotesRef.current) {
+                stuckTimerRef.current += 50; // Add 50ms
+                if (hintDelay > 0 && stuckTimerRef.current > hintDelay && !showHintRef.current) {
+                    setShowHint(true);
 
-            // Check Stuck Timer
-            if (currentExpectedObjs.length > 0) {
-                if (currentExpectedStr === prevExpectedNotesRef.current) {
-                    stuckTimerRef.current += 50; // Add 50ms
-                    if (hintDelay > 0 && stuckTimerRef.current > hintDelay && !showHintRef.current) {
-                        setShowHint(true);
-
-                        const lesson = songId ? getLessonById(songId) : null;
-                        const handPosition = lesson?.handPosition;
-                        let fingerAdvice = '';
-                        if (handPosition && POSITION_MAPS[handPosition]) {
-                            const map = POSITION_MAPS[handPosition];
-                            const advices = currentExpectedMidis.map(m => {
-                                const keyStr = midiToKeyString(m);
-                                const info = map[keyStr];
-                                if (info) {
-                                    const fingerNames = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky'];
-                                    return `${info.hand} Finger ${info.finger} (${fingerNames[info.finger - 1]})`;
-                                }
-                                return null;
-                            }).filter(Boolean);
-                            if (advices.length > 0) {
-                                fingerAdvice = ` - Use ${advices.join(' + ')}`;
+                    const lesson = songId ? getLessonById(songId) : null;
+                    const handPosition = lesson?.handPosition;
+                    let fingerAdvice = '';
+                    if (handPosition && POSITION_MAPS[handPosition]) {
+                        const map = POSITION_MAPS[handPosition];
+                        const advices = currentExpectedMidis.map(m => {
+                            const keyStr = midiToKeyString(m);
+                            const info = map[keyStr];
+                            if (info) {
+                                const fingerNames = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky'];
+                                return `${info.hand} Finger ${info.finger} (${fingerNames[info.finger - 1]})`;
                             }
+                            return null;
+                        }).filter(Boolean);
+                        if (advices.length > 0) {
+                            fingerAdvice = ` - Use ${advices.join(' + ')}`;
                         }
-                        const expectedNoteNames = currentExpectedMidis.map(getNoteName).join(' + ');
-                        setFeedback(`💡 Stuck? Play ${expectedNoteNames}${fingerAdvice}`);
                     }
-                } else {
-                    // New notes! Reset.
-                    stuckTimerRef.current = 0;
-                    prevExpectedNotesRef.current = currentExpectedStr;
-                    setShowHint(false);
+                    const expectedNoteNames = currentExpectedMidis.map(getNoteName).join(' + ');
+                    setFeedback(`💡 Stuck? Play ${expectedNoteNames}${fingerAdvice}`);
                 }
             } else {
+                // New notes! Reset.
                 stuckTimerRef.current = 0;
+                prevExpectedNotesRef.current = currentExpectedStr;
                 setShowHint(false);
             }
+        } else {
+            stuckTimerRef.current = 0;
+            setShowHint(false);
+        }
 
-            // If we are just polling for the stuck timer, we exit early here!
-            // However, if the step changed, we want to let the new validation timer schedule, so we don't exit early before that.
-            if (isFromPoll && !stepChanged) return;
+        // If we are just polling for the stuck timer, we exit early here!
+        if (isFromPoll && !stepChanged) return;
 
-            // 1. Check for End of Section
-            const currentTimestamp = playbackEngine.CurrentTimestamp;
-            const endTimestamp = playbackEngine.getMeasureTimestamp(currentSectionRef.current.endMeasure);
+        // 1. Check for End of Section
+        const currentTimestamp = playbackEngine.CurrentTimestamp;
+        const endTimestamp = playbackEngine.getMeasureTimestamp(currentSectionRef.current.endMeasure);
 
-            if (endTimestamp !== null && currentTimestamp >= endTimestamp) {
-                isTransitioningRef.current = true;
-                // End of Section Reached! Check Accuracy.
-                const total = notesCorrectRef.current + notesMissedRef.current;
-                // If total is 0 (empty section?), treat as 100%
-                const acc = total > 0 ? (notesCorrectRef.current / total) * 100 : 100;
-                setAccuracy(Math.round(acc));
+        if (endTimestamp !== null && currentTimestamp >= endTimestamp) {
+            isTransitioningRef.current = true;
+            // End of Section Reached! Check Accuracy.
+            const total = notesCorrectRef.current + notesMissedRef.current;
+            const acc = total > 0 ? (notesCorrectRef.current / total) * 100 : 100;
+            setAccuracy(Math.round(acc));
 
-                if (transitionTimeoutRef.current) {
-                    clearTimeout(transitionTimeoutRef.current);
-                }
+            if (transitionTimeoutRef.current) {
+                clearTimeout(transitionTimeoutRef.current);
+            }
 
-                if (acc >= 90) {
-                    if (isSpeedTrainerActive) {
-                        if (tempoMultiplier < 1.0) {
-                            const nextMult = Math.min(1.0, tempoMultiplier + 0.1);
-                            setTempoMultiplierState(nextMult);
-                            if (playbackEngine) playbackEngine.setTempoMultiplier(nextMult);
-                            setFeedback(`🚀 Speed increased to ${Math.round(nextMult * 100)}%! Let's practice again.`);
-                            transitionTimeoutRef.current = setTimeout(() => retrySectionRef.current(), 1500);
-                        } else {
-                            setFeedback(`🎉 Section mastered at 100% speed! Moving on!`);
-                            setTempoMultiplierState(0.6); // Reset for next section
-                            if (playbackEngine) playbackEngine.setTempoMultiplier(0.6);
-                            if (onSectionCompleteRef.current) onSectionCompleteRef.current();
-                            transitionTimeoutRef.current = setTimeout(() => nextSectionRef.current(), 1500);
-                        }
+            if (acc >= 90) {
+                if (isSpeedTrainerActive) {
+                    if (tempoMultiplier < 1.0) {
+                        const nextMult = Math.min(1.0, tempoMultiplier + 0.1);
+                        setTempoMultiplierState(nextMult);
+                        if (playbackEngine) playbackEngine.setTempoMultiplier(nextMult);
+                        setFeedback(`🚀 Speed increased to ${Math.round(nextMult * 100)}%! Let's practice again.`);
+                        transitionTimeoutRef.current = setTimeout(() => retrySectionRef.current(), 1500);
                     } else {
-                        setFeedback(`Great! Accuracy: ${Math.round(acc)}%. Moving on!`);
-                        if (onSectionCompleteRef.current) onSectionCompleteRef.current(); // Major XP event
+                        setFeedback(`🎉 Section mastered at 100% speed! Moving on!`);
+                        setTempoMultiplierState(0.6); // Reset for next section
+                        if (playbackEngine) playbackEngine.setTempoMultiplier(0.6);
+                        if (onSectionCompleteRef.current) onSectionCompleteRef.current();
                         transitionTimeoutRef.current = setTimeout(() => nextSectionRef.current(), 1500);
                     }
                 } else {
-                    setFeedback(`Accuracy: ${Math.round(acc)}%. Let's try again.`);
-                    transitionTimeoutRef.current = setTimeout(() => retrySectionRef.current(), 1500);
+                    setFeedback(`Great! Accuracy: ${Math.round(acc)}%. Moving on!`);
+                    if (onSectionCompleteRef.current) onSectionCompleteRef.current(); // Major XP event
+                    transitionTimeoutRef.current = setTimeout(() => nextSectionRef.current(), 1500);
                 }
-                playbackEngine.stop(); // Stop checking
-                setShowHint(false);
-                return;
+            } else {
+                setFeedback(`Accuracy: ${Math.round(acc)}%. Let's try again.`);
+                transitionTimeoutRef.current = setTimeout(() => retrySectionRef.current(), 1500);
+            }
+            playbackEngine.stop(); // Stop checking
+            setShowHint(false);
+            return;
+        }
+
+        // 2. Handle Rests / Empty Steps (Auto-advance accompaniment-only steps in Wait Mode)
+        if (currentExpectedMidis.length === 0) {
+            if (!autoAdvanceTimerRef.current) {
+                const stepDurationMs = playbackEngine.getCurrentStepDuration() * 1000;
+                autoAdvanceTimerRef.current = setTimeout(() => {
+                    if (isTransitioningRef.current) return;
+                    autoAdvanceTimerRef.current = null;
+                    playbackEngine.nextStep();
+                    playbackEngine.playAccompanimentForCurrentPosition();
+                    setExpectedNotes([]);
+                }, stepDurationMs);
+            }
+            setLastSuccessfulNotes(new Set());
+            return;
+        }
+
+        // 3. Highlight Notes with correct and wrong subsets passed
+        const userPressedMidis = new Set(userActiveNotesRef.current);
+        const correctSet = new Set(currentExpectedMidis.filter(m => userPressedMidis.has(m)));
+        const incorrectSet = new Set(Array.from(heldWrongNotesRef.current));
+        
+        playbackEngine.highlightCurrentNotes(correctSet, incorrectSet);
+        setExpectedNotes(currentExpectedMidis);
+
+        // PreHeld Guard: block evaluation if preHeld is true
+        let isPreHeldLocked = preHeldRef.current;
+        if (isPreHeldLocked) {
+            const stillHoldingAll = currentExpectedMidis.length > 0 && currentExpectedMidis.every(m => userActiveNotesRef.current.has(m));
+            const newlyPressed = currentExpectedMidis.filter(m => !notesActiveAtStepStartRef.current.has(m));
+            const pressedNewRequired = newlyPressed.some(m => userActiveNotesRef.current.has(m));
+
+            if (!stillHoldingAll || pressedNewRequired) {
+                setPreHeld(false);
+                isPreHeldLocked = false;
+            }
+        }
+
+        if (isPreHeldLocked) {
+            return;
+        }
+
+        // Debounce the validation logic (Steps 4, 5, and 6)
+        if (!isFromPoll || stepChanged) {
+            if (validationTimerRef.current) {
+                clearTimeout(validationTimerRef.current);
             }
 
-            // 2. Handle Rests / Empty Steps (Auto-advance accompaniment-only steps in Wait Mode)
-            if (currentExpectedMidis.length === 0) {
-                if (!autoAdvanceTimerRef.current) {
-                    const stepDurationMs = playbackEngine.getCurrentStepDuration() * 1000;
-                    autoAdvanceTimerRef.current = setTimeout(() => {
-                        if (isTransitioningRef.current) return;
-                        autoAdvanceTimerRef.current = null;
-                        playbackEngine.nextStep();
-                        playbackEngine.playAccompanimentForCurrentPosition();
-                        // Trigger checkInput re-evaluation via expectedNotes state
-                        setExpectedNotes([]);
-                    }, stepDurationMs);
-                }
-                setLastSuccessfulNotes(new Set());
-                return;
-            }
-
-            // 3. Highlight Notes with correct and wrong subsets passed
-            const userPressedMidis = new Set(userActiveNotesRef.current);
-            const correctSet = new Set(currentExpectedMidis.filter(m => userPressedMidis.has(m)));
-            const incorrectSet = new Set(Array.from(heldWrongNotesRef.current));
-            
-            playbackEngine.highlightCurrentNotes(correctSet, incorrectSet);
-            setExpectedNotes(currentExpectedMidis);
-
-            // PreHeld Guard: block evaluation if preHeld is true
-            let isPreHeldLocked = preHeldRef.current;
-            if (isPreHeldLocked) {
-                const stillHoldingAll = currentExpectedMidis.length > 0 && currentExpectedMidis.every(m => userActiveNotesRef.current.has(m));
-                const newlyPressed = currentExpectedMidis.filter(m => !notesActiveAtStepStartRef.current.has(m));
-                const pressedNewRequired = newlyPressed.some(m => userActiveNotesRef.current.has(m));
-
-                if (!stillHoldingAll || pressedNewRequired) {
-                    setPreHeld(false);
-                    isPreHeldLocked = false;
-                }
-            }
-
-            if (isPreHeldLocked) {
-                return;
-            }
-
-            // Debounce the validation logic (Steps 4, 5, and 6)
-            // We only clear/reschedule the timer if user active notes changed (!isFromPoll)
-            // or if the step just changed (stepChanged).
-            if (!isFromPoll || stepChanged) {
-                if (validationTimerRef.current) {
-                    clearTimeout(validationTimerRef.current);
-                }
-
-                validationTimerRef.current = setTimeout(() => {
-                if (isTransitioningRef.current) return;
+            validationTimerRef.current = setTimeout(() => {
+                if (isTransitioningRef.current || !playbackEngine) return;
 
                 const checkTime = Date.now();
-                // Clean up old presses older than 150ms
                 recentPressesRef.current.forEach((timestamp, midi) => {
                     if (checkTime - timestamp > 150) {
                         recentPressesRef.current.delete(midi);
@@ -777,7 +768,6 @@ export function usePracticeMode({
 
                 // 5. Check Input
                 const allNotesPressed = freshExpectedObjs.every(noteObj => {
-                    // Match if currently held OR if pressed within the 150ms latch window
                     const isCurrentlyHeld = userActiveNotesRef.current.has(noteObj.midi);
                     const lastPressedTime = recentPressesRef.current.get(noteObj.midi);
                     const isPressedRecently = lastPressedTime !== undefined && (checkTime - lastPressedTime < 150);
@@ -801,6 +791,10 @@ export function usePracticeMode({
                 } else {
                     // 6. Mistake Tracking
                     const activeWrongNotes = [...userActiveNotesRef.current].filter(n => {
+                        // Hand filtering: Ignore wrong notes outside the range of the practiced hand
+                        if (practicedHand === 'right' && n < 60) return false;
+                        if (practicedHand === 'left' && n >= 60) return false;
+
                         if (freshExpectedMidis.includes(n)) return false;
                         if (lastSuccessfulNotesRef.current.has(n)) return false;
                         if (notesActiveAtStepStartRef.current.has(n)) return false;
@@ -855,11 +849,14 @@ export function usePracticeMode({
                     }
                 }
             }, 50);
-            }
-        };
+        }
+    }, [playbackEngine, practicedHand, songId, hintDelay]);
+
+    // Effect to run Polling interval for Wait Mode stuck timer and rests
+    useEffect(() => {
+        if (!isActive || mode !== 'wait' || !playbackEngine) return;
 
         const interval = setInterval(() => checkInput(true), 50); // Poll 20Hz
-        checkInput(false); // Run check immediately on user input change for zero-latency response
         return () => {
             clearInterval(interval);
             if (validationTimerRef.current) {
@@ -870,8 +867,14 @@ export function usePracticeMode({
                 autoAdvanceTimerRef.current = null;
             }
         };
+    }, [isActive, mode, playbackEngine, checkInput]);
 
-    }, [isActive, mode, playbackEngine, userActiveNotes, practicedHand]);
+    // Separate effect to trigger checkInput immediately on user input change for zero-latency response
+    useEffect(() => {
+        if (isActive && mode === 'wait') {
+            checkInput(false);
+        }
+    }, [userActiveNotes, isActive, mode, checkInput]);
 
 
     const changeMode = useCallback((newMode: PracticeModeType) => {
